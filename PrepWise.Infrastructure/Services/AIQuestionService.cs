@@ -2,21 +2,28 @@ using Microsoft.Extensions.Configuration;
 using PrepWise.Core.Entities;
 using PrepWise.Core.Services;
 using System.Text.Json;
-using System.Net.Http;
-using System.Text;
+using Microsoft.Extensions.Logging;
 
 namespace PrepWise.Infrastructure.Services;
 
 public class AIQuestionService : IAIQuestionService
 {
-    private readonly HttpClient _httpClient;
+    private readonly IEnumerable<IAIProvider> _providers;
     private readonly IConfiguration _configuration;
+    private readonly ILogger<AIQuestionService> _logger;
+    private readonly string _primaryProvider;
+    private readonly List<string> _fallbackProviders;
 
-    public AIQuestionService(IConfiguration configuration)
+    public AIQuestionService(
+        IEnumerable<IAIProvider> providers, 
+        IConfiguration configuration,
+        ILogger<AIQuestionService> logger)
     {
+        _providers = providers;
         _configuration = configuration;
-        _httpClient = new HttpClient();
-        _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_configuration["OpenAI:ApiKey"]}");
+        _logger = logger;
+        _primaryProvider = configuration["AIProviders:Primary"] ?? "Gemini";
+        _fallbackProviders = configuration.GetSection("AIProviders:Fallback").Get<List<string>>() ?? new List<string>();
     }
 
     public async Task<List<Question>> GenerateQuestionsAsync(int subjectId, int questionCount, QuestionDifficulty difficulty, QuestionLanguage language)
@@ -55,31 +62,7 @@ Format the response as JSON array with structure:
 
         try
         {
-            var requestBody = new
-            {
-                model = "gpt-3.5-turbo",
-                messages = new[]
-                {
-                    new { role = "system", content = "You are an expert TNPSC Group 4 exam question generator. Generate high-quality, relevant questions." },
-                    new { role = "user", content = prompt }
-                },
-                max_tokens = 2000
-            };
-
-            var json = JsonSerializer.Serialize(requestBody);
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
-
-            var response = await _httpClient.PostAsync("https://api.openai.com/v1/chat/completions", content);
-            var responseContent = await response.Content.ReadAsStringAsync();
-
-            if (!response.IsSuccessStatusCode)
-            {
-                Console.WriteLine($"OpenAI API error: {responseContent}");
-                return questions;
-            }
-
-            var openAiResponse = JsonSerializer.Deserialize<OpenAIResponse>(responseContent);
-            var aiContent = openAiResponse?.choices?.FirstOrDefault()?.message?.content;
+            var aiContent = await GenerateTextWithFallbackAsync(prompt, 2000);
             
             // Parse JSON response
             var questionData = JsonSerializer.Deserialize<List<QuestionData>>(aiContent);
@@ -111,8 +94,7 @@ Format the response as JSON array with structure:
         }
         catch (Exception ex)
         {
-            // Log error and return empty list
-            Console.WriteLine($"Error generating questions: {ex.Message}");
+            _logger.LogError(ex, "Error generating questions with all providers");
         }
 
         return questions;
@@ -128,35 +110,65 @@ Respond in a helpful and educational manner.";
 
         try
         {
-            var requestBody = new
-            {
-                model = "gpt-3.5-turbo",
-                messages = new[]
-                {
-                    new { role = "system", content = "You are a helpful TNPSC Group 4 exam preparation assistant." },
-                    new { role = "user", content = prompt }
-                },
-                max_tokens = 500
-            };
-
-            var json = JsonSerializer.Serialize(requestBody);
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
-
-            var response = await _httpClient.PostAsync("https://api.openai.com/v1/chat/completions", content);
-            var responseContent = await response.Content.ReadAsStringAsync();
-
-            if (!response.IsSuccessStatusCode)
-            {
-                return "I apologize, but I'm having trouble processing your request right now. Please try again later.";
-            }
-
-            var openAiResponse = JsonSerializer.Deserialize<OpenAIResponse>(responseContent);
-            return openAiResponse?.choices?.FirstOrDefault()?.message?.content ?? "I apologize, but I'm having trouble processing your request right now. Please try again later.";
+            return await GenerateTextWithFallbackAsync(prompt, 500);
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Error getting chat response with all providers");
             return "I apologize, but I'm having trouble processing your request right now. Please try again later.";
         }
+    }
+
+    private async Task<string> GenerateTextWithFallbackAsync(string prompt, int maxTokens)
+    {
+        // Try primary provider first
+        var primaryProvider = _providers.FirstOrDefault(p => p.Name == _primaryProvider && p.IsAvailable);
+        if (primaryProvider != null)
+        {
+            try
+            {
+                _logger.LogInformation($"Trying primary provider: {primaryProvider.Name}");
+                return await primaryProvider.GenerateTextAsync(prompt, maxTokens);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, $"Primary provider {primaryProvider.Name} failed, trying fallbacks");
+            }
+        }
+
+        // Try fallback providers
+        foreach (var fallbackName in _fallbackProviders)
+        {
+            var fallbackProvider = _providers.FirstOrDefault(p => p.Name == fallbackName && p.IsAvailable);
+            if (fallbackProvider != null)
+            {
+                try
+                {
+                    _logger.LogInformation($"Trying fallback provider: {fallbackProvider.Name}");
+                    return await fallbackProvider.GenerateTextAsync(prompt, maxTokens);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, $"Fallback provider {fallbackProvider.Name} failed");
+                }
+            }
+        }
+
+        // If all providers failed, try any available provider
+        foreach (var provider in _providers.Where(p => p.IsAvailable))
+        {
+            try
+            {
+                _logger.LogInformation($"Trying any available provider: {provider.Name}");
+                return await provider.GenerateTextAsync(prompt, maxTokens);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, $"Provider {provider.Name} failed");
+            }
+        }
+
+        throw new InvalidOperationException("All AI providers failed or are unavailable");
     }
 
     private string GetSubjectPrompt(int subjectId)
@@ -191,20 +203,5 @@ Respond in a helpful and educational manner.";
         public string Text { get; set; } = string.Empty;
         public string? TextTamil { get; set; }
         public bool IsCorrect { get; set; }
-    }
-
-    private class OpenAIResponse
-    {
-        public List<OpenAIChoice>? choices { get; set; }
-    }
-
-    private class OpenAIChoice
-    {
-        public OpenAIMessage? message { get; set; }
-    }
-
-    private class OpenAIMessage
-    {
-        public string? content { get; set; }
     }
 } 

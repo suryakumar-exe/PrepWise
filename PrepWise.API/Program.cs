@@ -72,6 +72,11 @@ builder.Services.AddCors(options =>
     });
 });
 
+// Register AI providers
+builder.Services.AddScoped<IAIProvider, OpenAIProvider>();
+builder.Services.AddScoped<IAIProvider, GeminiProvider>();
+builder.Services.AddScoped<IAIProvider, GroqProvider>();
+
 // Register services
 builder.Services.AddScoped<IAIQuestionService, AIQuestionService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
