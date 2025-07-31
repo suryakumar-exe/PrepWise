@@ -1,5 +1,6 @@
 using HotChocolate.Types;
 using PrepWise.Core.Entities;
+using PrepWise.Infrastructure.Data;
 
 namespace PrepWise.API.GraphQL.Types;
 
@@ -17,20 +18,8 @@ public class QuestionType : ObjectType<Question>
         descriptor.Field(q => q.IsActive).Type<NonNullType<BooleanType>>();
         descriptor.Field(q => q.IsAIGenerated).Type<NonNullType<BooleanType>>();
         
-        descriptor.Field(q => q.Subject).ResolveWith<QuestionResolvers>(r => r.GetSubject(default!, default!));
-        descriptor.Field(q => q.Options).ResolveWith<QuestionResolvers>(r => r.GetOptions(default!, default!));
-    }
-}
-
-public class QuestionResolvers
-{
-    public Subject GetSubject(Question question, [Service] PrepWise.Infrastructure.Data.PrepWiseDbContext context)
-    {
-        return context.Subjects.First(s => s.Id == question.SubjectId);
-    }
-
-    public IQueryable<QuestionOption> GetOptions(Question question, [Service] PrepWise.Infrastructure.Data.PrepWiseDbContext context)
-    {
-        return context.QuestionOptions.Where(o => o.QuestionId == question.Id).OrderBy(o => o.OrderIndex);
+        // Use automatic navigation properties - HotChocolate will handle these automatically
+        descriptor.Field(q => q.Subject);
+        descriptor.Field(q => q.Options);
     }
 } 

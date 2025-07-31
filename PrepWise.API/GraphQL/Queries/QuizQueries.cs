@@ -59,7 +59,15 @@ public class QuizQueries
         }
         await context.SaveChangesAsync();
 
-        return questions;
+        // Reload questions from database with options included for GraphQL resolution
+        var questionIds = questions.Select(q => q.Id).ToList();
+        var savedQuestions = await context.Questions
+            .Include(q => q.Options.OrderBy(o => o.OrderIndex))
+            .Include(q => q.Subject)
+            .Where(q => questionIds.Contains(q.Id))
+            .ToListAsync();
+
+        return savedQuestions;
     }
 
     [GraphQLDescription("Get user skill scores")]
