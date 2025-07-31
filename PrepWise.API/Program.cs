@@ -6,6 +6,7 @@ using PrepWise.Core.Services;
 using PrepWise.Infrastructure.Data;
 using PrepWise.Infrastructure.Services;
 using System;
+using System.Net.Http.Headers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,7 +23,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<PrepWiseDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection"),
-        b => b.MigrationsAssembly("PrepWise.Infrastructure") // 👈 Exact project name where your DbContext is
+        b => b.MigrationsAssembly("PrepWise.Infrastructure") 
     )
 );
 
@@ -54,7 +55,7 @@ builder.Services.AddAuthentication("Bearer")
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(
-                System.Text.Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? "your-secret-key-here"))
+                System.Text.Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? "9f84a12c8f83b467a19f2a3fbb09172a7e7cfda4ae2c4fcaa84ad91d7e1a7c6f"))
         };
     });
 
@@ -73,7 +74,7 @@ builder.Services.AddCors(options =>
 
 // Register services
 builder.Services.AddScoped<IAIQuestionService, AIQuestionService>();
-//builder.Services.AddScoped<IJwtService, JwtService>();
+builder.Services.AddScoped<IJwtService, JwtService>();
 
 var app = builder.Build();
 
@@ -96,6 +97,7 @@ using (var scope = app.Services.CreateScope())
     
     // Drop and recreate database to handle schema changes
     //context.Database.EnsureDeleted();
+    //context.Database.Migrate(); // Apply migrations if any
     context.Database.EnsureCreated();
 }
 
