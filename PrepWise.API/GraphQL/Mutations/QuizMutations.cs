@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using PrepWise.Core.Entities;
 using PrepWise.Core.Services;
 using PrepWise.Infrastructure.Data;
+using PrepWise.API.GraphQL.Types;
 
 namespace PrepWise.API.GraphQL.Mutations;
 
@@ -318,39 +319,53 @@ public class QuizMutations
         [Service] PrepWiseDbContext context,
         [Service] IAIQuestionService aiService)
     {
-        // Save user message
-        var userMessage = new ChatMessage
+        try
         {
-            UserId = userId,
-            Message = message,
-            Type = ChatMessageType.UserMessage,
-            CreatedAt = DateTime.UtcNow
-        };
+            // Validate user exists
+            var userExists = await context.Users.AnyAsync(u => u.Id == userId && u.IsActive);
+            if (!userExists)
+            {
+                return new ChatResult
+                {
+                    Success = false,
+                    Message = "User not found or inactive",
+                    Response = null
+                };
+            }
 
-        context.ChatMessages.Add(userMessage);
+            // Get AI response first
+            var aiResponse = await aiService.GetChatResponseAsync(message, userId);
 
-        // Get AI response
-        var aiResponse = await aiService.GetChatResponseAsync(message, userId);
+            // Create single chat message with both user message and AI response
+            var chatMessage = new ChatMessage
+            {
+                UserId = userId,
+                Message = message,                    // User's message
+                Response = aiResponse,                // AI's response
+                Type = ChatMessageType.UserMessage,  // This is a user-initiated conversation
+                IsAIGenerated = false,              // The message itself is from user
+                CreatedAt = DateTime.UtcNow
+            };
 
-        // Save AI response
-        var aiMessage = new ChatMessage
+            context.ChatMessages.Add(chatMessage);
+            await context.SaveChangesAsync();
+
+            return new ChatResult
+            {
+                Success = true,
+                Message = "Message sent successfully",
+                Response = aiResponse
+            };
+        }
+        catch (Exception ex)
         {
-            UserId = userId,
-            Message = aiResponse,
-            Type = ChatMessageType.AIResponse,
-            IsAIGenerated = true,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        context.ChatMessages.Add(aiMessage);
-        await context.SaveChangesAsync();
-
-        return new ChatResult
-        {
-            Success = true,
-            Message = "Message sent successfully",
-            Response = aiResponse
-        };
+            return new ChatResult
+            {
+                Success = false,
+                Message = $"Error processing message: {ex.Message}",
+                Response = null
+            };
+        }
     }
 
     private async Task UpdateSkillScore(int userId, int subjectId, int correctAnswers, int totalQuestions, PrepWiseDbContext context)
@@ -424,10 +439,4 @@ public class MockTestResult
     public int WrongAnswers { get; set; }
     public int UnansweredQuestions { get; set; }
 }
-
-public class ChatResult
-{
-    public bool Success { get; set; }
-    public string Message { get; set; } = string.Empty;
-    public string? Response { get; set; }
-} 
+ 
