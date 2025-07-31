@@ -1,0 +1,78 @@
+<div class="question-card">
+    <!-- Question Header -->
+    <div class="question-header">
+        <div class="question-meta">
+            <span class="question-number" *ngIf="showQuestionNumber">
+                <i class="bi bi-question-circle me-2"></i>
+                Question {{ questionNumber }} of {{ totalQuestions }}
+            </span>
+            <div class="question-badges">
+                <span class="badge" [class]="'bg-' + getDifficultyColor()">
+                    {{ question.difficulty }}
+                </span>
+                <span class="badge bg-light text-dark">
+                    {{ getLanguageFlag() }} {{ question.language }}
+                </span>
+            </div>
+        </div>
+
+        <button class="btn btn-sm btn-outline-secondary flag-btn" [class.active]="isFlagged" (click)="toggleFlag()"
+            [attr.aria-label]="isFlagged ? 'Remove flag' : 'Flag question'">
+            <i class="bi bi-flag" *ngIf="!isFlagged"></i>
+            <i class="bi bi-flag-fill" *ngIf="isFlagged"></i>
+        </button>
+    </div>
+
+    <!-- Question Text -->
+    <div class="question-content">
+        <div class="question-text" [innerHTML]="question.text"></div>
+    </div>
+
+    <!-- Options -->
+    <div class="question-options">
+        <div class="option-container" *ngFor="let option of question.options; trackBy: trackByOptionId">
+            <label [class]="getOptionClass(option)" [for]="'option-' + option.id">
+
+                <input [type]="allowMultipleSelection ? 'checkbox' : 'radio'" [id]="'option-' + option.id"
+                    [name]="'question-' + question.id" [value]="option.id" [checked]="selectedOptionId === option.id"
+                    [disabled]="disabled" (change)="selectOption(option.id)" class="option-input">
+
+                <div class="option-marker">
+                    <span class="option-letter">{{ String.fromCharCode(65 + option.orderIndex) }}</span>
+                </div>
+
+                <div class="option-content">
+                    <div class="option-text" [innerHTML]="option.text"></div>
+                </div>
+
+                <!-- Result Icons -->
+                <div class="option-result" *ngIf="showResult">
+                    <i class="bi bi-check-circle-fill text-success" *ngIf="option.isCorrect"></i>
+                    <i class="bi bi-x-circle-fill text-danger"
+                        *ngIf="!option.isCorrect && selectedOptionId === option.id"></i>
+                </div>
+            </label>
+        </div>
+    </div>
+
+    <!-- Explanation -->
+    <div class="question-explanation" *ngIf="showExplanation && question.explanation">
+        <div class="explanation-header">
+            <i class="bi bi-lightbulb me-2"></i>
+            <strong>Explanation</strong>
+        </div>
+        <div class="explanation-content" [innerHTML]="question.explanation"></div>
+    </div>
+
+    <!-- Progress Indicator -->
+    <div class="question-progress" *ngIf="showQuestionNumber">
+        <div class="progress" style="height: 6px;">
+            <div class="progress-bar bg-primary" [style.width.%]="(questionNumber / totalQuestions) * 100"
+                role="progressbar">
+            </div>
+        </div>
+        <small class="progress-text text-muted">
+            {{ questionNumber }} of {{ totalQuestions }} questions
+        </small>
+    </div>
+</div>

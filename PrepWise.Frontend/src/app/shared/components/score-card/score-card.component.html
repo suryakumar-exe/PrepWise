@@ -1,0 +1,96 @@
+<div class="score-card" [class]="'score-card-' + size" [class.animated]="animated">
+    <!-- Header -->
+    <div class="score-header" [class]="'text-' + getScoreColor()">
+        <div class="score-icon">
+            <i [class]="getScoreIcon()"></i>
+        </div>
+        <h3 class="score-title">Quiz Results</h3>
+    </div>
+
+    <!-- Main Score Display -->
+    <div class="score-main">
+        <!-- Circular Progress -->
+        <div class="score-circle">
+            <svg class="progress-ring" width="120" height="120">
+                <circle class="progress-ring-circle-bg" stroke="#e2e8f0" stroke-width="8" fill="transparent" r="45"
+                    cx="60" cy="60" />
+                <circle class="progress-ring-circle"
+                    [attr.stroke]="getScoreColor() === 'success' ? '#10b981' : getScoreColor() === 'warning' ? '#f59e0b' : '#ef4444'"
+                    stroke-width="8" fill="transparent" r="45" cx="60" cy="60"
+                    [style.stroke-dasharray]="getCircumference()" [style.stroke-dashoffset]="getStrokeDashoffset()" />
+            </svg>
+
+            <div class="score-percentage">
+                <span class="percentage-number" [class]="'text-' + getScoreColor()">{{ scoreData.percentage }}%</span>
+                <span class="grade-badge" [class]="'badge bg-' + getScoreColor()">{{ getGrade() }}</span>
+            </div>
+        </div>
+
+        <!-- Score Details -->
+        <div class="score-details" *ngIf="showDetails">
+            <div class="performance-message" [class]="'text-' + getScoreColor()">
+                {{ getPerformanceMessage() }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="score-stats" *ngIf="showDetails">
+        <div class="row g-3">
+            <div class="col-6">
+                <div class="stat-item stat-success">
+                    <div class="stat-icon">
+                        <i class="bi bi-check-circle-fill"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number">{{ scoreData.correctAnswers }}</div>
+                        <div class="stat-label">Correct</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-6">
+                <div class="stat-item stat-danger">
+                    <div class="stat-icon">
+                        <i class="bi bi-x-circle-fill"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number">{{ scoreData.wrongAnswers }}</div>
+                        <div class="stat-label">Wrong</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-6">
+                <div class="stat-item stat-secondary">
+                    <div class="stat-icon">
+                        <i class="bi bi-dash-circle-fill"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number">{{ scoreData.unansweredQuestions }}</div>
+                        <div class="stat-label">Unanswered</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-6" *ngIf="showTimeTaken && scoreData.timeTaken">
+                <div class="stat-item stat-info">
+                    <div class="stat-icon">
+                        <i class="bi bi-clock-fill"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number">{{ scoreData.timeTaken }}</div>
+                        <div class="stat-label">Time</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary -->
+    <div class="score-summary">
+        <div class="summary-text">
+            You scored <strong>{{ scoreData.score }}/{{ scoreData.totalQuestions }}</strong> questions correctly
+        </div>
+    </div>
+</div>

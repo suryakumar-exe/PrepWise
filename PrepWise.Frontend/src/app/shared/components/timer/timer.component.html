@@ -1,0 +1,39 @@
+<div class="timer-container">
+    <div class="timer-display" [class]="'timer-' + timeColor">
+        <div class="timer-icon">
+            <i class="bi bi-clock" *ngIf="!isDanger"></i>
+            <i class="bi bi-clock-fill text-danger" *ngIf="isDanger"></i>
+        </div>
+
+        <div class="timer-content">
+            <div class="timer-text">{{ formattedTime }}</div>
+            <div class="timer-progress">
+                <div class="progress" style="height: 4px;">
+                    <div class="progress-bar" [class]="'bg-' + timeColor" [style.width.%]="progressPercentage"
+                        role="progressbar">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="timer-controls">
+            <button class="btn btn-sm btn-outline-secondary" (click)="isRunning ? pause() : resume()"
+                [disabled]="remainingSeconds <= 0" [attr.aria-label]="isRunning ? 'Pause timer' : 'Resume timer'">
+                <i class="bi bi-pause" *ngIf="isRunning"></i>
+                <i class="bi bi-play" *ngIf="!isRunning && remainingSeconds > 0"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Status Messages -->
+    <div class="timer-status" *ngIf="isWarning || isDanger">
+        <div class="alert alert-warning alert-sm mb-0" *ngIf="isWarning && !isDanger">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            Time running low!
+        </div>
+        <div class="alert alert-danger alert-sm mb-0" *ngIf="isDanger">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            Time almost up!
+        </div>
+    </div>
+</div>

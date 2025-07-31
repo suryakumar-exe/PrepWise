@@ -1,0 +1,231 @@
+<div class="mock-test-result-container" *ngIf="result && mockTest">
+    <!-- Header -->
+    <header class="result-header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col">
+                    <button class="btn btn-outline-light" (click)="goToDashboard()">
+                        <i class="bi bi-arrow-left me-2"></i>
+                        Back to Dashboard
+                    </button>
+                </div>
+                <div class="col-auto">
+                    <h1 class="result-title">
+                        <i class="bi bi-trophy me-3"></i>
+                        Test Results
+                    </h1>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container">
+        <div class="row">
+            <!-- Score Overview -->
+            <div class="col-lg-8">
+                <div class="score-overview-card">
+                    <div class="score-header">
+                        <h2 class="test-name">{{ mockTest.title }}</h2>
+                        <p class="test-date">Completed on {{ mockTest.completedAt | date:'medium' }}</p>
+                    </div>
+
+                    <div class="score-display">
+                        <div class="score-circle" [class]="'score-' + performanceColor">
+                            <div class="score-value">{{ scorePercentage }}%</div>
+                            <div class="score-label">{{ performanceLevel }}</div>
+                        </div>
+
+                        <div class="score-details">
+                            <div class="detail-item">
+                                <i class="bi bi-check-circle text-success"></i>
+                                <span class="detail-label">Correct Answers:</span>
+                                <span class="detail-value">{{ result.correctAnswers }}/{{ result.totalQuestions
+                                    }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="bi bi-x-circle text-danger"></i>
+                                <span class="detail-label">Wrong Answers:</span>
+                                <span class="detail-value">{{ result.wrongAnswers }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="bi bi-dash-circle text-warning"></i>
+                                <span class="detail-label">Unanswered:</span>
+                                <span class="detail-value">{{ result.unansweredQuestions }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="bi bi-clock text-info"></i>
+                                <span class="detail-label">Time Taken:</span>
+                                <span class="detail-value">{{ result.timeTakenMinutes }} minutes</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Performance Analytics -->
+                <div class="analytics-card">
+                    <h3 class="card-title">
+                        <i class="bi bi-graph-up me-2"></i>
+                        Performance Analytics
+                    </h3>
+
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="metric-card">
+                                <div class="metric-icon bg-success">
+                                    <i class="bi bi-target"></i>
+                                </div>
+                                <div class="metric-content">
+                                    <h4 class="metric-value">{{ accuracyRate }}%</h4>
+                                    <p class="metric-label">Accuracy Rate</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="metric-card">
+                                <div class="metric-icon bg-info">
+                                    <i class="bi bi-speedometer2"></i>
+                                </div>
+                                <div class="metric-content">
+                                    <h4 class="metric-value">{{ averageTimePerQuestion }} min</h4>
+                                    <p class="metric-label">Avg. Time per Question</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="metric-card">
+                                <div class="metric-icon bg-warning">
+                                    <i class="bi bi-lightning"></i>
+                                </div>
+                                <div class="metric-content">
+                                    <h4 class="metric-value">{{ result.correctAnswers }}</h4>
+                                    <p class="metric-label">Questions Correct</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="metric-card">
+                                <div class="metric-icon bg-primary">
+                                    <i class="bi bi-star"></i>
+                                </div>
+                                <div class="metric-content">
+                                    <h4 class="metric-value">{{ performanceLevel }}</h4>
+                                    <p class="metric-label">Performance Level</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Panel -->
+            <div class="col-lg-4">
+                <div class="action-panel">
+                    <div class="action-card">
+                        <h4 class="action-title">
+                            <i class="bi bi-lightbulb me-2"></i>
+                            What's Next?
+                        </h4>
+
+                        <div class="action-buttons">
+                            <button class="btn btn-primary btn-lg w-100 mb-3" (click)="viewDetailedAnalysis()">
+                                <i class="bi bi-graph-up me-2"></i>
+                                View Detailed Analysis
+                            </button>
+
+                            <button class="btn btn-success btn-lg w-100 mb-3" (click)="startNewTest()">
+                                <i class="bi bi-play-circle me-2"></i>
+                                Start New Test
+                            </button>
+
+                            <button class="btn btn-outline-primary w-100 mb-3" (click)="shareResult()">
+                                <i class="bi bi-share me-2"></i>
+                                Share Result
+                            </button>
+
+                            <button class="btn btn-outline-success w-100" (click)="downloadCertificate()">
+                                <i class="bi bi-download me-2"></i>
+                                Download Certificate
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Performance Tips -->
+                    <div class="tips-card">
+                        <h4 class="tips-title">
+                            <i class="bi bi-lightbulb me-2"></i>
+                            Performance Tips
+                        </h4>
+
+                        <div class="tips-list">
+                            <div class="tip-item" *ngIf="scorePercentage < 70">
+                                <i class="bi bi-exclamation-triangle text-warning"></i>
+                                <span>Focus on weak areas and practice more questions</span>
+                            </div>
+                            <div class="tip-item" *ngIf="averageTimePerQuestion > 2">
+                                <i class="bi bi-clock text-info"></i>
+                                <span>Work on improving your speed while maintaining accuracy</span>
+                            </div>
+                            <div class="tip-item" *ngIf="result.unansweredQuestions > 0">
+                                <i class="bi bi-question-circle text-danger"></i>
+                                <span>Try to answer all questions - even if you're unsure</span>
+                            </div>
+                            <div class="tip-item">
+                                <i class="bi bi-book text-primary"></i>
+                                <span>Review the topics where you made mistakes</span>
+                            </div>
+                            <div class="tip-item">
+                                <i class="bi bi-calendar text-success"></i>
+                                <span>Take regular mock tests to track your progress</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Subject-wise Performance -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="subject-performance-card">
+                    <h3 class="card-title">
+                        <i class="bi bi-pie-chart me-2"></i>
+                        Subject-wise Performance
+                    </h3>
+
+                    <div class="subject-grid">
+                        <div class="subject-item" *ngFor="let subject of result.subjectPerformance">
+                            <div class="subject-header">
+                                <h5 class="subject-name">{{ subject.subjectName }}</h5>
+                                <span class="subject-score">{{ subject.correctAnswers }}/{{ subject.totalQuestions
+                                    }}</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar"
+                                    [style.width.%]="(subject.correctAnswers / subject.totalQuestions) * 100"
+                                    [class]="'bg-' + getSubjectColor(subject.correctAnswers / subject.totalQuestions)">
+                                </div>
+                            </div>
+                            <div class="subject-stats">
+                                <span class="stat">Accuracy: {{ Math.round((subject.correctAnswers /
+                                    subject.totalQuestions) * 100) }}%</span>
+                                <span class="stat">Time: {{ subject.timeTaken }} min</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading State -->
+<div class="loading-container" *ngIf="!result">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="loading-text">Loading your results...</p>
+</div>

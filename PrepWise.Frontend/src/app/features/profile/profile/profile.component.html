@@ -1,0 +1,239 @@
+<div class="profile-container">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <!-- Profile Header -->
+                <div class="profile-header text-center mb-4">
+                    <h1 class="profile-title">My Profile</h1>
+                    <p class="profile-subtitle">Manage your account settings and preferences</p>
+                </div>
+
+                <!-- Profile Tabs -->
+                <div class="profile-tabs">
+                    <ul class="nav nav-tabs" id="profileTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="profile-tab" data-bs-toggle="tab"
+                                data-bs-target="#profile" type="button" role="tab">
+                                <i class="bi bi-person-circle me-2"></i>
+                                Profile
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settings"
+                                type="button" role="tab">
+                                <i class="bi bi-gear me-2"></i>
+                                Settings
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="achievements-tab" data-bs-toggle="tab"
+                                data-bs-target="#achievements" type="button" role="tab">
+                                <i class="bi bi-trophy me-2"></i>
+                                Achievements
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="history-tab" data-bs-toggle="tab" data-bs-target="#history"
+                                type="button" role="tab">
+                                <i class="bi bi-clock-history me-2"></i>
+                                Test History
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content" id="profileTabsContent">
+                        <!-- Profile Tab -->
+                        <div class="tab-pane fade show active" id="profile" role="tabpanel">
+                            <div class="card">
+                                <div class="card-body">
+                                    <form [formGroup]="profileForm" (ngSubmit)="onUpdateProfile()">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="firstName" class="form-label">First Name</label>
+                                                    <input type="text" class="form-control" id="firstName"
+                                                        formControlName="firstName">
+                                                    <div class="invalid-feedback"
+                                                        *ngIf="profileForm.get('firstName')?.invalid && profileForm.get('firstName')?.touched">
+                                                        First name is required
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="lastName" class="form-label">Last Name</label>
+                                                    <input type="text" class="form-control" id="lastName"
+                                                        formControlName="lastName">
+                                                    <div class="invalid-feedback"
+                                                        *ngIf="profileForm.get('lastName')?.invalid && profileForm.get('lastName')?.touched">
+                                                        Last name is required
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="email" class="form-label">Email</label>
+                                            <input type="email" class="form-control" id="email" formControlName="email"
+                                                readonly>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="phone" class="form-label">Phone Number</label>
+                                            <input type="tel" class="form-control" id="phone" formControlName="phone">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="location" class="form-label">Location</label>
+                                            <input type="text" class="form-control" id="location"
+                                                formControlName="location">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="bio" class="form-label">Bio</label>
+                                            <textarea class="form-control" id="bio" rows="3" formControlName="bio"
+                                                placeholder="Tell us about yourself..."></textarea>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary"
+                                            [disabled]="profileForm.invalid || isUpdating">
+                                            <span *ngIf="isUpdating"
+                                                class="spinner-border spinner-border-sm me-2"></span>
+                                            {{ isUpdating ? 'Updating...' : 'Update Profile' }}
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Settings Tab -->
+                        <div class="tab-pane fade" id="settings" role="tabpanel">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title mb-4">Change Password</h5>
+                                    <form [formGroup]="passwordForm" (ngSubmit)="onChangePassword()">
+                                        <div class="mb-3">
+                                            <label for="currentPassword" class="form-label">Current Password</label>
+                                            <input type="password" class="form-control" id="currentPassword"
+                                                formControlName="currentPassword">
+                                            <div class="invalid-feedback"
+                                                *ngIf="passwordForm.get('currentPassword')?.invalid && passwordForm.get('currentPassword')?.touched">
+                                                Current password is required
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="newPassword" class="form-label">New Password</label>
+                                            <input type="password" class="form-control" id="newPassword"
+                                                formControlName="newPassword">
+                                            <div class="invalid-feedback"
+                                                *ngIf="passwordForm.get('newPassword')?.invalid && passwordForm.get('newPassword')?.touched">
+                                                New password must be at least 6 characters
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="confirmPassword" class="form-label">Confirm New Password</label>
+                                            <input type="password" class="form-control" id="confirmPassword"
+                                                formControlName="confirmPassword">
+                                            <div class="invalid-feedback"
+                                                *ngIf="passwordForm.get('confirmPassword')?.invalid && passwordForm.get('confirmPassword')?.touched">
+                                                Passwords do not match
+                                            </div>
+                                        </div>
+                                        <button type="submit" class="btn btn-warning"
+                                            [disabled]="passwordForm.invalid || isChangingPassword">
+                                            <span *ngIf="isChangingPassword"
+                                                class="spinner-border spinner-border-sm me-2"></span>
+                                            {{ isChangingPassword ? 'Changing...' : 'Change Password' }}
+                                        </button>
+                                    </form>
+
+                                    <hr class="my-4">
+
+                                    <h5 class="card-title mb-4">Preferences</h5>
+                                    <div class="mb-3">
+                                        <label class="form-label">Language</label>
+                                        <select class="form-select">
+                                            <option value="en">English</option>
+                                            <option value="ta">Tamil</option>
+                                            <option value="hi">Hindi</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Theme</label>
+                                        <select class="form-select">
+                                            <option value="light">Light</option>
+                                            <option value="dark">Dark</option>
+                                            <option value="auto">Auto</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="notifications">
+                                        <label class="form-check-label" for="notifications">
+                                            Enable Notifications
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Achievements Tab -->
+                        <div class="tab-pane fade" id="achievements" role="tabpanel">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title mb-4">Your Achievements</h5>
+                                    <div class="row">
+                                        <div class="col-md-4 mb-3" *ngFor="let achievement of achievements">
+                                            <div class="achievement-card text-center p-3 border rounded">
+                                                <div class="achievement-icon mb-2">
+                                                    <i class="bi" [class]="achievement.icon"></i>
+                                                </div>
+                                                <h6 class="achievement-title">{{ achievement.title }}</h6>
+                                                <p class="achievement-description small">{{ achievement.description }}
+                                                </p>
+                                                <span class="badge bg-success" *ngIf="achievement.earned">Earned</span>
+                                                <span class="badge bg-secondary"
+                                                    *ngIf="!achievement.earned">Locked</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- History Tab -->
+                        <div class="tab-pane fade" id="history" role="tabpanel">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title mb-4">Test History</h5>
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Test Type</th>
+                                                    <th>Subject</th>
+                                                    <th>Score</th>
+                                                    <th>Date</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr *ngFor="let test of testHistory">
+                                                    <td>{{ test.type }}</td>
+                                                    <td>{{ test.subject }}</td>
+                                                    <td>
+                                                        <span class="badge" [class]="'bg-' + getScoreColor(test.score)">
+                                                            {{ test.score }}%
+                                                        </span>
+                                                    </td>
+                                                    <td>{{ test.date | date:'short' }}</td>
+                                                    <td>
+                                                        <button class="btn btn-sm btn-outline-primary">View</button>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,118 @@
+import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
+import { MockTestService } from '../../../core/services/mock-test.service';
+import { LanguageService } from '../../../core/services/language.service';
+import { MockTestAttempt, MockTestResult } from '../../../core/models/mock-test.model';
+
+@Component({
+    selector: 'app-mock-test-result',
+    templateUrl: './mock-test-result.component.html',
+    styleUrls: ['./mock-test-result.component.css']
+})
+export class MockTestResultComponent implements OnInit {
+    mockTest: MockTestAttempt | null = null;
+    result: MockTestResult | null = null;
+    answers: Map<number, number> = new Map();
+    isLoading = false;
+    Math = Math;
+
+    constructor(
+        private router: Router,
+        private mockTestService: MockTestService,
+        public languageService: LanguageService
+    ) { }
+
+    ngOnInit(): void {
+        const navigation = this.router.getCurrentNavigation();
+        const resultData = navigation?.extras?.state;
+
+        if (resultData) {
+            this.result = resultData['result'];
+            this.mockTest = resultData['mockTest'];
+            this.answers = resultData['answers'] || new Map();
+        } else {
+            // Redirect if no result data
+            this.router.navigate(['/mock-test']);
+        }
+    }
+
+    get scorePercentage(): number {
+        if (!this.result) return 0;
+        return Math.round((this.result.correctAnswers / this.result.totalQuestions) * 100);
+    }
+
+    get performanceLevel(): string {
+        const percentage = this.scorePercentage;
+        if (percentage >= 90) return 'Excellent';
+        if (percentage >= 80) return 'Very Good';
+        if (percentage >= 70) return 'Good';
+        if (percentage >= 60) return 'Average';
+        if (percentage >= 50) return 'Below Average';
+        return 'Needs Improvement';
+    }
+
+    get performanceColor(): string {
+        const percentage = this.scorePercentage;
+        if (percentage >= 90) return 'success';
+        if (percentage >= 80) return 'info';
+        if (percentage >= 70) return 'primary';
+        if (percentage >= 60) return 'warning';
+        return 'danger';
+    }
+
+    get accuracyRate(): number {
+        if (!this.result) return 0;
+        return Math.round((this.result.correctAnswers / this.result.totalQuestions) * 100);
+    }
+
+    get averageTimePerQuestion(): number {
+        if (!this.result || !this.result.totalQuestions) return 0;
+        return Math.round(this.result.timeTakenMinutes / this.result.totalQuestions);
+    }
+
+    goToDashboard(): void {
+        this.router.navigate(['/dashboard']);
+    }
+
+    startNewTest(): void {
+        this.router.navigate(['/mock-test']);
+    }
+
+    viewDetailedAnalysis(): void {
+        // Navigate to detailed analysis page
+        this.router.navigate(['/analytics'], {
+            state: {
+                mockTestId: this.mockTest?.id,
+                result: this.result
+            }
+        });
+    }
+
+    shareResult(): void {
+        if (navigator.share) {
+            navigator.share({
+                title: 'My TNPSC Mock Test Result',
+                text: `I scored ${this.scorePercentage}% on my TNPSC mock test!`,
+                url: window.location.href
+            });
+        } else {
+            // Fallback: copy to clipboard
+            const text = `I scored ${this.scorePercentage}% on my TNPSC mock test!`;
+            navigator.clipboard.writeText(text).then(() => {
+                // Show toast notification
+                console.log('Result copied to clipboard');
+            });
+        }
+    }
+
+    downloadCertificate(): void {
+        // Implementation for downloading certificate
+        console.log('Downloading certificate...');
+    }
+
+    getSubjectColor(percentage: number): string {
+        if (percentage >= 80) return 'success';
+        if (percentage >= 60) return 'warning';
+        return 'danger';
+    }
+} 

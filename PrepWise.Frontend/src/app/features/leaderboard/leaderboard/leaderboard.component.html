@@ -1,0 +1,223 @@
+<div class="leaderboard-container">
+    <!-- Header -->
+    <header class="leaderboard-header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col">
+                    <button class="btn btn-outline-light" (click)="goToDashboard()">
+                        <i class="bi bi-arrow-left me-2"></i>
+                        Back to Dashboard
+                    </button>
+                </div>
+                <div class="col-auto">
+                    <h1 class="leaderboard-title">
+                        <i class="bi bi-trophy me-3"></i>
+                        Leaderboard
+                    </h1>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Filters -->
+    <div class="filters-section">
+        <div class="container">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label for="subjectFilter" class="form-label">Subject</label>
+                    <select id="subjectFilter" class="form-select" [(ngModel)]="selectedSubjectId"
+                        (change)="onSubjectChange()">
+                        <option [value]="null">All Subjects</option>
+                        <option *ngFor="let subject of subjects" [value]="subject.id">
+                            {{ subject.name }}
+                        </option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label for="timeFrameFilter" class="form-label">Time Frame</label>
+                    <select id="timeFrameFilter" class="form-select" [(ngModel)]="selectedTimeFrame"
+                        (change)="onTimeFrameChange()">
+                        <option *ngFor="let timeFrame of timeFrames" [value]="timeFrame.value">
+                            {{ timeFrame.label }}
+                        </option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Current User Rank -->
+    <div class="current-user-section" *ngIf="currentUserRank && currentUserScore">
+        <div class="container">
+            <div class="current-user-card">
+                <div class="user-rank-info">
+                    <div class="rank-badge" [class]="getRankClass(currentUserRank)">
+                        {{ getRankBadge(currentUserRank) }}
+                    </div>
+                    <div class="user-details">
+                        <h4 class="user-name">Your Rank</h4>
+                        <p class="user-score">
+                            Score: <span [class]="getScoreColor(currentUserScore)">{{ currentUserScore }}%</span>
+                        </p>
+                    </div>
+                </div>
+                <div class="user-actions">
+                    <button class="btn btn-outline-primary" (click)="shareLeaderboard()">
+                        <i class="bi bi-share me-2"></i>
+                        Share
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaderboard Table -->
+    <div class="leaderboard-content">
+        <div class="container">
+            <div class="leaderboard-card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="bi bi-list-ol me-2"></i>
+                        Top Performers
+                    </h3>
+                    <p class="card-subtitle">
+                        {{ selectedSubjectId ? 'Subject-specific rankings' : 'Overall rankings' }}
+                        • {{ timeFrames.find(t => t.value === selectedTimeFrame)?.label }}
+                    </p>
+                </div>
+
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th scope="col" class="rank-column">Rank</th>
+                                    <th scope="col" class="user-column">User</th>
+                                    <th scope="col" class="score-column">Score</th>
+                                    <th scope="col" class="accuracy-column">Accuracy</th>
+                                    <th scope="col" class="tests-column">Tests</th>
+                                    <th scope="col" class="actions-column">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let entry of leaderboardData; let i = index"
+                                    [class.current-user]="entry.isCurrentUser" class="leaderboard-row">
+                                    <td class="rank-cell">
+                                        <div class="rank-display" [class]="getRankClass(i + 1)">
+                                            <span class="rank-number">{{ getRankBadge(i + 1) }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="user-cell">
+                                        <div class="user-info">
+                                            <div class="user-avatar">
+                                                <i class="bi bi-person-circle"></i>
+                                            </div>
+                                            <div class="user-details">
+                                                <h6 class="user-name">{{ entry.userName }}</h6>
+                                                <p class="user-location">{{ entry.location || 'Tamil Nadu' }}</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="score-cell">
+                                        <div class="score-display">
+                                            <span class="score-value" [class]="getScoreColor(entry.score)">
+                                                {{ entry.score }}%
+                                            </span>
+                                            <div class="score-bar">
+                                                <div class="score-progress" [style.width.%]="entry.score"
+                                                    [class]="'bg-' + getScoreColor(entry.score).replace('text-', '')">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="accuracy-cell">
+                                        <span class="accuracy-value">{{ entry.accuracy }}%</span>
+                                    </td>
+                                    <td class="tests-cell">
+                                        <span class="tests-count">{{ entry.testsTaken }}</span>
+                                    </td>
+                                    <td class="actions-cell">
+                                        <button class="btn btn-sm btn-outline-primary"
+                                            (click)="viewUserProfile(entry.userId)">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Empty State -->
+                    <div class="empty-state" *ngIf="!isLoading && leaderboardData.length === 0">
+                        <div class="empty-icon">
+                            <i class="bi bi-trophy"></i>
+                        </div>
+                        <h4 class="empty-title">No Rankings Yet</h4>
+                        <p class="empty-description">
+                            Be the first to take a test and claim the top spot!
+                        </p>
+                        <button class="btn btn-primary" (click)="goToDashboard()">
+                            <i class="bi bi-play-circle me-2"></i>
+                            Start Your First Test
+                        </button>
+                    </div>
+
+                    <!-- Loading State -->
+                    <div class="loading-state" *ngIf="isLoading">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="loading-text">Loading leaderboard...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Section -->
+    <div class="statistics-section">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="stat-card">
+                        <div class="stat-icon bg-primary">
+                            <i class="bi bi-people"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h4 class="stat-value">{{ leaderboardData.length }}</h4>
+                            <p class="stat-label">Active Participants</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card">
+                        <div class="stat-icon bg-success">
+                            <i class="bi bi-graph-up"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h4 class="stat-value">
+                                {{ leaderboardData.length > 0 ? Math.round(leaderboardData.reduce((sum, entry) => sum +
+                                entry.score, 0) / leaderboardData.length) : 0 }}%
+                            </h4>
+                            <p class="stat-label">Average Score</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card">
+                        <div class="stat-icon bg-warning">
+                            <i class="bi bi-calendar-check"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h4 class="stat-value">
+                                {{ leaderboardData.length > 0 ? Math.round(leaderboardData.reduce((sum, entry) => sum +
+                                entry.testsTaken, 0) / leaderboardData.length) : 0 }}
+                            </h4>
+                            <p class="stat-label">Avg. Tests Taken</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

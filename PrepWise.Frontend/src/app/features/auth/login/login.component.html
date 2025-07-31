@@ -1,0 +1,107 @@
+<div class="login-container">
+    <!-- Header -->
+    <div class="auth-form-header">
+        <h2 class="auth-title">{{ languageService.translate('auth.login') }}</h2>
+        <p class="auth-subtitle">Welcome back! Please sign in to your account</p>
+    </div>
+
+    <!-- Login Form -->
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="auth-form">
+        <!-- Email Field -->
+        <div class="form-floating mb-3">
+            <input type="email" class="form-control" [class.is-invalid]="isFieldInvalid('email')" id="email"
+                formControlName="email" placeholder="name@example.com" autocomplete="email">
+            <label for="email">
+                <i class="bi bi-envelope me-2"></i>
+                {{ languageService.translate('auth.email') }}
+            </label>
+            <div class="invalid-feedback" *ngIf="isFieldInvalid('email')">
+                {{ getFieldError('email') }}
+            </div>
+        </div>
+
+        <!-- Password Field -->
+        <div class="form-floating mb-3">
+            <input [type]="showPassword ? 'text' : 'password'" class="form-control"
+                [class.is-invalid]="isFieldInvalid('password')" id="password" formControlName="password"
+                placeholder="Password" autocomplete="current-password">
+            <label for="password">
+                <i class="bi bi-lock me-2"></i>
+                {{ languageService.translate('auth.password') }}
+            </label>
+            <button type="button" class="password-toggle" (click)="togglePasswordVisibility()"
+                [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'">
+                <i [class]="showPassword ? 'bi bi-eye-slash' : 'bi bi-eye'"></i>
+            </button>
+            <div class="invalid-feedback" *ngIf="isFieldInvalid('password')">
+                {{ getFieldError('password') }}
+            </div>
+        </div>
+
+        <!-- Remember Me & Forgot Password -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" formControlName="rememberMe" id="rememberMe">
+                <label class="form-check-label" for="rememberMe">
+                    {{ languageService.translate('auth.rememberMe') }}
+                </label>
+            </div>
+            <a href="#" class="forgot-password-link">
+                {{ languageService.translate('auth.forgotPassword') }}
+            </a>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="btn btn-primary btn-lg w-100 mb-3" [disabled]="isLoading">
+            <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </span>
+            {{ languageService.translate('auth.login') }}
+        </button>
+
+        <!-- Demo Login (Development) -->
+        <div class="demo-section" *ngIf="true">
+            <hr class="my-3">
+            <p class="text-center text-muted small mb-2">Quick Demo Access</p>
+            <button type="button" class="btn btn-outline-secondary btn-sm w-100" (click)="quickLogin('demo')"
+                [disabled]="isLoading">
+                <i class="bi bi-person-gear me-2"></i>
+                Demo Login
+            </button>
+        </div>
+    </form>
+
+    <!-- Register Link -->
+    <div class="auth-form-footer">
+        <p class="register-text">
+            Don't have an account?
+            <button type="button" class="btn-link" (click)="navigateToRegister()" [disabled]="isLoading">
+                {{ languageService.translate('auth.register') }}
+            </button>
+        </p>
+    </div>
+
+    <!-- Features Highlight -->
+    <div class="features-highlight">
+        <div class="row text-center">
+            <div class="col-4">
+                <div class="feature-item">
+                    <i class="bi bi-cpu feature-icon"></i>
+                    <p class="feature-text">AI-Powered Questions</p>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="feature-item">
+                    <i class="bi bi-translate feature-icon"></i>
+                    <p class="feature-text">Multi-Language Support</p>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="feature-item">
+                    <i class="bi bi-trophy feature-icon"></i>
+                    <p class="feature-text">Performance Analytics</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

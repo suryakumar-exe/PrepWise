@@ -1,0 +1,118 @@
+<div class="quiz-result-container">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <!-- Header -->
+                <div class="result-header text-center mb-4">
+                    <h1 class="result-title">Quiz Result</h1>
+                    <p class="result-subtitle">Here's how you performed</p>
+                </div>
+
+                <!-- Loading Spinner -->
+                <app-loading-spinner *ngIf="isLoading" size="large" text="Loading result...">
+                </app-loading-spinner>
+
+                <!-- Result Content -->
+                <div *ngIf="!isLoading && quizResult" class="result-content">
+                    <!-- Score Overview -->
+                    <div class="score-overview card mb-4">
+                        <div class="card-body text-center">
+                            <div class="score-circle">
+                                <div class="score-number">{{ quizResult.score }}%</div>
+                                <div class="score-label">Your Score</div>
+                            </div>
+                            <div class="performance-level mt-3">
+                                <span class="badge" [class]="'bg-' + getPerformanceColor(quizResult.score)">
+                                    {{ getPerformanceLevel(quizResult.score) }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Performance Metrics -->
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <div class="metric-card card text-center">
+                                <div class="card-body">
+                                    <div class="metric-icon text-success">
+                                        <i class="bi bi-check-circle-fill"></i>
+                                    </div>
+                                    <div class="metric-value">{{ quizResult.correctAnswers }}</div>
+                                    <div class="metric-label">Correct</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="metric-card card text-center">
+                                <div class="card-body">
+                                    <div class="metric-icon text-danger">
+                                        <i class="bi bi-x-circle-fill"></i>
+                                    </div>
+                                    <div class="metric-value">{{ quizResult.wrongAnswers }}</div>
+                                    <div class="metric-label">Wrong</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="metric-card card text-center">
+                                <div class="card-body">
+                                    <div class="metric-icon text-warning">
+                                        <i class="bi bi-clock-fill"></i>
+                                    </div>
+                                    <div class="metric-value">{{ quizResult.timeTaken | timeFormat }}</div>
+                                    <div class="metric-label">Time Taken</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Subject Performance -->
+                    <div class="subject-performance card mb-4" *ngIf="quizResult.subjectPerformance">
+                        <div class="card-header">
+                            <h5 class="mb-0">Subject-wise Performance</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="subject-item" *ngFor="let subject of quizResult.subjectPerformance">
+                                <div class="subject-info">
+                                    <span class="subject-name">{{ subject.subjectName }}</span>
+                                    <span class="subject-score">{{ subject.score }}%</span>
+                                </div>
+                                <div class="progress">
+                                    <div class="progress-bar" [class]="'bg-' + getPerformanceColor(subject.score)"
+                                        [style.width.%]="subject.score"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="action-buttons text-center">
+                        <button class="btn btn-primary btn-lg me-3" (click)="onStartNewQuiz()">
+                            <i class="bi bi-play-circle me-2"></i>
+                            Start New Quiz
+                        </button>
+                        <button class="btn btn-outline-primary btn-lg me-3" (click)="onViewAnalytics()">
+                            <i class="bi bi-graph-up me-2"></i>
+                            View Analytics
+                        </button>
+                        <button class="btn btn-outline-secondary btn-lg" (click)="onShareResult()">
+                            <i class="bi bi-share me-2"></i>
+                            Share Result
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Error State -->
+                <div *ngIf="!isLoading && !quizResult" class="text-center">
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        No quiz result found. Please try again.
+                    </div>
+                    <button class="btn btn-primary" (click)="onStartNewQuiz()">
+                        Start a New Quiz
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,169 @@
+<div class="mock-test-play-container" *ngIf="mockTest">
+    <!-- Header -->
+    <header class="test-header">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col">
+                    <h1 class="test-title">{{ mockTest.title }}</h1>
+                    <p class="test-subtitle">Question {{ currentQuestionIndex + 1 }} of {{ questions.length }}</p>
+                </div>
+                <div class="col-auto">
+                    <div class="header-controls">
+                        <div class="timer-container">
+                            <i class="bi bi-clock text-warning me-2"></i>
+                            <span class="timer" [class.warning]="timeRemaining <= 300">
+                                {{ timeRemainingFormatted }}
+                            </span>
+                        </div>
+                        <button class="btn btn-outline-danger ms-3" (click)="confirmExit()">
+                            <i class="bi bi-x-circle me-2"></i>
+                            Exit Test
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Progress Bar -->
+    <div class="progress-container">
+        <div class="container-fluid">
+            <div class="progress">
+                <div class="progress-bar" [style.width.%]="progressPercentage" role="progressbar">
+                    {{ Math.round(progressPercentage) }}%
+                </div>
+            </div>
+            <div class="progress-stats">
+                <span class="stat-item">
+                    <i class="bi bi-check-circle text-success me-1"></i>
+                    {{ answeredQuestionsCount }} Answered
+                </span>
+                <span class="stat-item">
+                    <i class="bi bi-question-circle text-warning me-1"></i>
+                    {{ questions.length - answeredQuestionsCount }} Remaining
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Question Panel -->
+            <div class="col-lg-8">
+                <div class="question-panel">
+                    <div class="question-container" *ngIf="currentQuestion">
+                        <div class="question-header">
+                            <span class="question-number">Question {{ currentQuestionIndex + 1 }}</span>
+                            <span class="question-difficulty" [class]="'badge-' + currentQuestion.difficulty">
+                                {{ currentQuestion.difficulty }}
+                            </span>
+                        </div>
+
+                        <div class="question-content">
+                            <h3 class="question-text">{{ currentQuestion.questionText }}</h3>
+                            <p class="question-text-tamil" *ngIf="currentQuestion.questionTextTamil">
+                                {{ currentQuestion.questionTextTamil }}
+                            </p>
+                        </div>
+
+                        <div class="options-container">
+                            <div class="option-item" *ngFor="let option of currentQuestion.options; let i = index"
+                                [class.selected]="isAnswerSelected(currentQuestion.id, option.id)"
+                                (click)="selectAnswer(currentQuestion.id, option.id)">
+                                <div class="option-marker">
+                                    <span class="option-letter">{{ String.fromCharCode(65 + i) }}</span>
+                                </div>
+                                <div class="option-content">
+                                    <span class="option-text">{{ option.optionText }}</span>
+                                    <span class="option-text-tamil" *ngIf="option.optionTextTamil">
+                                        {{ option.optionTextTamil }}
+                                    </span>
+                                </div>
+                                <div class="option-check">
+                                    <i class="bi bi-check-circle-fill"
+                                        *ngIf="isAnswerSelected(currentQuestion.id, option.id)"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Navigation Buttons -->
+                    <div class="question-navigation">
+                        <button class="btn btn-outline-primary" (click)="previousQuestion()"
+                            [disabled]="currentQuestionIndex === 0">
+                            <i class="bi bi-arrow-left me-2"></i>
+                            Previous
+                        </button>
+
+                        <button class="btn btn-primary" (click)="nextQuestion()"
+                            [disabled]="currentQuestionIndex === questions.length - 1">
+                            Next
+                            <i class="bi bi-arrow-right ms-2"></i>
+                        </button>
+
+                        <button class="btn btn-success" (click)="submitTest()" [disabled]="isLoading">
+                            <span *ngIf="!isLoading">
+                                <i class="bi bi-check-circle me-2"></i>
+                                Submit Test
+                            </span>
+                            <span *ngIf="isLoading">
+                                <i class="bi bi-hourglass-split me-2"></i>
+                                Submitting...
+                            </span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Question Navigator -->
+            <div class="col-lg-4">
+                <div class="question-navigator">
+                    <div class="navigator-header">
+                        <h4 class="navigator-title">
+                            <i class="bi bi-grid me-2"></i>
+                            Question Navigator
+                        </h4>
+                        <p class="navigator-subtitle">Click to jump to any question</p>
+                    </div>
+
+                    <div class="question-grid">
+                        <div class="question-item" *ngFor="let question of questions; let i = index"
+                            [class.current]="i === currentQuestionIndex"
+                            [class.answered]="isQuestionAnswered(question.id)"
+                            [class.unanswered]="!isQuestionAnswered(question.id)" (click)="goToQuestion(i)">
+                            <span class="question-number">{{ i + 1 }}</span>
+                            <div class="question-status">
+                                <i class="bi bi-check-circle-fill" *ngIf="isQuestionAnswered(question.id)"></i>
+                                <i class="bi bi-question-circle" *ngIf="!isQuestionAnswered(question.id)"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="navigator-legend">
+                        <div class="legend-item">
+                            <div class="legend-marker current"></div>
+                            <span>Current Question</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-marker answered"></div>
+                            <span>Answered</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-marker unanswered"></div>
+                            <span>Unanswered</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading State -->
+<div class="loading-container" *ngIf="!mockTest">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="loading-text">Loading your mock test...</p>
+</div>

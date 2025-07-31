@@ -1,0 +1,223 @@
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Router, ActivatedRoute } from '@angular/router';
+import { Subject } from 'rxjs';
+import { takeUntil, finalize } from 'rxjs/operators';
+
+import { QuizService } from '../../../core/services/quiz.service';
+import { AuthService } from '../../../core/services/auth.service';
+import { LanguageService } from '../../../core/services/language.service';
+import { Subject as SubjectModel, QuestionDifficulty, QuestionLanguage } from '../../../core/models/quiz.model';
+import { User } from '../../../core/models/user.model';
+
+@Component({
+    selector: 'app-quiz-start',
+    templateUrl: './quiz-start.component.html',
+    styleUrls: ['./quiz-start.component.css']
+})
+export class QuizStartComponent implements OnInit, OnDestroy {
+    quizForm!: FormGroup;
+    subjects: SubjectModel[] = [];
+    currentUser: User | null = null;
+    isLoading = false;
+    isStartingQuiz = false;
+    selectedSubjectId: number | null = null;
+
+    private destroy$ = new Subject<void>();
+
+    // Options for form
+    difficultyOptions = [
+        { value: QuestionDifficulty.Easy, label: 'Easy', description: 'Basic level questions' },
+        { value: QuestionDifficulty.Medium, label: 'Medium', description: 'Intermediate level questions' },
+        { value: QuestionDifficulty.Hard, label: 'Hard', description: 'Advanced level questions' }
+    ];
+
+    languageOptions = [
+        { value: QuestionLanguage.English, label: 'English', flag: '🇺🇸' },
+        { value: QuestionLanguage.Tamil, label: 'Tamil', flag: '🇮🇳' }
+    ];
+
+    questionCountOptions = [
+        { value: 10, label: '10 Questions', duration: '10 mins' },
+        { value: 20, label: '20 Questions', duration: '20 mins' },
+        { value: 30, label: '30 Questions', duration: '30 mins' },
+        { value: 50, label: '50 Questions', duration: '50 mins' }
+    ];
+
+    timeLimitOptions = [
+        { value: 10, label: '10 minutes', description: 'Quick practice' },
+        { value: 20, label: '20 minutes', description: 'Standard practice' },
+        { value: 30, label: '30 minutes', description: 'Extended practice' },
+        { value: 45, label: '45 minutes', description: 'Comprehensive practice' },
+        { value: 60, label: '60 minutes', description: 'Full practice session' }
+    ];
+
+    constructor(
+        private formBuilder: FormBuilder,
+        private quizService: QuizService,
+        private authService: AuthService,
+        private languageService: LanguageService,
+        private router: Router,
+        private route: ActivatedRoute
+    ) { }
+
+    ngOnInit(): void {
+        this.initializeForm();
+        this.loadCurrentUser();
+        this.loadSubjects();
+        this.checkQueryParams();
+    }
+
+    ngOnDestroy(): void {
+        this.destroy$.next();
+        this.destroy$.complete();
+    }
+
+    private initializeForm(): void {
+        this.quizForm = this.formBuilder.group({
+            subjectId: ['', [Validators.required]],
+            difficulty: [QuestionDifficulty.Medium, [Validators.required]],
+            language: [QuestionLanguage.English, [Validators.required]],
+            questionCount: [20, [Validators.required, Validators.min(5), Validators.max(100)]],
+            timeLimitMinutes: [20, [Validators.required, Validators.min(5), Validators.max(120)]]
+        });
+    }
+
+    private loadCurrentUser(): void {
+        this.authService.currentUser$
+            .pipe(takeUntil(this.destroy$))
+            .subscribe(user => {
+                this.currentUser = user;
+            });
+    }
+
+    private loadSubjects(): void {
+        this.isLoading = true;
+        this.quizService.getSubjects()
+            .pipe(
+                takeUntil(this.destroy$),
+                finalize(() => this.isLoading = false)
+            )
+            .subscribe({
+                next: (subjects) => {
+                    this.subjects = subjects.filter(s => s.isActive);
+                },
+                error: (error) => {
+                    console.error('Error loading subjects:', error);
+                    // Use mock subjects if API fails
+                    this.subjects = this.getMockSubjects();
+                }
+            });
+    }
+
+    private checkQueryParams(): void {
+        this.route.queryParams
+            .pipe(takeUntil(this.destroy$))
+            .subscribe(params => {
+                if (params['subject']) {
+                    const subjectId = parseInt(params['subject'], 10);
+                    this.selectedSubjectId = subjectId;
+                    this.quizForm.patchValue({ subjectId });
+                }
+            });
+    }
+
+    private getMockSubjects(): SubjectModel[] {
+        return [
+            { id: 1, name: 'Tamil Subject Quiz', description: 'Standard 6th to 10th Tamil', isActive: true },
+            { id: 2, name: 'Tamil Grammar', description: 'Grammar, Literature, Comprehension', isActive: true },
+            { id: 3, name: 'Simplification', description: 'Mathematical Simplification', isActive: true },
+            { id: 4, name: 'Percentage', description: 'Percentage Calculations', isActive: true },
+            { id: 5, name: 'HCF and LCM', description: 'Highest Common Factor & LCM', isActive: true },
+            { id: 6, name: 'Ratio and Proportion', description: 'Ratio and Proportion Problems', isActive: true },
+            { id: 7, name: 'Area and Volume', description: 'Area and Volume Calculations', isActive: true },
+            { id: 8, name: 'General Science', description: 'Physics, Chemistry, Biology', isActive: true },
+            { id: 9, name: 'Current Events', description: 'Current Affairs & News', isActive: true },
+            { id: 10, name: 'Geography', description: 'Indian and World Geography', isActive: true },
+            { id: 11, name: 'History and Culture', description: 'Indian History & Culture', isActive: true },
+            { id: 12, name: 'Indian Polity', description: 'Constitution and Politics', isActive: true }
+        ];
+    }
+
+    onSubjectSelect(subjectId: number): void {
+        this.selectedSubjectId = subjectId;
+        this.quizForm.patchValue({ subjectId });
+    }
+
+    onStartQuiz(): void {
+        if (this.quizForm.valid && this.currentUser) {
+            this.isStartingQuiz = true;
+
+            const quizData = {
+                userId: this.currentUser.id,
+                subjectId: this.quizForm.value.subjectId,
+                questionCount: this.quizForm.value.questionCount,
+                timeLimitMinutes: this.quizForm.value.timeLimitMinutes
+            };
+
+            this.quizService.startQuizAttempt(quizData)
+                .pipe(
+                    takeUntil(this.destroy$),
+                    finalize(() => this.isStartingQuiz = false)
+                )
+                .subscribe({
+                    next: (result) => {
+                        if (result.success && result.quizAttempt) {
+                            this.router.navigate(['/quiz/play', result.quizAttempt.id]);
+                        }
+                    },
+                    error: (error) => {
+                        console.error('Error starting quiz:', error);
+                    }
+                });
+        } else {
+            this.markFormGroupTouched();
+        }
+    }
+
+    onBackToDashboard(): void {
+        this.router.navigate(['/dashboard']);
+    }
+
+    // Helper methods
+    isFieldInvalid(fieldName: string): boolean {
+        const field = this.quizForm.get(fieldName);
+        return !!(field && field.invalid && (field.dirty || field.touched));
+    }
+
+    getFieldError(fieldName: string): string {
+        const field = this.quizForm.get(fieldName);
+        if (field && field.errors && (field.dirty || field.touched)) {
+            if (field.errors['required']) {
+                return `${fieldName} is required`;
+            }
+            if (field.errors['min']) {
+                return `Minimum value is ${field.errors['min'].min}`;
+            }
+            if (field.errors['max']) {
+                return `Maximum value is ${field.errors['max'].max}`;
+            }
+        }
+        return '';
+    }
+
+    private markFormGroupTouched(): void {
+        Object.keys(this.quizForm.controls).forEach(key => {
+            const control = this.quizForm.get(key);
+            control?.markAsTouched();
+        });
+    }
+
+    getSelectedSubject(): SubjectModel | undefined {
+        return this.subjects.find(s => s.id === this.selectedSubjectId);
+    }
+
+    getDifficultyColor(difficulty: QuestionDifficulty): string {
+        switch (difficulty) {
+            case QuestionDifficulty.Easy: return 'success';
+            case QuestionDifficulty.Medium: return 'warning';
+            case QuestionDifficulty.Hard: return 'danger';
+            default: return 'secondary';
+        }
+    }
+} 

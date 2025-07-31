@@ -1,0 +1,308 @@
+.score-card {
+    background: white;
+    border-radius: 1.5rem;
+    box-shadow: var(--shadow-lg);
+    padding: 2rem;
+    text-align: center;
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+}
+
+.score-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.score-card.animated {
+    animation: scoreCardAppear 0.6s ease-out;
+}
+
+.score-header {
+    margin-bottom: 2rem;
+}
+
+.score-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.score-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.score-main {
+    margin-bottom: 2rem;
+}
+
+.score-circle {
+    position: relative;
+    display: inline-block;
+    margin-bottom: 1.5rem;
+}
+
+.progress-ring {
+    transform: rotate(-90deg);
+}
+
+.progress-ring-circle {
+    transition: stroke-dashoffset 1.5s ease-in-out;
+    stroke-linecap: round;
+}
+
+.score-percentage {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.percentage-number {
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.grade-badge {
+    font-size: 0.875rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-weight: 600;
+}
+
+.performance-message {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.score-stats {
+    margin-bottom: 1.5rem;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    border-radius: 0.75rem;
+    background-color: rgba(0, 0, 0, 0.02);
+    border: 1px solid var(--border-color);
+    transition: all 0.2s ease;
+}
+
+.stat-item:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow);
+}
+
+.stat-success {
+    border-left: 4px solid var(--success-color);
+}
+
+.stat-danger {
+    border-left: 4px solid var(--danger-color);
+}
+
+.stat-secondary {
+    border-left: 4px solid var(--secondary-color);
+}
+
+.stat-info {
+    border-left: 4px solid #17a2b8;
+}
+
+.stat-icon {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 0.75rem;
+    font-size: 1rem;
+}
+
+.stat-success .stat-icon {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: var(--success-color);
+}
+
+.stat-danger .stat-icon {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: var(--danger-color);
+}
+
+.stat-secondary .stat-icon {
+    background-color: rgba(100, 116, 139, 0.1);
+    color: var(--secondary-color);
+}
+
+.stat-info .stat-icon {
+    background-color: rgba(23, 162, 184, 0.1);
+    color: #17a2b8;
+}
+
+.stat-content {
+    flex: 1;
+    text-align: left;
+}
+
+.stat-number {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-top: 0.25rem;
+}
+
+.score-summary {
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.summary-text {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+/* Size Variants */
+.score-card-small {
+    padding: 1.5rem;
+}
+
+.score-card-small .score-icon {
+    font-size: 2rem;
+}
+
+.score-card-small .score-title {
+    font-size: 1.25rem;
+}
+
+.score-card-small .percentage-number {
+    font-size: 1.5rem;
+}
+
+.score-card-large {
+    padding: 3rem;
+}
+
+.score-card-large .score-icon {
+    font-size: 4rem;
+}
+
+.score-card-large .score-title {
+    font-size: 2rem;
+}
+
+.score-card-large .percentage-number {
+    font-size: 2.5rem;
+}
+
+/* Animations */
+@keyframes scoreCardAppear {
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.9);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.score-card.animated .progress-ring-circle {
+    animation: drawCircle 1.5s ease-in-out 0.5s both;
+}
+
+@keyframes drawCircle {
+    from {
+        stroke-dashoffset: 283;
+        /* Full circumference */
+    }
+}
+
+.score-card.animated .stat-item {
+    animation: statItemSlide 0.4s ease-out both;
+}
+
+.score-card.animated .stat-item:nth-child(1) {
+    animation-delay: 0.8s;
+}
+
+.score-card.animated .stat-item:nth-child(2) {
+    animation-delay: 1.0s;
+}
+
+.score-card.animated .stat-item:nth-child(3) {
+    animation-delay: 1.2s;
+}
+
+.score-card.animated .stat-item:nth-child(4) {
+    animation-delay: 1.4s;
+}
+
+@keyframes statItemSlide {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .score-card {
+        padding: 1.5rem;
+    }
+
+    .score-icon {
+        font-size: 2.5rem;
+    }
+
+    .score-title {
+        font-size: 1.25rem;
+    }
+
+    .percentage-number {
+        font-size: 1.5rem;
+    }
+
+    .stat-item {
+        padding: 0.75rem;
+    }
+
+    .stat-number {
+        font-size: 1.1rem;
+    }
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+    .score-card {
+        background: var(--dark-bg);
+        border-color: var(--border-color);
+    }
+
+    .stat-item {
+        background-color: rgba(255, 255, 255, 0.02);
+        border-color: var(--border-color);
+    }
+}
