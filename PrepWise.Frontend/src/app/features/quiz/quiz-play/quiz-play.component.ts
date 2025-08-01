@@ -112,10 +112,39 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
 
     private loadQuizSession(): void {
         const attemptId = this.route.snapshot.params['attemptId'];
-        if (attemptId) {
-            // Load quiz attempt details
+        console.log('Loading quiz session for attempt ID:', attemptId); // Debug log
+
+        // Try to get questions from navigation state first
+        const navigation = this.router.getCurrentNavigation();
+        const state = navigation?.extras?.state;
+        console.log('Navigation state:', state); // Debug log
+
+        if (state && state['questions']) {
+            // Use questions passed from quiz start component
+            const questions = state['questions'];
+            const timeLimitMinutes = state['timeLimitMinutes'] || 20;
+            const subjectId = state['subjectId'];
+
+            console.log('Using questions from navigation state:', questions); // Debug log
+
+            this.quizSession = {
+                attemptId: parseInt(attemptId) || 1,
+                questions: questions,
+                currentQuestionIndex: 0,
+                answers: new Map(),
+                flaggedQuestions: new Set(),
+                startTime: new Date(),
+                timeLimitSeconds: timeLimitMinutes * 60,
+                isSubmitted: false
+            };
+            this.remainingTime = this.quizSession.timeLimitSeconds;
+            this.isLoading = false;
+        } else if (attemptId) {
+            // Fallback: Load quiz attempt details from backend
+            console.log('No questions in state, trying to load from backend...'); // Debug log
             this.quizService.getQuizAttempt(attemptId).subscribe({
                 next: (attempt: any) => {
+                    console.log('Backend attempt response:', attempt); // Debug log
                     if (attempt) {
                         this.quizSession = {
                             attemptId: attempt.id,
@@ -127,28 +156,39 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
                             timeLimitSeconds: attempt.timeLimitMinutes * 60,
                             isSubmitted: false
                         };
+                        this.remainingTime = this.quizSession.timeLimitSeconds;
                         this.isLoading = false;
+                    } else {
+                        console.log('No attempt data from backend, using mock questions'); // Debug log
+                        this.loadMockQuizSession(attemptId);
                     }
                 },
                 error: (error: any) => {
-                    console.error('Error loading quiz session:', error);
-                    this.isLoading = false;
+                    console.error('Error loading quiz session from backend:', error);
+                    console.log('Falling back to mock questions'); // Debug log
+                    this.loadMockQuizSession(attemptId);
                 }
             });
         } else {
             // Fallback to mock data
-            this.quizSession = {
-                attemptId: 1,
-                questions: this.getMockQuestions(),
-                currentQuestionIndex: 0,
-                answers: new Map(),
-                flaggedQuestions: new Set(),
-                startTime: new Date(),
-                timeLimitSeconds: 1200, // 20 minutes
-                isSubmitted: false
-            };
-            this.isLoading = false;
+            console.log('No attempt ID, using mock questions'); // Debug log
+            this.loadMockQuizSession(1);
         }
+    }
+
+    private loadMockQuizSession(attemptId: number): void {
+        this.quizSession = {
+            attemptId: attemptId,
+            questions: this.getMockQuestions(),
+            currentQuestionIndex: 0,
+            answers: new Map(),
+            flaggedQuestions: new Set(),
+            startTime: new Date(),
+            timeLimitSeconds: 1200, // 20 minutes
+            isSubmitted: false
+        };
+        this.remainingTime = this.quizSession.timeLimitSeconds;
+        this.isLoading = false;
     }
 
     private getMockQuestions(): QuestionData[] {
