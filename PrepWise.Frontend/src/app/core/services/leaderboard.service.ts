@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { map, catchError } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
-import { LeaderboardEntry, Subject, LeaderboardResult } from '../models/leaderboard.model';
+import { LeaderboardResult, LeaderboardEntry } from '../models/leaderboard.model';
 
 @Injectable({
   providedIn: 'root'
@@ -13,66 +13,99 @@ export class LeaderboardService {
 
   constructor(private http: HttpClient) { }
 
-  getLeaderboard(subjectId: number | null, timeFrame: string): Observable<LeaderboardResult> {
-    let url = `${this.apiUrl}/api/leaderboard`;
-    const params: any = { timeFrame };
-    if (subjectId) params.subjectId = subjectId;
+  getLeaderboard(subjectId?: number, timeFrame: string = 'all'): Observable<LeaderboardResult> {
+    const graphqlQuery = {
+      query: `
+                query GetLeaderboard($subjectId: Int, $timeFrame: String) {
+                    leaderboard(subjectId: $subjectId, timeFrame: $timeFrame) {
+                        entries {
+                            userId
+                            userName
+                            score
+                            accuracy
+                            testsTaken
+                            rank
+                            lastActive
+                        }
+                        totalParticipants
+                        userRank
+                        userScore
+                    }
+                }
+            `,
+      variables: {
+        subjectId: subjectId || null,
+        timeFrame: timeFrame
+      }
+    };
 
-    return this.http.get<LeaderboardResult>(url, { params })
+    return this.http.post<any>(`${this.apiUrl}/graphql`, graphqlQuery)
       .pipe(
+        map(response => {
+          const data = response.data?.leaderboard;
+          if (data) {
+            return {
+              entries: data.entries || [],
+              totalParticipants: data.totalParticipants || 0,
+              userRank: data.userRank || 0,
+              userScore: data.userScore || 0,
+              currentUserRank: data.userRank || null,
+              currentUserScore: data.userScore || null
+            };
+          }
+          return this.getMockLeaderboardData();
+        }),
         catchError(error => {
           console.error('Error fetching leaderboard:', error);
-          // Return mock data for now
-          return of({
-            entries: [
-              {
-                id: 1,
-                userId: 1,
-                userName: 'John Doe',
-                location: 'Chennai',
-                score: 95,
-                accuracy: 95,
-                testsTaken: 10,
-                isCurrentUser: true
-              },
-              {
-                id: 2,
-                userId: 2,
-                userName: 'Jane Smith',
-                location: 'Mumbai',
-                score: 92,
-                accuracy: 92,
-                testsTaken: 8,
-                isCurrentUser: false
-              }
-            ],
-            currentUserRank: 1,
-            currentUserScore: 95
-          });
+          return of(this.getMockLeaderboardData());
         })
       );
   }
 
-  getSubjects(): Observable<Subject[]> {
-    return this.http.get<Subject[]>(`${this.apiUrl}/api/subjects`)
-      .pipe(
-        catchError(error => {
-          console.error('Error fetching subjects:', error);
-          return of([
-            {
-              id: 1,
-              name: 'Mathematics',
-              description: 'Basic mathematics concepts',
-              category: 'Science'
-            },
-            {
-              id: 2,
-              name: 'Science',
-              description: 'General science topics',
-              category: 'Science'
-            }
-          ]);
-        })
-      );
+  getGlobalLeaderboard(timeFrame: string = 'all'): Observable<LeaderboardResult> {
+    return this.getLeaderboard(undefined, timeFrame);
+  }
+
+  getSubjectLeaderboard(subjectId: number, timeFrame: string = 'all'): Observable<LeaderboardResult> {
+    return this.getLeaderboard(subjectId, timeFrame);
+  }
+
+  private getMockLeaderboardData(): LeaderboardResult {
+    return {
+      entries: [
+        {
+          userId: 1,
+          userName: 'John Doe',
+          score: 95,
+          accuracy: 92,
+          testsTaken: 15,
+          rank: 1,
+          lastActive: new Date().toISOString()
+        },
+        {
+          userId: 2,
+          userName: 'Jane Smith',
+          score: 88,
+          accuracy: 85,
+          testsTaken: 12,
+          rank: 2,
+          lastActive: new Date().toISOString()
+        },
+        {
+          userId: 3,
+          userName: 'Mike Johnson',
+          score: 82,
+          accuracy: 78,
+          testsTaken: 10,
+          rank: 3,
+          lastActive: new Date().toISOString()
+        }
+      ],
+      totalParticipants: 150,
+      userRank: 5,
+      userScore: 75,
+      currentUserRank: 5,
+      currentUserScore: 75
+    };
   }
 } 

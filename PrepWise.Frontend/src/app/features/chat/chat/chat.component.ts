@@ -71,7 +71,7 @@ How can I assist you today?`,
 
     async loadChatHistory(): Promise<void> {
         try {
-            const history = await this.chatService.getChatHistory().toPromise();
+            const history = await this.chatService.getChatHistory(1).toPromise();
             if (history && history.length > 0) {
                 this.messages = [...this.messages, ...history];
             }
@@ -85,6 +85,8 @@ How can I assist you today?`,
 
         const messageText = this.chatForm.get('message')?.value.trim();
         if (!messageText) return;
+
+        console.log('Sending message:', messageText); // Debug log
 
         // Add user message
         const userMessage: ChatMessage = {
@@ -104,18 +106,25 @@ How can I assist you today?`,
         this.isLoading = true;
 
         try {
-            const response = await this.chatService.sendMessage(messageText).toPromise();
+            console.log('Calling chat service...'); // Debug log
+            const response = await this.chatService.sendMessage(messageText, 1).toPromise();
+            console.log('Chat service response:', response); // Debug log
 
             if (response?.success) {
+                const responseContent = typeof response.response === 'string'
+                    ? response.response
+                    : 'Thank you for your message. I will help you with your TNPSC preparation.';
+
                 const aiMessage: ChatMessage = {
                     id: Date.now() + 1,
-                    content: response.response,
+                    content: responseContent,
                     isUser: false,
                     timestamp: new Date(),
                     type: 'text'
                 };
                 this.messages.push(aiMessage);
             } else {
+                console.error('Chat service returned error:', response); // Debug log
                 this.toastr.error(response?.message || 'Failed to get response');
             }
         } catch (error) {
@@ -144,12 +153,12 @@ How can I assist you today?`,
         this.router.navigate(['/dashboard']);
     }
 
-    clearChat(): void {
+    async clearChat(): Promise<void> {
         const confirmed = confirm('Are you sure you want to clear the chat history?');
         if (confirmed) {
             this.messages = [];
             this.addWelcomeMessage();
-            this.chatService.clearChatHistory();
+            await this.chatService.clearChatHistory(1).toPromise();
         }
     }
 

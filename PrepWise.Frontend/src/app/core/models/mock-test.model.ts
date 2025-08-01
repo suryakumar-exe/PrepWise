@@ -1,3 +1,12 @@
+export interface MockTest {
+    id: number;
+    title: string;
+    description: string;
+    questionCount: number;
+    timeLimitMinutes: number;
+    isActive: boolean;
+}
+
 export interface MockTestAttempt {
     id: number;
     title: string;
@@ -55,16 +64,20 @@ export interface SubmitMockTestInput {
 }
 
 export interface MockTestResult {
-    id: number;
-    score: number;
-    correctAnswers: number;
-    wrongAnswers: number;
-    unansweredQuestions: number;
-    totalQuestions: number;
-    timeTakenMinutes: number;
-    accuracy: number;
-    performanceLevel: string;
-    subjectPerformance: SubjectPerformance[];
+    success?: boolean;
+    message?: string;
+    id?: number;
+    score?: number;
+    correctAnswers?: number;
+    wrongAnswers?: number;
+    unansweredQuestions?: number;
+    totalQuestions?: number;
+    timeTaken?: number;
+    timeTakenMinutes?: number;
+    accuracy?: number;
+    performanceLevel?: string;
+    subjectPerformance?: SubjectPerformance[];
+    result?: any;
 }
 
 export interface SubjectPerformance {

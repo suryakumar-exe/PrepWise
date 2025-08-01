@@ -1,9 +1,7 @@
 import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, of } from 'rxjs';
 import { map, tap, catchError } from 'rxjs/operators';
-import { HttpClient } from '@angular/common/http';
-import { Router } from '@angular/router';
-import { ToastrService } from 'ngx-toastr';
 import { environment } from '../../../environments/environment';
 import { User, AuthResult, LoginRequest, RegisterRequest } from '../models/user.model';
 
@@ -14,26 +12,19 @@ export class AuthService {
     private currentUserSubject = new BehaviorSubject<User | null>(null);
     public currentUser$ = this.currentUserSubject.asObservable();
 
-    private isAuthenticatedSubject = new BehaviorSubject<boolean>(false);
-    public isAuthenticated$ = this.isAuthenticatedSubject.asObservable();
-
-    private apiUrl = environment.apiUrl;
-
-    constructor(
-        private http: HttpClient,
-        private router: Router,
-        private toastr: ToastrService
-    ) {
-        this.initializeAuth();
+    constructor(private http: HttpClient) {
+        this.loadStoredUser();
     }
 
-    private initializeAuth(): void {
-        const token = this.getToken();
-        const user = this.getStoredUser();
-
-        if (token && user) {
-            this.currentUserSubject.next(user);
-            this.isAuthenticatedSubject.next(true);
+    private loadStoredUser(): void {
+        const storedUser = localStorage.getItem('currentUser');
+        if (storedUser) {
+            try {
+                const user = JSON.parse(storedUser);
+                this.currentUserSubject.next(user);
+            } catch (error) {
+                localStorage.removeItem('currentUser');
+            }
         }
     }
 
@@ -50,10 +41,6 @@ export class AuthService {
                             email
                             firstName
                             lastName
-                            phoneNumber
-                            createdAt
-                            lastLoginAt
-                            isActive
                         }
                     }
                 }
@@ -64,26 +51,21 @@ export class AuthService {
             }
         };
 
-        return this.http.post<any>(`${this.apiUrl}/graphql`, graphqlQuery)
+        return this.http.post<any>(`${environment.apiUrl}/graphql`, graphqlQuery)
             .pipe(
-                map(response => response.data?.login || { success: false, message: 'Login failed' }),
+                map(response => {
+                    const result = response.data?.login || { success: false, message: 'Login failed' };
+                    if (result.success && result.user) {
+                        this.setCurrentUser(result.user);
+                        if (result.token) {
+                            localStorage.setItem('token', result.token);
+                        }
+                    }
+                    return result;
+                }),
                 catchError(error => {
                     console.error('Login error:', error);
-                    return of({
-                        success: false,
-                        message: 'Login failed. Please try again.',
-                        token: undefined,
-                        user: undefined
-                    });
-                }),
-                tap(authResult => {
-                    if (authResult.success && authResult.token && authResult.user) {
-                        this.setAuthData(authResult.token, authResult.user);
-                        this.toastr.success('Welcome back!', 'Login Successful');
-                        this.router.navigate(['/dashboard']);
-                    } else {
-                        this.toastr.error(authResult.message || 'Login failed', 'Login Failed');
-                    }
+                    return of({ success: false, message: 'Login failed. Please try again.' });
                 })
             );
     }
@@ -101,102 +83,73 @@ export class AuthService {
                             email
                             firstName
                             lastName
-                            phoneNumber
-                            createdAt
-                            lastLoginAt
-                            isActive
                         }
                     }
                 }
             `,
-            variables: userData
+            variables: {
+                email: userData.email,
+                password: userData.password,
+                firstName: userData.firstName,
+                lastName: userData.lastName,
+                phoneNumber: userData.phoneNumber
+            }
         };
 
-        return this.http.post<any>(`${this.apiUrl}/graphql`, graphqlQuery)
+        return this.http.post<any>(`${environment.apiUrl}/graphql`, graphqlQuery)
             .pipe(
-                map(response => response.data?.register || { success: false, message: 'Registration failed' }),
+                map(response => {
+                    const result = response.data?.register || { success: false, message: 'Registration failed' };
+                    if (result.success && result.user) {
+                        this.setCurrentUser(result.user);
+                        if (result.token) {
+                            localStorage.setItem('token', result.token);
+                        }
+                    }
+                    return result;
+                }),
                 catchError(error => {
                     console.error('Registration error:', error);
-                    return of({
-                        success: false,
-                        message: 'Registration failed. Please try again.',
-                        token: undefined,
-                        user: undefined
-                    });
-                }),
-                tap(authResult => {
-                    if (authResult.success && authResult.token && authResult.user) {
-                        this.setAuthData(authResult.token, authResult.user);
-                        this.toastr.success('Account created successfully!', 'Registration Successful');
-                        this.router.navigate(['/dashboard']);
-                    } else {
-                        this.toastr.error(authResult.message || 'Registration failed', 'Registration Failed');
-                    }
+                    return of({ success: false, message: 'Registration failed. Please try again.' });
                 })
             );
     }
 
     logout(): void {
-        this.clearAuthData();
-        this.toastr.info('You have been logged out', 'Goodbye!');
-        this.router.navigate(['/auth/login']);
-    }
-
-    private setAuthData(token: string, user: User): void {
-        localStorage.setItem('auth_token', token);
-        localStorage.setItem('current_user', JSON.stringify(user));
-        this.currentUserSubject.next(user);
-        this.isAuthenticatedSubject.next(true);
-    }
-
-    private clearAuthData(): void {
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('current_user');
+        localStorage.removeItem('token');
+        localStorage.removeItem('currentUser');
         this.currentUserSubject.next(null);
-        this.isAuthenticatedSubject.next(false);
-    }
-
-    getToken(): string | null {
-        return localStorage.getItem('auth_token');
     }
 
     getCurrentUser(): User | null {
         return this.currentUserSubject.value;
     }
 
-    private getStoredUser(): User | null {
-        const userStr = localStorage.getItem('current_user');
-        if (userStr) {
-            try {
-                return JSON.parse(userStr);
-            } catch {
-                return null;
+    isAuthenticated(): boolean {
+        return !!this.getCurrentUser();
+    }
+
+    private setCurrentUser(user: User): void {
+        this.currentUserSubject.next(user);
+        localStorage.setItem('currentUser', JSON.stringify(user));
+    }
+
+    // Mock data for development
+    private getMockAuthResult(): AuthResult {
+        return {
+            success: true,
+            message: 'Login successful',
+            token: 'mock-jwt-token',
+            user: {
+                id: 1,
+                email: 'user@example.com',
+                firstName: 'John',
+                lastName: 'Doe',
+                phoneNumber: '+1234567890',
+                createdAt: new Date().toISOString(),
+                lastLoginAt: new Date().toISOString(),
+                isActive: true
             }
-        }
-        return null;
-    }
-
-    isLoggedIn(): boolean {
-        return !!this.getToken() && !!this.getCurrentUser();
-    }
-
-    // Check if token is expired (basic check - in production, verify with backend)
-    isTokenExpired(): boolean {
-        const token = this.getToken();
-        if (!token) return true;
-
-        try {
-            const payload = JSON.parse(atob(token.split('.')[1]));
-            const exp = payload.exp * 1000; // Convert to milliseconds
-            return Date.now() >= exp;
-        } catch {
-            return true;
-        }
-    }
-
-    refreshTokenIfNeeded(): void {
-        if (this.isTokenExpired()) {
-            this.logout();
-        }
+        };
     }
 } 

@@ -19,6 +19,10 @@ const routes: Routes = [
                 component: QuizStartComponent
             },
             {
+                path: 'start',
+                component: QuizStartComponent
+            },
+            {
                 path: 'play/:attemptId',
                 component: QuizPlayComponent
             },

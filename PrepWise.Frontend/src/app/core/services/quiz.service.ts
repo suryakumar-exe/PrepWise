@@ -204,75 +204,59 @@ export class QuizService {
   }
 
   // Start a quiz attempt
-  startQuizAttempt(quizData: StartQuizInput): Observable<any> {
+  startQuizAttempt(userId: number, subjectId: number): Observable<any> {
     const graphqlQuery = {
       query: `
-                mutation StartQuizAttempt($userId: Int!, $subjectId: Int!, $questionCount: Int!, $timeLimitMinutes: Int!) {
-                    startQuizAttempt(userId: $userId, subjectId: $subjectId, questionCount: $questionCount, timeLimitMinutes: $timeLimitMinutes) {
+                mutation StartQuizAttempt($userId: Int!, $subjectId: Int!) {
+                    startQuizAttempt(userId: $userId, subjectId: $subjectId) {
                         success
-                        message
                         quizAttempt {
                             id
-                            userId
-                            quizId
                             startedAt
-                            totalQuestions
-                            status
                         }
                         questions {
                             id
-                            questionText
-                            questionTextTamil
-                            difficulty
-                            language
-                            subjectId
+                            text
                             options {
                                 id
-                                optionText
-                                optionTextTamil
-                                isCorrect
-                                orderIndex
+                                text
                             }
                         }
                     }
                 }
             `,
-      variables: quizData
+      variables: {
+        userId: userId,
+        subjectId: subjectId
+      }
     };
 
     return this.http.post<any>(`${this.apiUrl}/graphql`, graphqlQuery)
       .pipe(
         map(response => {
           const result = response.data?.startQuizAttempt;
-          if (result && result.questions) {
-            // Transform questions to match frontend model
-            result.questions = result.questions.map((q: any) => ({
-              id: q.id,
-              text: q.questionText,
-              explanation: q.explanation,
-              difficulty: q.difficulty,
-              language: q.language,
-              subjectId: q.subjectId,
-              options: q.options.map((opt: any) => ({
-                id: opt.id,
-                text: opt.optionText,
-                isCorrect: opt.isCorrect,
-                orderIndex: opt.orderIndex
-              })),
-              isActive: q.isActive,
-              createdAt: q.createdAt
-            }));
+          if (result?.success && result.questions) {
+            // Transform the response to match our expected format
+            return {
+              success: true,
+              attemptId: result.quizAttempt?.id,
+              questions: result.questions.map((q: any) => ({
+                id: q.id,
+                text: q.text,
+                options: q.options.map((opt: any) => ({
+                  id: opt.id,
+                  text: opt.text,
+                  isCorrect: false, // Will be set by backend
+                  orderIndex: 0
+                }))
+              }))
+            };
           }
-          return result;
+          return { success: false, message: 'Failed to start quiz' };
         }),
         catchError(error => {
           console.error('Error starting quiz:', error);
-          return of({
-            success: false,
-            message: 'Failed to start quiz',
-            quizAttempt: null,
-            questions: []
-          });
+          return of({ success: false, message: 'Failed to start quiz' });
         })
       );
   }

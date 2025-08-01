@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { map, catchError } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
-import { MockTestAttempt, MockTestResult, StartMockTestInput, SubmitMockTestInput } from '../models/mock-test.model';
+import { MockTest, MockTestAttempt, MockTestResult } from '../models/mock-test.model';
 
 @Injectable({
   providedIn: 'root'
@@ -13,37 +13,150 @@ export class MockTestService {
 
   constructor(private http: HttpClient) { }
 
-  startMockTest(input: StartMockTestInput): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/api/mock-test/start`, input)
+  getMockTests(): Observable<MockTest[]> {
+    const graphqlQuery = {
+      query: `
+                query GetMockTests {
+                    mockTests {
+                        id
+                        title
+                        description
+                        questionCount
+                        timeLimitMinutes
+                        isActive
+                    }
+                }
+            `
+    };
+
+    return this.http.post<any>(`${this.apiUrl}/graphql`, graphqlQuery)
       .pipe(
+        map(response => {
+          const tests = response.data?.mockTests;
+          return tests || this.getMockMockTests();
+        }),
+        catchError(error => {
+          console.error('Error fetching mock tests:', error);
+          return of(this.getMockMockTests());
+        })
+      );
+  }
+
+  startMockTest(testId: number): Observable<any> {
+    const graphqlQuery = {
+      query: `
+                mutation StartMockTest($testId: Int!) {
+                    startMockTest(testId: $testId) {
+                        success
+                        attemptId
+                        questions {
+                            id
+                            text
+                            options {
+                                id
+                                text
+                            }
+                        }
+                    }
+                }
+            `,
+      variables: {
+        testId: testId
+      }
+    };
+
+    return this.http.post<any>(`${this.apiUrl}/graphql`, graphqlQuery)
+      .pipe(
+        map(response => {
+          const result = response.data?.startMockTest;
+          if (result?.success) {
+            return {
+              success: true,
+              attemptId: result.attemptId,
+              questions: result.questions
+            };
+          }
+          return { success: false, message: 'Failed to start mock test' };
+        }),
         catchError(error => {
           console.error('Error starting mock test:', error);
-          return of({
-            success: false,
-            message: 'Failed to start mock test',
-            mockTestAttempt: null
-          });
+          return of({ success: false, message: 'Failed to start mock test' });
         })
       );
   }
 
-  submitMockTest(input: SubmitMockTestInput): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/api/mock-test/submit`, input)
+  submitMockTest(attemptId: number, answers: any[]): Observable<MockTestResult> {
+    const graphqlQuery = {
+      query: `
+                mutation SubmitMockTest($attemptId: Int!, $answers: [MockTestAnswerInput!]!) {
+                    submitMockTest(attemptId: $attemptId, answers: $answers) {
+                        success
+                        score
+                        correctAnswers
+                        totalQuestions
+                        timeTaken
+                        result {
+                            id
+                            score
+                            correctAnswers
+                            totalQuestions
+                            timeTaken
+                            completedAt
+                        }
+                    }
+                }
+            `,
+      variables: {
+        attemptId: attemptId,
+        answers: answers
+      }
+    };
+
+    return this.http.post<any>(`${this.apiUrl}/graphql`, graphqlQuery)
       .pipe(
+        map(response => {
+          const result = response.data?.submitMockTest;
+          if (result?.success) {
+            return {
+              success: true,
+              score: result.score,
+              correctAnswers: result.correctAnswers,
+              totalQuestions: result.totalQuestions,
+              timeTaken: result.timeTaken,
+              result: result.result
+            };
+          }
+          return { success: false, message: 'Failed to submit mock test' };
+        }),
         catchError(error => {
           console.error('Error submitting mock test:', error);
-          return of({
-            success: false,
-            message: 'Failed to submit mock test',
-            result: null
-          });
+          return of({ success: false, message: 'Failed to submit mock test' });
         })
       );
   }
 
-  getMockTestHistory(userId: number): Observable<MockTestAttempt[]> {
-    return this.http.get<MockTestAttempt[]>(`${this.apiUrl}/api/mock-test/history/${userId}`)
+  getMockTestHistory(): Observable<MockTestAttempt[]> {
+    const graphqlQuery = {
+      query: `
+                query GetMockTestHistory {
+                    mockTestHistory {
+                        id
+                        testId
+                        startedAt
+                        completedAt
+                        score
+                        status
+                    }
+                }
+            `
+    };
+
+    return this.http.post<any>(`${this.apiUrl}/graphql`, graphqlQuery)
       .pipe(
+        map(response => {
+          const history = response.data?.mockTestHistory;
+          return history || [];
+        }),
         catchError(error => {
           console.error('Error fetching mock test history:', error);
           return of([]);
@@ -51,44 +164,24 @@ export class MockTestService {
       );
   }
 
-  getMockTestDetails(mockTestId: number): Observable<MockTestAttempt> {
-    return this.http.get<MockTestAttempt>(`${this.apiUrl}/api/mock-test/details/${mockTestId}`)
-      .pipe(
-        catchError(error => {
-          console.error('Error fetching mock test details:', error);
-          return of(null as any);
-        })
-      );
-  }
-
-  // Utility methods
-  calculateAccuracy(correctAnswers: number, totalQuestions: number): number {
-    if (totalQuestions === 0) return 0;
-    return Math.round((correctAnswers / totalQuestions) * 100);
-  }
-
-  getPerformanceLevel(accuracy: number): string {
-    if (accuracy >= 90) return 'Excellent';
-    if (accuracy >= 80) return 'Very Good';
-    if (accuracy >= 70) return 'Good';
-    if (accuracy >= 60) return 'Average';
-    if (accuracy >= 50) return 'Below Average';
-    return 'Poor';
-  }
-
-  formatTime(minutes: number): string {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-
-    if (hours > 0) {
-      return `${hours}h ${mins}m`;
-    }
-    return `${mins}m`;
-  }
-
-  calculateTimeSpent(startTime: string, endTime: string): number {
-    const start = new Date(startTime).getTime();
-    const end = new Date(endTime).getTime();
-    return Math.floor((end - start) / (1000 * 60)); // Return minutes
+  private getMockMockTests(): MockTest[] {
+    return [
+      {
+        id: 1,
+        title: 'TNPSC Group 1 Mock Test 1',
+        description: 'Full-length mock test for TNPSC Group 1',
+        questionCount: 200,
+        timeLimitMinutes: 180,
+        isActive: true
+      },
+      {
+        id: 2,
+        title: 'TNPSC Group 2 Mock Test 1',
+        description: 'Full-length mock test for TNPSC Group 2',
+        questionCount: 150,
+        timeLimitMinutes: 150,
+        isActive: true
+      }
+    ];
   }
 } 

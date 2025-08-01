@@ -15,7 +15,7 @@ export interface ChatMessage {
 export interface ChatResponse {
     success: boolean;
     message: string;
-    response: string;
+    response?: string | ChatMessage;
 }
 
 export interface SkillScore {
