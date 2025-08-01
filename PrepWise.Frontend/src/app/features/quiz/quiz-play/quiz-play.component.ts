@@ -159,6 +159,24 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
     }
 
     private initializeQuizSession(questions: any[], timeLimitMinutes: number, attemptId: number): void {
+        console.log('=== INITIALIZING QUIZ SESSION ===');
+        console.log('Questions received:', questions);
+        console.log('Time limit minutes:', timeLimitMinutes);
+        console.log('Attempt ID:', attemptId);
+
+        // Log each question structure
+        questions.forEach((question, index) => {
+            console.log(`Question ${index + 1}:`, {
+                id: question.id,
+                text: question.text,
+                options: question.options.map((opt: any) => ({
+                    id: opt.id,
+                    text: opt.text,
+                    isCorrect: opt.isCorrect
+                }))
+            });
+        });
+
         this.quizSession = {
             attemptId: attemptId,
             questions: questions,
@@ -171,6 +189,74 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
         };
         this.remainingTime = this.quizSession.timeLimitSeconds;
         this.isLoading = false;
+        console.log('=== QUIZ SESSION INITIALIZED ===');
+    }
+
+    private calculateLocalResults(): any {
+        if (!this.quizSession) {
+            return {
+                success: false,
+                message: 'No quiz session available',
+                score: 0,
+                correctAnswers: 0,
+                wrongAnswers: 0,
+                unansweredQuestions: 0
+            };
+        }
+
+        let correctAnswers = 0;
+        let wrongAnswers = 0;
+        let unansweredQuestions = 0;
+
+        console.log('=== CALCULATION DEBUG ===');
+        console.log('Total questions:', this.quizSession.questions.length);
+        console.log('Answers map:', this.quizSession.answers);
+        console.log('Questions:', this.quizSession.questions);
+
+        this.quizSession.questions.forEach((question, index) => {
+            const selectedOptionId = this.quizSession!.answers.get(question.id);
+
+            console.log(`Question ${index + 1} (ID: ${question.id}):`);
+            console.log('  - Selected option ID:', selectedOptionId);
+            console.log('  - Question options:', question.options);
+
+            if (selectedOptionId === undefined || selectedOptionId === null) {
+                unansweredQuestions++;
+                console.log('  - Status: UNANSWERED');
+            } else {
+                const selectedOption = question.options.find(opt => opt.id === selectedOptionId);
+                console.log('  - Selected option:', selectedOption);
+
+                if (selectedOption && selectedOption.isCorrect) {
+                    correctAnswers++;
+                    console.log('  - Status: CORRECT');
+                } else {
+                    wrongAnswers++;
+                    console.log('  - Status: WRONG');
+                }
+            }
+        });
+
+        const totalQuestions = this.quizSession.questions.length;
+        const score = totalQuestions > 0 ? Math.round((correctAnswers / totalQuestions) * 100) : 0;
+
+        console.log('=== FINAL RESULTS ===');
+        console.log('Correct answers:', correctAnswers);
+        console.log('Wrong answers:', wrongAnswers);
+        console.log('Unanswered:', unansweredQuestions);
+        console.log('Total questions:', totalQuestions);
+        console.log('Score:', score + '%');
+        console.log('=== END DEBUG ===');
+
+        return {
+            success: true,
+            message: 'Quiz completed successfully',
+            score: score,
+            correctAnswers: correctAnswers,
+            wrongAnswers: wrongAnswers,
+            unansweredQuestions: unansweredQuestions,
+            totalQuestions: totalQuestions
+        };
     }
 
     private setupAutoSave(): void {
@@ -210,7 +296,15 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
 
         const currentQuestion = this.getCurrentQuestion();
         if (currentQuestion) {
+            console.log('=== ANSWER SELECTED ===');
+            console.log('Question ID:', currentQuestion.id);
+            console.log('Selected option ID:', optionId);
+            console.log('Current answers map:', this.quizSession.answers);
+
             this.quizSession.answers.set(currentQuestion.id, optionId);
+
+            console.log('Updated answers map:', this.quizSession.answers);
+            console.log('=== END ANSWER SELECTED ===');
         }
     }
 
@@ -289,26 +383,17 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
             selectedOptionId: optionId
         }));
 
-        this.quizService.submitQuizAnswers(this.quizSession.attemptId, answers)
-            .pipe(
-                takeUntil(this.destroy$),
-                finalize(() => this.isSubmitting = false)
-            )
-            .subscribe({
-                next: (result) => {
-                    if (result.success) {
-                        this.router.navigate(['/quiz/result', this.quizSession!.attemptId]);
-                    } else {
-                        this.toastr.error(result.message || 'Failed to submit quiz');
-                        this.quizSession!.isSubmitted = false;
-                    }
-                },
-                error: (error) => {
-                    console.error('Error submitting quiz:', error);
-                    this.toastr.error('An error occurred while submitting the quiz');
-                    this.quizSession!.isSubmitted = false;
-                }
-            });
+        // Calculate results locally since we're not using backend for quiz attempts
+        const result = this.calculateLocalResults();
+
+        // Navigate to result page with calculated data
+        this.router.navigate(['/quiz/result', this.quizSession!.attemptId], {
+            state: {
+                quizResult: result,
+                questions: this.quizSession!.questions,
+                answers: Array.from(this.quizSession!.answers.entries())
+            }
+        });
     }
 
     getSelectedOptionId(questionId: number): number | null {

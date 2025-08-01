@@ -27,10 +27,27 @@ export class QuizResultComponent implements OnInit {
     async loadQuizResult(): Promise<void> {
         this.isLoading = true;
         try {
-            const attemptId = this.route.snapshot.params['attemptId'];
-            if (attemptId) {
-                const result = await this.quizService.getQuizResult(attemptId).toPromise();
-                this.quizResult = result || null;
+            // Try to get result from navigation state first
+            const navigation = this.router.getCurrentNavigation();
+            const state = navigation?.extras?.state;
+
+            if (state && state['quizResult']) {
+                // Use result passed from quiz play component
+                this.quizResult = state['quizResult'];
+            } else {
+                // Fallback: Try to get from session storage
+                const storedResult = sessionStorage.getItem('quizResult');
+                if (storedResult) {
+                    this.quizResult = JSON.parse(storedResult);
+                    sessionStorage.removeItem('quizResult');
+                } else {
+                    // Final fallback: Try backend
+                    const attemptId = this.route.snapshot.params['attemptId'];
+                    if (attemptId) {
+                        const result = await this.quizService.getQuizResult(attemptId).toPromise();
+                        this.quizResult = result || null;
+                    }
+                }
             }
         } catch (error) {
             this.toastr.error('Failed to load quiz result', 'Error');
