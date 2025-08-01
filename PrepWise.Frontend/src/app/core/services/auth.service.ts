@@ -1,50 +1,11 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { map, tap } from 'rxjs/operators';
-import { Apollo, gql } from 'apollo-angular';
+import { BehaviorSubject, Observable, of } from 'rxjs';
+import { map, tap, catchError } from 'rxjs/operators';
+import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
+import { environment } from '../../../environments/environment';
 import { User, AuthResult, LoginRequest, RegisterRequest } from '../models/user.model';
-
-const LOGIN_MUTATION = gql`
-  mutation Login($email: String!, $password: String!) {
-    login(email: $email, password: $password) {
-      success
-      message
-      token
-      user {
-        id
-        email
-        firstName
-        lastName
-        phoneNumber
-        createdAt
-        lastLoginAt
-        isActive
-      }
-    }
-  }
-`;
-
-const REGISTER_MUTATION = gql`
-  mutation Register($email: String!, $password: String!, $firstName: String!, $lastName: String!, $phoneNumber: String) {
-    register(email: $email, password: $password, firstName: $firstName, lastName: $lastName, phoneNumber: $phoneNumber) {
-      success
-      message
-      token
-      user {
-        id
-        email
-        firstName
-        lastName
-        phoneNumber
-        createdAt
-        lastLoginAt
-        isActive
-      }
-    }
-  }
-`;
 
 @Injectable({
     providedIn: 'root'
@@ -56,8 +17,10 @@ export class AuthService {
     private isAuthenticatedSubject = new BehaviorSubject<boolean>(false);
     public isAuthenticated$ = this.isAuthenticatedSubject.asObservable();
 
+    private apiUrl = environment.apiUrl;
+
     constructor(
-        private apollo: Apollo,
+        private http: HttpClient,
         private router: Router,
         private toastr: ToastrService
     ) {
@@ -75,39 +38,51 @@ export class AuthService {
     }
 
     login(credentials: LoginRequest): Observable<AuthResult> {
-        return this.apollo.mutate<{ login: AuthResult }>({
-            mutation: LOGIN_MUTATION,
-            variables: credentials
-        }).pipe(
-            map(result => result.data?.login!),
-            tap(authResult => {
-                if (authResult.success && authResult.token && authResult.user) {
-                    this.setAuthData(authResult.token, authResult.user);
-                    this.toastr.success('Welcome back!', 'Login Successful');
-                    this.router.navigate(['/dashboard']);
-                } else {
-                    this.toastr.error(authResult.message, 'Login Failed');
-                }
-            })
-        );
+        return this.http.post<AuthResult>(`${this.apiUrl}/api/auth/login`, credentials)
+            .pipe(
+                catchError(error => {
+                    console.error('Login error:', error);
+                    return of({
+                        success: false,
+                        message: 'Login failed. Please try again.',
+                        token: undefined,
+                        user: undefined
+                    });
+                }),
+                tap(authResult => {
+                    if (authResult.success && authResult.token && authResult.user) {
+                        this.setAuthData(authResult.token, authResult.user);
+                        this.toastr.success('Welcome back!', 'Login Successful');
+                        this.router.navigate(['/dashboard']);
+                    } else {
+                        this.toastr.error(authResult.message, 'Login Failed');
+                    }
+                })
+            );
     }
 
     register(userData: RegisterRequest): Observable<AuthResult> {
-        return this.apollo.mutate<{ register: AuthResult }>({
-            mutation: REGISTER_MUTATION,
-            variables: userData
-        }).pipe(
-            map(result => result.data?.register!),
-            tap(authResult => {
-                if (authResult.success && authResult.token && authResult.user) {
-                    this.setAuthData(authResult.token, authResult.user);
-                    this.toastr.success('Account created successfully!', 'Registration Successful');
-                    this.router.navigate(['/dashboard']);
-                } else {
-                    this.toastr.error(authResult.message, 'Registration Failed');
-                }
-            })
-        );
+        return this.http.post<AuthResult>(`${this.apiUrl}/api/auth/register`, userData)
+            .pipe(
+                catchError(error => {
+                    console.error('Registration error:', error);
+                    return of({
+                        success: false,
+                        message: 'Registration failed. Please try again.',
+                        token: undefined,
+                        user: undefined
+                    });
+                }),
+                tap(authResult => {
+                    if (authResult.success && authResult.token && authResult.user) {
+                        this.setAuthData(authResult.token, authResult.user);
+                        this.toastr.success('Account created successfully!', 'Registration Successful');
+                        this.router.navigate(['/dashboard']);
+                    } else {
+                        this.toastr.error(authResult.message, 'Registration Failed');
+                    }
+                })
+            );
     }
 
     logout(): void {
@@ -128,7 +103,6 @@ export class AuthService {
         localStorage.removeItem('current_user');
         this.currentUserSubject.next(null);
         this.isAuthenticatedSubject.next(false);
-        this.apollo.client.clearStore();
     }
 
     getToken(): string | null {
