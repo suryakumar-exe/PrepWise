@@ -441,23 +441,35 @@ export class QuizService {
       variables: { attemptId: Number(attemptId) }
     };
 
-    console.log('Fetching quiz result for attempt ID:', attemptId);
-    console.log('GraphQL query:', graphqlQuery);
+    console.log('=== FETCHING QUIZ RESULT ===');
+    console.log('Attempt ID:', attemptId);
+    console.log('GraphQL Query:', JSON.stringify(graphqlQuery, null, 2));
+    console.log('API URL:', `${this.apiUrl}/graphql`);
 
     return this.http.post<any>(`${this.apiUrl}/graphql`, graphqlQuery)
       .pipe(
         map(response => {
-          console.log('Quiz result response:', response);
+          console.log('=== QUIZ RESULT RESPONSE ===');
+          console.log('Full response:', response);
+          console.log('Response data:', response.data);
+          console.log('Response errors:', response.errors);
+
           const result = response.data?.quizResult;
+          console.log('Quiz result from response:', result);
+
           if (result) {
-            return {
+            const transformedResult = {
               success: result.success,
               message: result.message,
               score: result.score || 0,
               correctAnswers: result.correctAnswers || 0,
               wrongAnswers: result.wrongAnswers || 0
             };
+            console.log('✅ Transformed result:', transformedResult);
+            return transformedResult;
           }
+
+          console.log('❌ No quiz result found in response');
           return {
             success: false,
             message: 'Result not found',
@@ -467,16 +479,19 @@ export class QuizService {
           };
         }),
         catchError(error => {
-          console.error('Error fetching quiz result:', error);
+          console.error('❌ Error fetching quiz result:', error);
+          console.error('Error details:', {
+            status: error.status,
+            statusText: error.statusText,
+            message: error.message,
+            url: error.url
+          });
           return of({
             success: false,
             message: 'Failed to load result',
             score: 0,
             correctAnswers: 0,
-            wrongAnswers: 0,
-            unansweredQuestions: 0,
-            timeTaken: 0,
-            subjectPerformance: []
+            wrongAnswers: 0
           });
         })
       );

@@ -35,25 +35,56 @@ export class QuizResultComponent implements OnInit {
                 return;
             }
 
-            console.log('Loading quiz result for attempt ID:', attemptId);
+            console.log('=== LOADING QUIZ RESULT ===');
+            console.log('Attempt ID:', attemptId);
+
+            // Add a longer delay to ensure backend has processed the submission and data is ready
+            console.log('Waiting for backend to process data...');
+            await new Promise(resolve => setTimeout(resolve, 5000));
 
             // Fetch quiz result from backend using attempt ID
+            console.log('Fetching result from backend...');
             const result = await this.quizService.getQuizResult(attemptId).toPromise();
 
-            if (result) {
-                console.log('Quiz result loaded from backend:', result);
+            console.log('Backend response:', result);
+
+            if (result && result.success) {
+                console.log('✅ Quiz result loaded successfully:', result);
                 this.quizResult = result;
+
+                // Add a small delay before showing success message to ensure UI is ready
+                setTimeout(() => {
+                    this.toastr.success('Results loaded successfully!', 'Success');
+                }, 500);
             } else {
-                console.log('No result found for attempt ID:', attemptId);
-                this.toastr.error('No quiz result found for this attempt', 'Error');
-                this.router.navigate(['/quiz/start']);
+                console.log('❌ No valid result found for attempt ID:', attemptId);
+                console.log('Result received:', result);
+
+                // Try one more time after a short delay
+                console.log('Retrying after 3 seconds...');
+                await new Promise(resolve => setTimeout(resolve, 3000));
+
+                const retryResult = await this.quizService.getQuizResult(attemptId).toPromise();
+                console.log('Retry result:', retryResult);
+
+                if (retryResult && retryResult.success) {
+                    console.log('✅ Quiz result loaded on retry:', retryResult);
+                    this.quizResult = retryResult;
+                    setTimeout(() => {
+                        this.toastr.success('Results loaded successfully!', 'Success');
+                    }, 500);
+                } else {
+                    this.toastr.error('No quiz result found for this attempt. Please try again.', 'Error');
+                    this.router.navigate(['/quiz/start']);
+                }
             }
         } catch (error) {
-            console.error('Error loading quiz result:', error);
-            this.toastr.error('Failed to load quiz result', 'Error');
+            console.error('❌ Error loading quiz result:', error);
+            this.toastr.error('Failed to load quiz result. Please try again.', 'Error');
             this.router.navigate(['/quiz/start']);
         } finally {
             this.isLoading = false;
+            console.log('=== END LOADING QUIZ RESULT ===');
         }
     }
 
@@ -68,6 +99,10 @@ export class QuizResultComponent implements OnInit {
     onShareResult(): void {
         // Implement sharing functionality
         this.toastr.info('Sharing feature coming soon!', 'Info');
+    }
+
+    onRefreshResult(): void {
+        this.loadQuizResult();
     }
 
     getPerformanceLevel(score: number): string {
