@@ -159,69 +159,24 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
                         this.remainingTime = this.quizSession.timeLimitSeconds;
                         this.isLoading = false;
                     } else {
-                        console.log('No attempt data from backend, using mock questions'); // Debug log
-                        this.loadMockQuizSession(attemptId);
+                        console.log('No attempt data from backend, redirecting to quiz start'); // Debug log
+                        this.toastr.error('No quiz data available. Please try again.');
+                        this.router.navigate(['/quiz/start']);
                     }
                 },
                 error: (error: any) => {
                     console.error('Error loading quiz session from backend:', error);
-                    console.log('Falling back to mock questions'); // Debug log
-                    this.loadMockQuizSession(attemptId);
+                    console.log('Backend error, redirecting to quiz start'); // Debug log
+                    this.toastr.error('Failed to load quiz. Please try again.');
+                    this.router.navigate(['/quiz/start']);
                 }
             });
         } else {
-            // Fallback to mock data
-            console.log('No attempt ID, using mock questions'); // Debug log
-            this.loadMockQuizSession(1);
+            // No questions available, redirect back to quiz start
+            console.log('No questions available, redirecting to quiz start'); // Debug log
+            this.toastr.error('No questions available for this quiz. Please try again.');
+            this.router.navigate(['/quiz/start']);
         }
-    }
-
-    private loadMockQuizSession(attemptId: number): void {
-        this.quizSession = {
-            attemptId: attemptId,
-            questions: this.getMockQuestions(),
-            currentQuestionIndex: 0,
-            answers: new Map(),
-            flaggedQuestions: new Set(),
-            startTime: new Date(),
-            timeLimitSeconds: 1200, // 20 minutes
-            isSubmitted: false
-        };
-        this.remainingTime = this.quizSession.timeLimitSeconds;
-        this.isLoading = false;
-    }
-
-    private getMockQuestions(): QuestionData[] {
-        return [
-            {
-                id: 1,
-                text: 'What is the capital of Tamil Nadu?',
-                difficulty: 'Easy',
-                language: 'English',
-                subjectId: 1,
-                options: [
-                    { id: 1, text: 'Chennai', isCorrect: true, orderIndex: 0 },
-                    { id: 2, text: 'Coimbatore', isCorrect: false, orderIndex: 1 },
-                    { id: 3, text: 'Madurai', isCorrect: false, orderIndex: 2 },
-                    { id: 4, text: 'Trichy', isCorrect: false, orderIndex: 3 }
-                ]
-            },
-            {
-                id: 2,
-                text: 'Which of the following is the correct grammar rule for Tamil?',
-                difficulty: 'Medium',
-                language: 'English',
-                subjectId: 2,
-                explanation: 'Tamil grammar follows specific rules for sentence structure.',
-                options: [
-                    { id: 5, text: 'Subject + Verb + Object', isCorrect: false, orderIndex: 0 },
-                    { id: 6, text: 'Subject + Object + Verb', isCorrect: true, orderIndex: 1 },
-                    { id: 7, text: 'Verb + Subject + Object', isCorrect: false, orderIndex: 2 },
-                    { id: 8, text: 'Object + Verb + Subject', isCorrect: false, orderIndex: 3 }
-                ]
-            }
-            // Add more mock questions as needed
-        ];
     }
 
     private setupAutoSave(): void {

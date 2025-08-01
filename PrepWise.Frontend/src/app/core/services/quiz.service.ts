@@ -202,12 +202,21 @@ export class QuizService {
     return this.http.post<any>(`${this.apiUrl}/graphql`, graphqlQuery)
       .pipe(
         map(response => {
-          console.log('GraphQL Response:', response); // Debug log
+          console.log('=== GRAPHQL RESPONSE DEBUG ===');
+          console.log('Full Response:', response); // Debug log
+          console.log('Response data:', response.data); // Debug log
+          console.log('Response errors:', response.errors); // Debug log
+
           const questions = response.data?.generateAIQuestions;
           console.log('Questions from response:', questions); // Debug log
+          console.log('Questions type:', typeof questions); // Debug log
+          console.log('Questions is array:', Array.isArray(questions)); // Debug log
+          console.log('Questions length:', questions ? questions.length : 'No questions'); // Debug log
+
           if (questions && Array.isArray(questions) && questions.length > 0) {
+            console.log('Processing questions:', questions.length); // Debug log
             // Transform to match frontend model
-            return questions.map((q: any) => ({
+            const transformedQuestions = questions.map((q: any) => ({
               id: q.id,
               text: q.questionText,
               explanation: '',
@@ -221,8 +230,13 @@ export class QuizService {
                 orderIndex: 0
               }))
             }));
+            console.log('Transformed questions:', transformedQuestions); // Debug log
+            console.log('=== END DEBUG ===');
+            return transformedQuestions;
           }
+
           console.log('No questions found or empty array'); // Debug log
+          console.log('=== END DEBUG ===');
           return [];
         }),
         catchError(error => {
