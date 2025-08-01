@@ -113,70 +113,36 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
     private loadQuizSession(): void {
         const attemptId = this.route.snapshot.params['attemptId'];
 
-        // Try to get questions from navigation state first
-        const navigation = this.router.getCurrentNavigation();
-        let state = navigation?.extras?.state;
-
-        // If navigation state is not available, try to get from history state
-        if (!state) {
-            state = history.state;
+        if (!attemptId) {
+            this.toastr.error('No quiz attempt ID provided');
+            this.router.navigate(['/quiz/start']);
+            return;
         }
 
-        if (state && state['questions']) {
-            // Use questions passed from quiz start component
-            const questions = state['questions'];
-            const timeLimitMinutes = state['timeLimitMinutes'] || 5;
-            const subjectId = state['subjectId'];
+        // Get time limit from navigation state
+        const navigation = this.router.getCurrentNavigation();
+        const state = navigation?.extras?.state;
+        const timeLimitMinutes = state?.['timeLimitMinutes'] || 5;
 
-            this.initializeQuizSession(questions, timeLimitMinutes, parseInt(attemptId) || 1);
-        } else {
-            // Try to get questions from session storage as fallback
-            const storedQuestions = sessionStorage.getItem('quizQuestions');
-            const storedTimeLimit = sessionStorage.getItem('quizTimeLimit');
-            const storedSubjectId = sessionStorage.getItem('quizSubjectId');
-
-            if (storedQuestions) {
-                try {
-                    const questions = JSON.parse(storedQuestions);
-                    const timeLimitMinutes = storedTimeLimit ? parseInt(storedTimeLimit) : 5;
-
-                    this.initializeQuizSession(questions, timeLimitMinutes, parseInt(attemptId) || 1);
-
-                    // Clear session storage after successful load
-                    sessionStorage.removeItem('quizQuestions');
-                    sessionStorage.removeItem('quizTimeLimit');
-                    sessionStorage.removeItem('quizSubjectId');
-                } catch (error) {
-                    this.toastr.error('Failed to load quiz data. Please try again.');
+        // Load quiz attempt details from backend
+        this.quizService.getQuizAttempt(attemptId).subscribe({
+            next: (attempt: any) => {
+                if (attempt && attempt.questions && attempt.questions.length > 0) {
+                    this.initializeQuizSession(attempt.questions, timeLimitMinutes, parseInt(attemptId));
+                } else {
+                    this.toastr.error('No questions available for this quiz. Please try again.');
                     this.router.navigate(['/quiz/start']);
                 }
-            } else {
-                // No questions available, redirect back to quiz start
-                this.toastr.error('No questions available for this quiz. Please try again.');
+            },
+            error: (error: any) => {
+                console.error('Error loading quiz session from backend:', error);
+                this.toastr.error('Failed to load quiz. Please try again.');
                 this.router.navigate(['/quiz/start']);
             }
-        }
+        });
     }
 
     private initializeQuizSession(questions: any[], timeLimitMinutes: number, attemptId: number): void {
-        console.log('=== INITIALIZING QUIZ SESSION ===');
-        console.log('Questions received:', questions);
-        console.log('Time limit minutes:', timeLimitMinutes);
-        console.log('Attempt ID:', attemptId);
-
-        // Log each question structure
-        questions.forEach((question, index) => {
-            console.log(`Question ${index + 1}:`, {
-                id: question.id,
-                text: question.text,
-                options: question.options.map((opt: any) => ({
-                    id: opt.id,
-                    text: opt.text,
-                    isCorrect: opt.isCorrect
-                }))
-            });
-        });
-
         this.quizSession = {
             attemptId: attemptId,
             questions: questions,
@@ -189,75 +155,9 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
         };
         this.remainingTime = this.quizSession.timeLimitSeconds;
         this.isLoading = false;
-        console.log('=== QUIZ SESSION INITIALIZED ===');
     }
 
-    private calculateLocalResults(): any {
-        if (!this.quizSession) {
-            return {
-                success: false,
-                message: 'No quiz session available',
-                score: 0,
-                correctAnswers: 0,
-                wrongAnswers: 0,
-                unansweredQuestions: 0
-            };
-        }
 
-        let correctAnswers = 0;
-        let wrongAnswers = 0;
-        let unansweredQuestions = 0;
-
-        console.log('=== CALCULATION DEBUG ===');
-        console.log('Total questions:', this.quizSession.questions.length);
-        console.log('Answers map:', this.quizSession.answers);
-        console.log('Questions:', this.quizSession.questions);
-
-        this.quizSession.questions.forEach((question, index) => {
-            const selectedOptionId = this.quizSession!.answers.get(question.id);
-
-            console.log(`Question ${index + 1} (ID: ${question.id}):`);
-            console.log('  - Selected option ID:', selectedOptionId);
-            console.log('  - Question options:', question.options);
-
-            if (selectedOptionId === undefined || selectedOptionId === null) {
-                unansweredQuestions++;
-                console.log('  - Status: UNANSWERED');
-            } else {
-                const selectedOption = question.options.find(opt => opt.id === selectedOptionId);
-                console.log('  - Selected option:', selectedOption);
-
-                if (selectedOption && selectedOption.isCorrect) {
-                    correctAnswers++;
-                    console.log('  - Status: CORRECT');
-                } else {
-                    wrongAnswers++;
-                    console.log('  - Status: WRONG');
-                }
-            }
-        });
-
-        const totalQuestions = this.quizSession.questions.length;
-        const score = totalQuestions > 0 ? Math.round((correctAnswers / totalQuestions) * 100) : 0;
-
-        console.log('=== FINAL RESULTS ===');
-        console.log('Correct answers:', correctAnswers);
-        console.log('Wrong answers:', wrongAnswers);
-        console.log('Unanswered:', unansweredQuestions);
-        console.log('Total questions:', totalQuestions);
-        console.log('Score:', score + '%');
-        console.log('=== END DEBUG ===');
-
-        return {
-            success: true,
-            message: 'Quiz completed successfully',
-            score: score,
-            correctAnswers: correctAnswers,
-            wrongAnswers: wrongAnswers,
-            unansweredQuestions: unansweredQuestions,
-            totalQuestions: totalQuestions
-        };
-    }
 
     private setupAutoSave(): void {
         // Auto-save answers every 30 seconds
@@ -296,15 +196,7 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
 
         const currentQuestion = this.getCurrentQuestion();
         if (currentQuestion) {
-            console.log('=== ANSWER SELECTED ===');
-            console.log('Question ID:', currentQuestion.id);
-            console.log('Selected option ID:', optionId);
-            console.log('Current answers map:', this.quizSession.answers);
-
             this.quizSession.answers.set(currentQuestion.id, optionId);
-
-            console.log('Updated answers map:', this.quizSession.answers);
-            console.log('=== END ANSWER SELECTED ===');
         }
     }
 
@@ -383,17 +275,34 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
             selectedOptionId: optionId
         }));
 
-        // Calculate results locally since we're not using backend for quiz attempts
-        const result = this.calculateLocalResults();
-
-        // Navigate to result page with calculated data
-        this.router.navigate(['/quiz/result', this.quizSession!.attemptId], {
-            state: {
-                quizResult: result,
-                questions: this.quizSession!.questions,
-                answers: Array.from(this.quizSession!.answers.entries())
-            }
-        });
+        // Submit answers to backend using the mutation
+        this.quizService.submitQuizAnswers(this.quizSession!.attemptId, answers)
+            .pipe(
+                takeUntil(this.destroy$),
+                finalize(() => this.isSubmitting = false)
+            )
+            .subscribe({
+                next: (result) => {
+                    if (result.success) {
+                        // Navigate to result page with backend-calculated results
+                        this.router.navigate(['/quiz/result', this.quizSession!.attemptId], {
+                            state: {
+                                quizResult: result,
+                                questions: this.quizSession!.questions,
+                                answers: Array.from(this.quizSession!.answers.entries())
+                            }
+                        });
+                    } else {
+                        this.toastr.error(result.message || 'Failed to submit quiz');
+                        this.quizSession!.isSubmitted = false;
+                    }
+                },
+                error: (error) => {
+                    console.error('Error submitting quiz:', error);
+                    this.toastr.error('An error occurred while submitting the quiz');
+                    this.quizSession!.isSubmitted = false;
+                }
+            });
     }
 
     getSelectedOptionId(questionId: number): number | null {

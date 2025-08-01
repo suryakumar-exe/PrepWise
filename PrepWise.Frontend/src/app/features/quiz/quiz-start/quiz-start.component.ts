@@ -165,83 +165,31 @@ export class QuizStartComponent implements OnInit, OnDestroy {
 
 
 
-            // Generate AI questions using the correct GraphQL query
-            this.quizService.generateAIQuestions(
-                this.selectedSubjectId,
-                formValue.difficulty as QuestionDifficulty,
-                formValue.language as QuestionLanguage,
-                formValue.questionCount
+            // Start quiz attempt directly using the mutation
+            this.quizService.startQuizAttempt(
+                this.currentUser!.id,
+                this.selectedSubjectId!,
+                formValue.questionCount,
+                formValue.timeLimitMinutes
             ).subscribe({
-                next: (questions) => {
-                    if (questions && questions.length > 0) {
-                        // Start quiz attempt with generated questions
-                        this.quizService.startQuizAttempt(
-                            this.currentUser!.id,
-                            this.selectedSubjectId!,
-                            formValue.questionCount,
-                            formValue.timeLimitMinutes
-                        ).subscribe({
-                            next: (result) => {
-                                if (result.success && result.attemptId) {
-                                    this.toastr.success('Quiz started successfully!');
-                                    // Pass the generated questions to the quiz play component
-                                    // Store questions in session storage as fallback
-                                    sessionStorage.setItem('quizQuestions', JSON.stringify(questions));
-                                    sessionStorage.setItem('quizTimeLimit', formValue.timeLimitMinutes.toString());
-                                    sessionStorage.setItem('quizSubjectId', this.selectedSubjectId!.toString());
-
-                                    this.router.navigate(['/quiz/play', result.attemptId], {
-                                        state: {
-                                            questions: questions,
-                                            timeLimitMinutes: formValue.timeLimitMinutes,
-                                            subjectId: this.selectedSubjectId
-                                        }
-                                    });
-                                } else {
-                                    // Fallback: Navigate with mock attempt ID if backend fails
-                                    this.toastr.success('Quiz started successfully!');
-                                    // Store questions in session storage as fallback
-                                    sessionStorage.setItem('quizQuestions', JSON.stringify(questions));
-                                    sessionStorage.setItem('quizTimeLimit', formValue.timeLimitMinutes.toString());
-                                    sessionStorage.setItem('quizSubjectId', this.selectedSubjectId!.toString());
-
-                                    this.router.navigate(['/quiz/play', '1'], {
-                                        state: {
-                                            questions: questions,
-                                            timeLimitMinutes: formValue.timeLimitMinutes,
-                                            subjectId: this.selectedSubjectId
-                                        }
-                                    });
-                                }
-                                this.isStartingQuiz = false;
-                            },
-                            error: (error) => {
-                                console.error('Error starting quiz:', error);
-                                // Fallback: Navigate with mock attempt ID if backend fails
-                                this.toastr.success('Quiz started successfully!');
-                                // Store questions in session storage as fallback
-                                sessionStorage.setItem('quizQuestions', JSON.stringify(questions));
-                                sessionStorage.setItem('quizTimeLimit', formValue.timeLimitMinutes.toString());
-                                sessionStorage.setItem('quizSubjectId', this.selectedSubjectId!.toString());
-
-                                this.router.navigate(['/quiz/play', '1'], {
-                                    state: {
-                                        questions: questions,
-                                        timeLimitMinutes: formValue.timeLimitMinutes,
-                                        subjectId: this.selectedSubjectId
-                                    }
-                                });
-                                this.isStartingQuiz = false;
+                next: (result) => {
+                    if (result.success && result.attemptId) {
+                        this.toastr.success('Quiz started successfully!');
+                        this.router.navigate(['/quiz/play', result.attemptId], {
+                            state: {
+                                attemptId: result.attemptId,
+                                timeLimitMinutes: formValue.timeLimitMinutes,
+                                subjectId: this.selectedSubjectId
                             }
                         });
                     } else {
-                        this.toastr.error('No questions available for this subject');
+                        this.toastr.error(result.message || 'Failed to start quiz');
                         this.isStartingQuiz = false;
                     }
                 },
                 error: (error) => {
-                    console.error('Error generating questions:', error);
-                    this.toastr.error('Failed to generate questions');
+                    console.error('Error starting quiz:', error);
+                    this.toastr.error('Failed to start quiz');
                     this.isStartingQuiz = false;
                 }
             });
