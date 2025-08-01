@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil, finalize } from 'rxjs/operators';
+import { ToastrService } from 'ngx-toastr';
 
 import { QuizService } from '../../../core/services/quiz.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -58,7 +59,8 @@ export class QuizStartComponent implements OnInit, OnDestroy {
         private authService: AuthService,
         private languageService: LanguageService,
         private router: Router,
-        private route: ActivatedRoute
+        private route: ActivatedRoute,
+        private toastr: ToastrService
     ) { }
 
     ngOnInit(): void {
@@ -148,28 +150,57 @@ export class QuizStartComponent implements OnInit, OnDestroy {
         if (this.quizForm.valid && this.currentUser) {
             this.isStartingQuiz = true;
 
-            const quizData = {
-                userId: this.currentUser.id,
-                subjectId: this.quizForm.value.subjectId,
-                questionCount: this.quizForm.value.questionCount,
-                timeLimitMinutes: this.quizForm.value.timeLimitMinutes
-            };
+            const formValue = this.quizForm.value;
+            const selectedSubject = this.getSelectedSubject();
 
-            this.quizService.startQuizAttempt(quizData.userId, quizData.subjectId)
-                .pipe(
-                    takeUntil(this.destroy$),
-                    finalize(() => this.isStartingQuiz = false)
-                )
-                .subscribe({
-                    next: (result) => {
-                        if (result.success && result.attemptId) {
-                            this.router.navigate(['/quiz/play', result.attemptId]);
-                        }
-                    },
-                    error: (error) => {
-                        console.error('Error starting quiz:', error);
+            if (!selectedSubject) {
+                this.toastr.error('Please select a subject');
+                this.isStartingQuiz = false;
+                return;
+            }
+
+            // For practice quiz, we need to generate questions first
+            this.quizService.generateAIQuestions(
+                selectedSubject.id,
+                formValue.difficulty,
+                formValue.language,
+                formValue.questionCount
+            ).subscribe({
+                next: (questions) => {
+                    if (questions && questions.length > 0) {
+                        // Start quiz attempt with generated questions
+                        this.quizService.startQuizAttempt(
+                            this.currentUser!.id,
+                            selectedSubject.id,
+                            formValue.questionCount,
+                            formValue.timeLimitMinutes
+                        ).subscribe({
+                            next: (result) => {
+                                if (result.success && result.attemptId) {
+                                    this.toastr.success('Quiz started successfully!');
+                                    this.router.navigate(['/quiz/play', result.attemptId]);
+                                } else {
+                                    this.toastr.error(result.message || 'Failed to start quiz');
+                                }
+                                this.isStartingQuiz = false;
+                            },
+                            error: (error) => {
+                                console.error('Error starting quiz:', error);
+                                this.toastr.error('Failed to start quiz');
+                                this.isStartingQuiz = false;
+                            }
+                        });
+                    } else {
+                        this.toastr.error('No questions available for this subject');
+                        this.isStartingQuiz = false;
                     }
-                });
+                },
+                error: (error) => {
+                    console.error('Error generating questions:', error);
+                    this.toastr.error('Failed to generate questions');
+                    this.isStartingQuiz = false;
+                }
+            });
         } else {
             this.markFormGroupTouched();
         }

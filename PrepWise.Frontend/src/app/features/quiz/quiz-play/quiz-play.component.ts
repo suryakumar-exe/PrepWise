@@ -1,7 +1,8 @@
-import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil, finalize } from 'rxjs/operators';
+import { ToastrService } from 'ngx-toastr';
 
 import { QuizService } from '../../../core/services/quiz.service';
 import { LanguageService } from '../../../core/services/language.service';
@@ -80,7 +81,8 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
         private route: ActivatedRoute,
         private router: Router,
         private quizService: QuizService,
-        public languageService: LanguageService
+        public languageService: LanguageService,
+        private toastr: ToastrService
     ) { }
 
     @HostListener('window:beforeunload', ['$event'])
@@ -110,17 +112,33 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
 
     private loadQuizSession(): void {
         const attemptId = this.route.snapshot.params['attemptId'];
-        if (!attemptId) {
-            this.router.navigate(['/quiz']);
-            return;
-        }
-
-        this.isLoading = true;
-
-        // Mock quiz session data (in real app, this would come from the API)
-        setTimeout(() => {
+        if (attemptId) {
+            // Load quiz attempt details
+            this.quizService.getQuizAttempt(attemptId).subscribe({
+                next: (attempt: any) => {
+                    if (attempt) {
+                        this.quizSession = {
+                            attemptId: attempt.id,
+                            questions: attempt.questions || [],
+                            currentQuestionIndex: 0,
+                            answers: new Map(),
+                            flaggedQuestions: new Set(),
+                            startTime: new Date(),
+                            timeLimitSeconds: attempt.timeLimitMinutes * 60,
+                            isSubmitted: false
+                        };
+                        this.isLoading = false;
+                    }
+                },
+                error: (error: any) => {
+                    console.error('Error loading quiz session:', error);
+                    this.isLoading = false;
+                }
+            });
+        } else {
+            // Fallback to mock data
             this.quizSession = {
-                attemptId: parseInt(attemptId),
+                attemptId: 1,
                 questions: this.getMockQuestions(),
                 currentQuestionIndex: 0,
                 answers: new Map(),
@@ -129,9 +147,8 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
                 timeLimitSeconds: 1200, // 20 minutes
                 isSubmitted: false
             };
-            this.remainingTime = this.quizSession.timeLimitSeconds;
             this.isLoading = false;
-        }, 1000);
+        }
     }
 
     private getMockQuestions(): QuestionData[] {
@@ -278,7 +295,7 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
         this.isSubmitting = true;
         this.quizSession.isSubmitted = true;
 
-        const answers: QuizAnswerInput[] = Array.from(this.quizSession.answers.entries()).map(([questionId, optionId]) => ({
+        const answers: any[] = Array.from(this.quizSession.answers.entries()).map(([questionId, optionId]) => ({
             questionId,
             selectedOptionId: optionId
         }));
@@ -292,10 +309,14 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
                 next: (result) => {
                     if (result.success) {
                         this.router.navigate(['/quiz/result', this.quizSession!.attemptId]);
+                    } else {
+                        this.toastr.error(result.message || 'Failed to submit quiz');
+                        this.quizSession!.isSubmitted = false;
                     }
                 },
                 error: (error) => {
                     console.error('Error submitting quiz:', error);
+                    this.toastr.error('An error occurred while submitting the quiz');
                     this.quizSession!.isSubmitted = false;
                 }
             });

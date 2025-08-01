@@ -62,23 +62,45 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private initializeSubjectCategories(): void {
         this.subjectCategories = [
             {
-                name: 'PART A: Tamil',
-                description: 'Tamil language and literature',
+                name: 'Standard 6',
+                description: 'Tamil Nadu State Board - 6th Standard',
                 subjects: [
                     {
                         id: 1,
                         name: 'Tamil Subject Quiz',
-                        description: 'Standard 6th to 10th Tamil - Individual sections for each standard',
-                        icon: 'bi-translate',
+                        description: 'Standard 6th Tamil Language',
+                        icon: 'bi-book',
                         color: '#e74c3c',
                         category: 'Tamil'
                     },
                     {
                         id: 2,
-                        name: 'Tamil Quiz',
-                        description: 'Grammar, Literature, Comprehension and Vocabulary',
+                        name: 'Tamil Grammar',
+                        description: 'Grammar, Literature, Comprehension',
+                        icon: 'bi-pencil',
+                        color: '#c0392b',
+                        category: 'Tamil'
+                    }
+                ]
+            },
+            {
+                name: 'Standard 7-10',
+                description: 'Tamil Nadu State Board - 7th to 10th Standards',
+                subjects: [
+                    {
+                        id: 3,
+                        name: 'Tamil Subject Quiz',
+                        description: 'Standard 7th to 10th Tamil Language',
                         icon: 'bi-book',
-                        color: '#3498db',
+                        color: '#e74c3c',
+                        category: 'Tamil'
+                    },
+                    {
+                        id: 4,
+                        name: 'Tamil Grammar',
+                        description: 'Advanced Grammar, Literature, Comprehension',
+                        icon: 'bi-pencil',
+                        color: '#c0392b',
                         category: 'Tamil'
                     }
                 ]
@@ -88,31 +110,31 @@ export class DashboardComponent implements OnInit, OnDestroy {
                 description: 'Mathematical and logical reasoning',
                 subjects: [
                     {
-                        id: 3,
+                        id: 5,
                         name: 'Simplification',
                         description: 'Mathematical Simplification',
                         icon: 'bi-calculator',
-                        color: '#2ecc71',
-                        category: 'Aptitude'
-                    },
-                    {
-                        id: 4,
-                        name: 'Percentage',
-                        description: 'Percentage Calculations',
-                        icon: 'bi-percent',
-                        color: '#f39c12',
-                        category: 'Aptitude'
-                    },
-                    {
-                        id: 5,
-                        name: 'HCF and LCM',
-                        description: 'Highest Common Factor & Least Common Multiple',
-                        icon: 'bi-diagram-3',
-                        color: '#9b59b6',
+                        color: '#3498db',
                         category: 'Aptitude'
                     },
                     {
                         id: 6,
+                        name: 'Percentage',
+                        description: 'Percentage Calculations',
+                        icon: 'bi-percent',
+                        color: '#2980b9',
+                        category: 'Aptitude'
+                    },
+                    {
+                        id: 7,
+                        name: 'HCF and LCM',
+                        description: 'Highest Common Factor & LCM',
+                        icon: 'bi-hash',
+                        color: '#1abc9c',
+                        category: 'Aptitude'
+                    },
+                    {
+                        id: 8,
                         name: 'Ratio and Proportion',
                         description: 'Ratio and Proportion Problems',
                         icon: 'bi-pie-chart',
@@ -120,7 +142,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
                         category: 'Aptitude'
                     },
                     {
-                        id: 7,
+                        id: 9,
                         name: 'Area and Volume',
                         description: 'Area and Volume Calculations',
                         icon: 'bi-bounding-box',
@@ -134,7 +156,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
                 description: 'General knowledge and current affairs',
                 subjects: [
                     {
-                        id: 8,
+                        id: 10,
                         name: 'General Science',
                         description: 'Physics, Chemistry, Biology and other sciences',
                         icon: 'bi-atom',
@@ -142,7 +164,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
                         category: 'GeneralStudies'
                     },
                     {
-                        id: 9,
+                        id: 11,
                         name: 'Current Events',
                         description: 'Current Affairs and Latest News',
                         icon: 'bi-newspaper',
@@ -150,7 +172,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
                         category: 'GeneralStudies'
                     },
                     {
-                        id: 10,
+                        id: 12,
                         name: 'Geography',
                         description: 'Indian and World Geography',
                         icon: 'bi-globe',
@@ -158,7 +180,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
                         category: 'GeneralStudies'
                     },
                     {
-                        id: 11,
+                        id: 13,
                         name: 'History and Culture',
                         description: 'Indian History and Culture',
                         icon: 'bi-building',
@@ -166,7 +188,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
                         category: 'GeneralStudies'
                     },
                     {
-                        id: 12,
+                        id: 14,
                         name: 'Indian Polity',
                         description: 'Constitution, Politics and Governance',
                         icon: 'bi-bank',

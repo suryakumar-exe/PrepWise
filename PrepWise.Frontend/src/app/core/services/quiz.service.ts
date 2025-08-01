@@ -142,59 +142,56 @@ export class QuizService {
       );
   }
 
-  // Generate AI questions
-  generateAIQuestions(
-    subjectId: number,
-    questionCount: number,
-    difficulty: QuestionDifficulty,
-    language: QuestionLanguage
-  ): Observable<Question[]> {
+  // Generate AI questions for practice
+  generateAIQuestions(subjectId: number, difficulty: string = 'MEDIUM', language: string = 'ENGLISH', questionCount: number = 10): Observable<any> {
     const graphqlQuery = {
       query: `
-                query GenerateAIQuestions($subjectId: Int!, $questionCount: Int!, $difficulty: QuestionDifficulty!, $language: QuestionLanguage!) {
-                    generateAIQuestions(subjectId: $subjectId, questionCount: $questionCount, difficulty: $difficulty, language: $language) {
-                        id
-                        questionText
-                        questionTextTamil
-                        difficulty
-                        language
-                        subjectId
-                        options {
-                            id
-                            optionText
-                            optionTextTamil
-                            isCorrect
-                            orderIndex
-                        }
-                        isActive
-                        createdAt
-                    }
-                }
-            `,
-      variables: { subjectId, questionCount, difficulty, language }
+              query GenerateAIQuestions($subjectId: Int!, $difficulty: String!, $language: String!, $questionCount: Int!) {
+                  generateAIQuestions(subjectId: $subjectId, difficulty: $difficulty, language: $language, questionCount: $questionCount) {
+                      id
+                      questionText
+                      questionTextTamil
+                      difficulty
+                      language
+                      options {
+                          id
+                          optionText
+                          optionTextTamil
+                          isCorrect
+                      }
+                  }
+              }
+          `,
+      variables: {
+        subjectId: subjectId,
+        difficulty: difficulty,
+        language: language,
+        questionCount: questionCount
+      }
     };
 
     return this.http.post<any>(`${this.apiUrl}/graphql`, graphqlQuery)
       .pipe(
         map(response => {
-          // Transform backend response to match frontend model
-          const questions = response.data?.generateAIQuestions || [];
-          return questions.map((q: any) => ({
-            id: q.id,
-            text: q.questionText, // Map questionText to text
-            explanation: q.explanation,
-            difficulty: q.difficulty,
-            language: q.language,
-            subjectId: q.subjectId,
-            options: q.options.map((opt: any) => ({
-              id: opt.id,
-              text: opt.optionText, // Map optionText to text
-              isCorrect: opt.isCorrect,
-              orderIndex: opt.orderIndex
-            })),
-            isActive: q.isActive,
-            createdAt: q.createdAt
-          }));
+          const questions = response.data?.generateAIQuestions;
+          if (questions) {
+            // Transform to match frontend model
+            return questions.map((q: any) => ({
+              id: q.id,
+              text: q.questionText,
+              explanation: '',
+              difficulty: q.difficulty,
+              language: q.language,
+              subjectId: subjectId,
+              options: q.options.map((opt: any) => ({
+                id: opt.id,
+                text: opt.optionText,
+                isCorrect: opt.isCorrect,
+                orderIndex: 0
+              }))
+            }));
+          }
+          return [];
         }),
         catchError(error => {
           console.error('Error generating AI questions:', error);
@@ -204,30 +201,32 @@ export class QuizService {
   }
 
   // Start a quiz attempt
-  startQuizAttempt(userId: number, subjectId: number): Observable<any> {
+  startQuizAttempt(userId: number, subjectId: number, questionCount: number = 10, timeLimitMinutes: number = 30): Observable<any> {
     const graphqlQuery = {
       query: `
-                mutation StartQuizAttempt($userId: Int!, $subjectId: Int!) {
-                    startQuizAttempt(userId: $userId, subjectId: $subjectId) {
-                        success
-                        quizAttempt {
-                            id
-                            startedAt
-                        }
-                        questions {
-                            id
-                            text
-                            options {
-                                id
-                                text
-                            }
-                        }
-                    }
-                }
-            `,
+              mutation StartQuizAttempt($userId: Int!, $subjectId: Int!, $questionCount: Int!, $timeLimitMinutes: Int!) {
+                  startQuizAttempt(userId: $userId, subjectId: $subjectId, questionCount: $questionCount, timeLimitMinutes: $timeLimitMinutes) {
+                      success
+                      message
+                      quizAttempt {
+                          id
+                          quiz {
+                              id
+                              title
+                              questionCount
+                              timeLimitMinutes
+                          }
+                          startedAt
+                          status
+                      }
+                  }
+              }
+          `,
       variables: {
         userId: userId,
-        subjectId: subjectId
+        subjectId: subjectId,
+        questionCount: questionCount,
+        timeLimitMinutes: timeLimitMinutes
       }
     };
 
@@ -235,21 +234,11 @@ export class QuizService {
       .pipe(
         map(response => {
           const result = response.data?.startQuizAttempt;
-          if (result?.success && result.questions) {
-            // Transform the response to match our expected format
+          if (result?.success) {
             return {
               success: true,
               attemptId: result.quizAttempt?.id,
-              questions: result.questions.map((q: any) => ({
-                id: q.id,
-                text: q.text,
-                options: q.options.map((opt: any) => ({
-                  id: opt.id,
-                  text: opt.text,
-                  isCorrect: false, // Will be set by backend
-                  orderIndex: 0
-                }))
-              }))
+              quizAttempt: result.quizAttempt
             };
           }
           return { success: false, message: 'Failed to start quiz' };
@@ -261,37 +250,96 @@ export class QuizService {
       );
   }
 
-  // Submit quiz answers
-  submitQuizAnswers(quizAttemptId: number, answers: QuizAnswerInput[]): Observable<QuizResult> {
+  // Get quiz attempt details
+  getQuizAttempt(attemptId: number): Observable<any> {
     const graphqlQuery = {
       query: `
-                mutation SubmitQuizAnswers($quizAttemptId: Int!, $answers: [QuizAnswerInput!]!) {
-                    submitQuizAnswers(quizAttemptId: $quizAttemptId, answers: $answers) {
-                        success
-                        message
-                        score
-                        correctAnswers
-                        wrongAnswers
-                        unansweredQuestions
-                    }
-                }
-            `,
-      variables: { quizAttemptId, answers }
+        query GetQuizAttempt($attemptId: Int!) {
+          quizAttempt(id: $attemptId) {
+            id
+            quiz {
+              id
+              title
+              questionCount
+              timeLimitMinutes
+            }
+            startedAt
+            status
+            questions {
+              id
+              text
+              options {
+                id
+                text
+                isCorrect
+              }
+            }
+          }
+        }
+      `,
+      variables: {
+        attemptId: attemptId
+      }
     };
 
     return this.http.post<any>(`${this.apiUrl}/graphql`, graphqlQuery)
       .pipe(
-        map(response => response.data?.submitQuizAnswers),
+        map(response => {
+          const attempt = response.data?.quizAttempt;
+          if (attempt) {
+            return {
+              id: attempt.id,
+              timeLimitMinutes: attempt.quiz?.timeLimitMinutes || 30,
+              questions: attempt.questions || []
+            };
+          }
+          return null;
+        }),
+        catchError(error => {
+          console.error('Error fetching quiz attempt:', error);
+          return of(null);
+        })
+      );
+  }
+
+  // Submit quiz answers
+  submitQuizAnswers(quizAttemptId: number, answers: any[]): Observable<any> {
+    const graphqlQuery = {
+      query: `
+              mutation SubmitQuizAnswers($quizAttemptId: Int!, $answers: [QuizAnswerInput!]!) {
+                  submitQuizAnswers(quizAttemptId: $quizAttemptId, answers: $answers) {
+                      success
+                      message
+                      score
+                      correctAnswers
+                      wrongAnswers
+                  }
+              }
+          `,
+      variables: {
+        quizAttemptId: quizAttemptId,
+        answers: answers
+      }
+    };
+
+    return this.http.post<any>(`${this.apiUrl}/graphql`, graphqlQuery)
+      .pipe(
+        map(response => {
+          const result = response.data?.submitQuizAnswers;
+          if (result?.success) {
+            return {
+              success: true,
+              score: result.score,
+              correctAnswers: result.correctAnswers,
+              wrongAnswers: result.wrongAnswers,
+              message: result.message
+            };
+          }
+          return { success: false, message: 'Failed to submit answers' };
+        }),
         catchError(error => {
           console.error('Error submitting quiz answers:', error);
-          return of({
-            success: false,
-            message: 'Failed to submit answers',
-            score: 0,
-            correctAnswers: 0,
-            wrongAnswers: 0,
-            unansweredQuestions: 0
-          });
+          return of({ success: false, message: 'Failed to submit answers' });
         })
       );
   }
