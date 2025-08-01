@@ -115,33 +115,62 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
 
         // Try to get questions from navigation state first
         const navigation = this.router.getCurrentNavigation();
-        const state = navigation?.extras?.state;
+        let state = navigation?.extras?.state;
+
+        // If navigation state is not available, try to get from history state
+        if (!state) {
+            state = history.state;
+        }
 
         if (state && state['questions']) {
             // Use questions passed from quiz start component
             const questions = state['questions'];
-            const timeLimitMinutes = state['timeLimitMinutes'] || 20;
+            const timeLimitMinutes = state['timeLimitMinutes'] || 5;
             const subjectId = state['subjectId'];
 
-
-
-            this.quizSession = {
-                attemptId: parseInt(attemptId) || 1,
-                questions: questions,
-                currentQuestionIndex: 0,
-                answers: new Map(),
-                flaggedQuestions: new Set(),
-                startTime: new Date(),
-                timeLimitSeconds: timeLimitMinutes * 60,
-                isSubmitted: false
-            };
-            this.remainingTime = this.quizSession.timeLimitSeconds;
-            this.isLoading = false;
+            this.initializeQuizSession(questions, timeLimitMinutes, parseInt(attemptId) || 1);
         } else {
-            // No questions available, redirect back to quiz start
-            this.toastr.error('No questions available for this quiz. Please try again.');
-            this.router.navigate(['/quiz/start']);
+            // Try to get questions from session storage as fallback
+            const storedQuestions = sessionStorage.getItem('quizQuestions');
+            const storedTimeLimit = sessionStorage.getItem('quizTimeLimit');
+            const storedSubjectId = sessionStorage.getItem('quizSubjectId');
+
+            if (storedQuestions) {
+                try {
+                    const questions = JSON.parse(storedQuestions);
+                    const timeLimitMinutes = storedTimeLimit ? parseInt(storedTimeLimit) : 5;
+
+                    this.initializeQuizSession(questions, timeLimitMinutes, parseInt(attemptId) || 1);
+
+                    // Clear session storage after successful load
+                    sessionStorage.removeItem('quizQuestions');
+                    sessionStorage.removeItem('quizTimeLimit');
+                    sessionStorage.removeItem('quizSubjectId');
+                } catch (error) {
+                    this.toastr.error('Failed to load quiz data. Please try again.');
+                    this.router.navigate(['/quiz/start']);
+                }
+            } else {
+                // No questions available, redirect back to quiz start
+                this.toastr.error('No questions available for this quiz. Please try again.');
+                this.router.navigate(['/quiz/start']);
+            }
         }
+    }
+
+    private initializeQuizSession(questions: any[], timeLimitMinutes: number, attemptId: number): void {
+        this.quizSession = {
+            attemptId: attemptId,
+            questions: questions,
+            currentQuestionIndex: 0,
+            answers: new Map(),
+            flaggedQuestions: new Set(),
+            startTime: new Date(),
+            timeLimitSeconds: timeLimitMinutes * 60,
+            isSubmitted: false
+        };
+        this.remainingTime = this.quizSession.timeLimitSeconds;
+        this.isLoading = false;
     }
 
     private setupAutoSave(): void {

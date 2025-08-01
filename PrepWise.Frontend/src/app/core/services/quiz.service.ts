@@ -174,7 +174,7 @@ export class QuizService {
   }
 
   // Generate AI questions for practice
-  generateAIQuestions(subjectId: number, difficulty: QuestionDifficulty = QuestionDifficulty.Medium, language: QuestionLanguage = QuestionLanguage.English, questionCount: number = 5): Observable<Question[]> {
+  generateAIQuestions(subjectId: number, difficulty: QuestionDifficulty = QuestionDifficulty.Medium, language: QuestionLanguage = QuestionLanguage.English, questionCount: number = 2): Observable<Question[]> {
     const graphqlQuery = {
       query: `
               query GenerateAIQuestions($subjectId: Int!, $difficulty: QuestionDifficulty!, $language: QuestionLanguage!, $questionCount: Int!) {
@@ -237,7 +237,7 @@ export class QuizService {
   }
 
   // Start a quiz attempt
-  startQuizAttempt(userId: number, subjectId: number, questionCount: number = 5, timeLimitMinutes: number = 30): Observable<{ success: boolean; attemptId?: number; quizAttempt?: any; message?: string }> {
+  startQuizAttempt(userId: number, subjectId: number, questionCount: number = 2, timeLimitMinutes: number = 30): Observable<{ success: boolean; attemptId?: number; quizAttempt?: any; message?: string }> {
     const graphqlQuery = {
       query: `
               mutation StartQuizAttempt($userId: Int!, $subjectId: Int!, $questionCount: Int!, $timeLimitMinutes: Int!) {

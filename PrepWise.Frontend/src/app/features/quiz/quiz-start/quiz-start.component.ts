@@ -39,6 +39,7 @@ export class QuizStartComponent implements OnInit, OnDestroy {
     ];
 
     questionCountOptions = [
+        { value: 2, label: '2 Questions', duration: '2 mins' },
         { value: 5, label: '5 Questions', duration: '5 mins' },
         { value: 10, label: '10 Questions', duration: '10 mins' },
         { value: 20, label: '20 Questions', duration: '20 mins' },
@@ -81,7 +82,7 @@ export class QuizStartComponent implements OnInit, OnDestroy {
         this.quizForm = this.formBuilder.group({
             difficulty: [QuestionDifficulty.Medium, [Validators.required]],
             language: [QuestionLanguage.English, [Validators.required]],
-            questionCount: [5, [Validators.required, Validators.min(5), Validators.max(100)]],
+            questionCount: [2, [Validators.required, Validators.min(2), Validators.max(100)]],
             timeLimitMinutes: [5, [Validators.required, Validators.min(5), Validators.max(120)]]
         });
     }
@@ -184,6 +185,11 @@ export class QuizStartComponent implements OnInit, OnDestroy {
                                 if (result.success && result.attemptId) {
                                     this.toastr.success('Quiz started successfully!');
                                     // Pass the generated questions to the quiz play component
+                                    // Store questions in session storage as fallback
+                                    sessionStorage.setItem('quizQuestions', JSON.stringify(questions));
+                                    sessionStorage.setItem('quizTimeLimit', formValue.timeLimitMinutes.toString());
+                                    sessionStorage.setItem('quizSubjectId', this.selectedSubjectId!.toString());
+
                                     this.router.navigate(['/quiz/play', result.attemptId], {
                                         state: {
                                             questions: questions,
@@ -194,6 +200,11 @@ export class QuizStartComponent implements OnInit, OnDestroy {
                                 } else {
                                     // Fallback: Navigate with mock attempt ID if backend fails
                                     this.toastr.success('Quiz started successfully!');
+                                    // Store questions in session storage as fallback
+                                    sessionStorage.setItem('quizQuestions', JSON.stringify(questions));
+                                    sessionStorage.setItem('quizTimeLimit', formValue.timeLimitMinutes.toString());
+                                    sessionStorage.setItem('quizSubjectId', this.selectedSubjectId!.toString());
+
                                     this.router.navigate(['/quiz/play', '1'], {
                                         state: {
                                             questions: questions,
@@ -208,6 +219,11 @@ export class QuizStartComponent implements OnInit, OnDestroy {
                                 console.error('Error starting quiz:', error);
                                 // Fallback: Navigate with mock attempt ID if backend fails
                                 this.toastr.success('Quiz started successfully!');
+                                // Store questions in session storage as fallback
+                                sessionStorage.setItem('quizQuestions', JSON.stringify(questions));
+                                sessionStorage.setItem('quizTimeLimit', formValue.timeLimitMinutes.toString());
+                                sessionStorage.setItem('quizSubjectId', this.selectedSubjectId!.toString());
+
                                 this.router.navigate(['/quiz/play', '1'], {
                                     state: {
                                         questions: questions,
