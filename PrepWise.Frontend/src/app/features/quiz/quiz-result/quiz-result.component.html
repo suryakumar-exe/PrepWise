@@ -56,34 +56,18 @@
                         <div class="col-md-4">
                             <div class="metric-card card text-center">
                                 <div class="card-body">
-                                    <div class="metric-icon text-warning">
-                                        <i class="bi bi-clock-fill"></i>
+                                    <div class="metric-icon text-info">
+                                        <i class="bi bi-question-circle-fill"></i>
                                     </div>
-                                    <div class="metric-value">{{ quizResult.timeTaken || 0 | timeFormat }}</div>
-                                    <div class="metric-label">Time Taken</div>
+                                    <div class="metric-value">{{ (quizResult.correctAnswers + quizResult.wrongAnswers)
+                                        }}</div>
+                                    <div class="metric-label">Total Answered</div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Subject Performance -->
-                    <div class="subject-performance card mb-4" *ngIf="quizResult.subjectPerformance">
-                        <div class="card-header">
-                            <h5 class="mb-0">Subject-wise Performance</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="subject-item" *ngFor="let subject of quizResult.subjectPerformance">
-                                <div class="subject-info">
-                                    <span class="subject-name">{{ subject.subjectName }}</span>
-                                    <span class="subject-score">{{ subject.accuracy }}%</span>
-                                </div>
-                                <div class="progress">
-                                    <div class="progress-bar" [class]="'bg-' + getPerformanceColor(subject.accuracy)"
-                                        [style.width.%]="subject.accuracy"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+
 
                     <!-- Action Buttons -->
                     <div class="action-buttons text-center">
