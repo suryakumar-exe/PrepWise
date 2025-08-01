@@ -39,6 +39,7 @@ export class QuizStartComponent implements OnInit, OnDestroy {
     ];
 
     questionCountOptions = [
+        { value: 5, label: '5 Questions', duration: '5 mins' },
         { value: 10, label: '10 Questions', duration: '10 mins' },
         { value: 20, label: '20 Questions', duration: '20 mins' },
         { value: 30, label: '30 Questions', duration: '30 mins' },
@@ -46,11 +47,12 @@ export class QuizStartComponent implements OnInit, OnDestroy {
     ];
 
     timeLimitOptions = [
-        { value: 10, label: '10 minutes', description: 'Quick practice' },
-        { value: 20, label: '20 minutes', description: 'Standard practice' },
-        { value: 30, label: '30 minutes', description: 'Extended practice' },
-        { value: 45, label: '45 minutes', description: 'Comprehensive practice' },
-        { value: 60, label: '60 minutes', description: 'Full practice session' }
+        { value: 5, label: '5 minutes', description: 'Quick practice' },
+        { value: 10, label: '10 minutes', description: 'Standard practice' },
+        { value: 20, label: '20 minutes', description: 'Extended practice' },
+        { value: 30, label: '30 minutes', description: 'Comprehensive practice' },
+        { value: 45, label: '45 minutes', description: 'Full practice session' },
+        { value: 60, label: '60 minutes', description: 'Extended session' }
     ];
 
     constructor(
@@ -79,8 +81,8 @@ export class QuizStartComponent implements OnInit, OnDestroy {
         this.quizForm = this.formBuilder.group({
             difficulty: [QuestionDifficulty.Medium, [Validators.required]],
             language: [QuestionLanguage.English, [Validators.required]],
-            questionCount: [20, [Validators.required, Validators.min(5), Validators.max(100)]],
-            timeLimitMinutes: [20, [Validators.required, Validators.min(5), Validators.max(120)]]
+            questionCount: [5, [Validators.required, Validators.min(5), Validators.max(100)]],
+            timeLimitMinutes: [5, [Validators.required, Validators.min(5), Validators.max(120)]]
         });
     }
 

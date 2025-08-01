@@ -137,34 +137,6 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
             };
             this.remainingTime = this.quizSession.timeLimitSeconds;
             this.isLoading = false;
-        } else if (attemptId) {
-            // Fallback: Load quiz attempt details from backend
-            this.quizService.getQuizAttempt(attemptId).subscribe({
-                next: (attempt: any) => {
-                    if (attempt) {
-                        this.quizSession = {
-                            attemptId: attempt.id,
-                            questions: attempt.questions || [],
-                            currentQuestionIndex: 0,
-                            answers: new Map(),
-                            flaggedQuestions: new Set(),
-                            startTime: new Date(),
-                            timeLimitSeconds: attempt.timeLimitMinutes * 60,
-                            isSubmitted: false
-                        };
-                        this.remainingTime = this.quizSession.timeLimitSeconds;
-                        this.isLoading = false;
-                    } else {
-                        this.toastr.error('No quiz data available. Please try again.');
-                        this.router.navigate(['/quiz/start']);
-                    }
-                },
-                error: (error: any) => {
-                    console.error('Error loading quiz session from backend:', error);
-                    this.toastr.error('Failed to load quiz. Please try again.');
-                    this.router.navigate(['/quiz/start']);
-                }
-            });
         } else {
             // No questions available, redirect back to quiz start
             this.toastr.error('No questions available for this quiz. Please try again.');
