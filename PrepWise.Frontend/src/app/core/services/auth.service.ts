@@ -38,8 +38,35 @@ export class AuthService {
     }
 
     login(credentials: LoginRequest): Observable<AuthResult> {
-        return this.http.post<AuthResult>(`${this.apiUrl}/api/auth/login`, credentials)
+        const graphqlQuery = {
+            query: `
+                mutation Login($email: String!, $password: String!) {
+                    login(email: $email, password: $password) {
+                        success
+                        message
+                        token
+                        user {
+                            id
+                            email
+                            firstName
+                            lastName
+                            phoneNumber
+                            createdAt
+                            lastLoginAt
+                            isActive
+                        }
+                    }
+                }
+            `,
+            variables: {
+                email: credentials.email,
+                password: credentials.password
+            }
+        };
+
+        return this.http.post<any>(`${this.apiUrl}/graphql`, graphqlQuery)
             .pipe(
+                map(response => response.data?.login || { success: false, message: 'Login failed' }),
                 catchError(error => {
                     console.error('Login error:', error);
                     return of({
@@ -55,15 +82,39 @@ export class AuthService {
                         this.toastr.success('Welcome back!', 'Login Successful');
                         this.router.navigate(['/dashboard']);
                     } else {
-                        this.toastr.error(authResult.message, 'Login Failed');
+                        this.toastr.error(authResult.message || 'Login failed', 'Login Failed');
                     }
                 })
             );
     }
 
     register(userData: RegisterRequest): Observable<AuthResult> {
-        return this.http.post<AuthResult>(`${this.apiUrl}/api/auth/register`, userData)
+        const graphqlQuery = {
+            query: `
+                mutation Register($email: String!, $password: String!, $firstName: String!, $lastName: String!, $phoneNumber: String) {
+                    register(email: $email, password: $password, firstName: $firstName, lastName: $lastName, phoneNumber: $phoneNumber) {
+                        success
+                        message
+                        token
+                        user {
+                            id
+                            email
+                            firstName
+                            lastName
+                            phoneNumber
+                            createdAt
+                            lastLoginAt
+                            isActive
+                        }
+                    }
+                }
+            `,
+            variables: userData
+        };
+
+        return this.http.post<any>(`${this.apiUrl}/graphql`, graphqlQuery)
             .pipe(
+                map(response => response.data?.register || { success: false, message: 'Registration failed' }),
                 catchError(error => {
                     console.error('Registration error:', error);
                     return of({
@@ -79,7 +130,7 @@ export class AuthService {
                         this.toastr.success('Account created successfully!', 'Registration Successful');
                         this.router.navigate(['/dashboard']);
                     } else {
-                        this.toastr.error(authResult.message, 'Registration Failed');
+                        this.toastr.error(authResult.message || 'Registration failed', 'Registration Failed');
                     }
                 })
             );
