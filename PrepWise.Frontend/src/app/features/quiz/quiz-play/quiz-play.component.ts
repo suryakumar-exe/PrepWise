@@ -29,9 +29,28 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
     isLoading = true;
     isSubmitting = false;
     showConfirmSubmit = false;
+    remainingTime = 0;
+
+    // Properties for template access
+    get currentQuestionIndex(): number {
+        return this.quizSession?.currentQuestionIndex || 0;
+    }
+
+    get totalQuestions(): number {
+        return this.quizSession?.questions.length || 0;
+    }
+
+    get questions(): QuestionData[] {
+        return this.quizSession?.questions || [];
+    }
+
+    get answeredQuestions(): number {
+        return this.getAnsweredQuestionsCount();
+    }
 
     private destroy$ = new Subject<void>();
     private autoSaveInterval: any;
+    private timerInterval: any;
 
     constructor(
         private route: ActivatedRoute,
@@ -50,6 +69,7 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
     ngOnInit(): void {
         this.loadQuizSession();
         this.setupAutoSave();
+        this.startTimer();
     }
 
     ngOnDestroy(): void {
@@ -58,6 +78,9 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
 
         if (this.autoSaveInterval) {
             clearInterval(this.autoSaveInterval);
+        }
+        if (this.timerInterval) {
+            clearInterval(this.timerInterval);
         }
     }
 
@@ -82,6 +105,7 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
                 timeLimitSeconds: 1200, // 20 minutes
                 isSubmitted: false
             };
+            this.remainingTime = this.quizSession.timeLimitSeconds;
             this.isLoading = false;
         }, 1000);
     }
@@ -126,6 +150,17 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
                 this.saveProgress();
             }
         }, 30000);
+    }
+
+    private startTimer(): void {
+        this.timerInterval = setInterval(() => {
+            if (this.quizSession && !this.quizSession.isSubmitted && this.remainingTime > 0) {
+                this.remainingTime--;
+                if (this.remainingTime <= 0) {
+                    this.onTimeUp();
+                }
+            }
+        }, 1000);
     }
 
     private saveProgress(): void {
@@ -178,6 +213,20 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
         }
     }
 
+    // Template methods
+    nextQuestion(): void {
+        this.goToNextQuestion();
+    }
+
+    goToQuestion(index: number): void {
+        this.navigateToQuestion(index);
+    }
+
+    getQuestionNumberClass(index: number): string {
+        const status = this.getQuestionStatus(index);
+        return `question-number ${status}`;
+    }
+
     onTimeUp(): void {
         this.submitQuiz();
     }
@@ -195,7 +244,7 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
         this.showConfirmSubmit = false;
     }
 
-    private submitQuiz(): void {
+    submitQuiz(): void {
         if (!this.quizSession || this.isSubmitting) return;
 
         this.isSubmitting = true;

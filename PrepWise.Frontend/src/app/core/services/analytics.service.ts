@@ -28,9 +28,9 @@ export class AnalyticsService {
             totalQuestions: 100,
             averageTime: 2.5,
             performanceLevel: 'Good',
-            accuracyTrend: 75,
-            questionsTrend: 25,
-            timeTrend: 2.5,
+            accuracyTrend: [70, 72, 75, 73, 78, 75],
+            questionsTrend: [10, 15, 12, 18, 20, 25],
+            timeTrend: [3.2, 2.8, 2.5, 2.9, 2.3, 2.5],
             streak: 5,
             subjectPerformance: [
               {
@@ -57,7 +57,8 @@ export class AnalyticsService {
                 description: 'Your accuracy in Mathematics has improved by 15% this week',
                 type: 'success' as const,
                 icon: 'trending-up',
-                actionText: 'Continue Practice'
+                actionText: 'Continue Practice',
+                action: () => console.log('Continue Practice clicked')
               }
             ],
             subjects: [

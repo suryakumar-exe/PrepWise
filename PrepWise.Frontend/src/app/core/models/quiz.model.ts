@@ -91,6 +91,16 @@ export interface QuizResult {
     correctAnswers: number;
     wrongAnswers: number;
     unansweredQuestions: number;
+    timeTaken?: number;
+    subjectPerformance?: SubjectPerformance[];
+}
+
+export interface SubjectPerformance {
+    subjectId: number;
+    subjectName: string;
+    correctAnswers: number;
+    totalQuestions: number;
+    accuracy: number;
 }
 
 // Input types for GraphQL mutations

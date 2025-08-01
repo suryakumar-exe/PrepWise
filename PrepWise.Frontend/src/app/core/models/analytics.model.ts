@@ -3,9 +3,9 @@ export interface AnalyticsData {
     totalQuestions: number;
     averageTime: number;
     performanceLevel: string;
-    accuracyTrend: number;
-    questionsTrend: number;
-    timeTrend: number;
+    accuracyTrend: number[];
+    questionsTrend: number[];
+    timeTrend: number[];
     streak: number;
     subjectPerformance: SubjectPerformance[];
     speedTrend: number[];
@@ -28,6 +28,7 @@ export interface StudyInsight {
     type: 'success' | 'warning' | 'info' | 'danger';
     icon: string;
     actionText?: string;
+    action?: () => void;
 }
 
 export interface Subject {

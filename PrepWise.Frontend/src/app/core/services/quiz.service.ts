@@ -354,6 +354,60 @@ export class QuizService {
       );
   }
 
+  // Get quiz result by attempt ID
+  getQuizResult(attemptId: number): Observable<QuizResult> {
+    const graphqlQuery = {
+      query: `
+                query GetQuizResult($attemptId: Int!) {
+                    quizResult(attemptId: $attemptId) {
+                        success
+                        message
+                        score
+                        correctAnswers
+                        wrongAnswers
+                        unansweredQuestions
+                        timeTaken
+                        subjectPerformance {
+                            subjectId
+                            subjectName
+                            correctAnswers
+                            totalQuestions
+                            accuracy
+                        }
+                    }
+                }
+            `,
+      variables: { attemptId }
+    };
+
+    return this.http.post<any>(`${this.apiUrl}/graphql`, graphqlQuery)
+      .pipe(
+        map(response => response.data?.quizResult || {
+          success: false,
+          message: 'Result not found',
+          score: 0,
+          correctAnswers: 0,
+          wrongAnswers: 0,
+          unansweredQuestions: 0,
+          timeTaken: 0,
+          subjectPerformance: []
+        }),
+        catchError(error => {
+          console.error('Error fetching quiz result:', error);
+          return of({
+            success: false,
+            message: 'Failed to load result',
+            score: 0,
+            correctAnswers: 0,
+            wrongAnswers: 0,
+            unansweredQuestions: 0,
+            timeTaken: 0,
+            subjectPerformance: []
+          });
+        })
+      );
+  }
+
   // Utility methods
   calculateTimeSpent(startTime: string, endTime: string): number {
     const start = new Date(startTime).getTime();

@@ -98,6 +98,11 @@ export class LeaderboardComponent implements OnInit {
         return 'text-danger';
     }
 
+    getTimeFrameLabel(): string {
+        const timeFrame = this.timeFrames.find(t => t.value === this.selectedTimeFrame);
+        return timeFrame ? timeFrame.label : 'All Time';
+    }
+
     goToDashboard(): void {
         this.router.navigate(['/dashboard']);
     }

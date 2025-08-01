@@ -82,7 +82,7 @@
                     </h3>
                     <p class="card-subtitle">
                         {{ selectedSubjectId ? 'Subject-specific rankings' : 'Overall rankings' }}
-                        • {{ timeFrames.find(t => t.value === selectedTimeFrame)?.label }}
+                        • {{ getTimeFrameLabel() }}
                     </p>
                 </div>
 
