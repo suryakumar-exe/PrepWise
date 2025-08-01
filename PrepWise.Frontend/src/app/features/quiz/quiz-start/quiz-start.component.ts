@@ -160,9 +160,7 @@ export class QuizStartComponent implements OnInit, OnDestroy {
                 return;
             }
 
-            console.log('Selected subject ID:', this.selectedSubjectId); // Debug log
-            console.log('Selected subject:', selectedSubject); // Debug log
-            console.log('Form values:', formValue); // Debug log
+
 
             // Generate AI questions using the correct GraphQL query
             this.quizService.generateAIQuestions(
@@ -172,9 +170,7 @@ export class QuizStartComponent implements OnInit, OnDestroy {
                 formValue.questionCount
             ).subscribe({
                 next: (questions) => {
-                    console.log('Generated questions:', questions); // Debug log
                     if (questions && questions.length > 0) {
-                        console.log('Questions generated successfully, starting quiz attempt...'); // Debug log
                         // Start quiz attempt with generated questions
                         this.quizService.startQuizAttempt(
                             this.currentUser!.id,
@@ -183,9 +179,7 @@ export class QuizStartComponent implements OnInit, OnDestroy {
                             formValue.timeLimitMinutes
                         ).subscribe({
                             next: (result) => {
-                                console.log('Start quiz attempt result:', result); // Debug log
                                 if (result.success && result.attemptId) {
-                                    console.log('Quiz attempt created successfully, navigating to play...'); // Debug log
                                     this.toastr.success('Quiz started successfully!');
                                     // Pass the generated questions to the quiz play component
                                     this.router.navigate(['/quiz/play', result.attemptId], {
@@ -196,7 +190,6 @@ export class QuizStartComponent implements OnInit, OnDestroy {
                                         }
                                     });
                                 } else {
-                                    console.log('Failed to start quiz attempt, using fallback navigation...'); // Debug log
                                     // Fallback: Navigate with mock attempt ID if backend fails
                                     this.toastr.success('Quiz started successfully!');
                                     this.router.navigate(['/quiz/play', '1'], {
@@ -211,7 +204,6 @@ export class QuizStartComponent implements OnInit, OnDestroy {
                             },
                             error: (error) => {
                                 console.error('Error starting quiz:', error);
-                                console.log('Using fallback navigation due to error...'); // Debug log
                                 // Fallback: Navigate with mock attempt ID if backend fails
                                 this.toastr.success('Quiz started successfully!');
                                 this.router.navigate(['/quiz/play', '1'], {

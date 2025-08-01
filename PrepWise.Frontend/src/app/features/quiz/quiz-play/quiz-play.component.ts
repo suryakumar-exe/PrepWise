@@ -112,12 +112,10 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
 
     private loadQuizSession(): void {
         const attemptId = this.route.snapshot.params['attemptId'];
-        console.log('Loading quiz session for attempt ID:', attemptId); // Debug log
 
         // Try to get questions from navigation state first
         const navigation = this.router.getCurrentNavigation();
         const state = navigation?.extras?.state;
-        console.log('Navigation state:', state); // Debug log
 
         if (state && state['questions']) {
             // Use questions passed from quiz start component
@@ -125,7 +123,7 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
             const timeLimitMinutes = state['timeLimitMinutes'] || 20;
             const subjectId = state['subjectId'];
 
-            console.log('Using questions from navigation state:', questions); // Debug log
+
 
             this.quizSession = {
                 attemptId: parseInt(attemptId) || 1,
@@ -141,10 +139,8 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
             this.isLoading = false;
         } else if (attemptId) {
             // Fallback: Load quiz attempt details from backend
-            console.log('No questions in state, trying to load from backend...'); // Debug log
             this.quizService.getQuizAttempt(attemptId).subscribe({
                 next: (attempt: any) => {
-                    console.log('Backend attempt response:', attempt); // Debug log
                     if (attempt) {
                         this.quizSession = {
                             attemptId: attempt.id,
@@ -159,21 +155,18 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
                         this.remainingTime = this.quizSession.timeLimitSeconds;
                         this.isLoading = false;
                     } else {
-                        console.log('No attempt data from backend, redirecting to quiz start'); // Debug log
                         this.toastr.error('No quiz data available. Please try again.');
                         this.router.navigate(['/quiz/start']);
                     }
                 },
                 error: (error: any) => {
                     console.error('Error loading quiz session from backend:', error);
-                    console.log('Backend error, redirecting to quiz start'); // Debug log
                     this.toastr.error('Failed to load quiz. Please try again.');
                     this.router.navigate(['/quiz/start']);
                 }
             });
         } else {
             // No questions available, redirect back to quiz start
-            console.log('No questions available, redirecting to quiz start'); // Debug log
             this.toastr.error('No questions available for this quiz. Please try again.');
             this.router.navigate(['/quiz/start']);
         }

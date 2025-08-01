@@ -11,7 +11,10 @@ import {
   QuizAnswerInput,
   StartQuizInput,
   QuestionDifficulty,
-  QuestionLanguage
+  QuestionLanguage,
+  GenerateAIQuestionsResponse,
+  StartQuizAttemptResponse,
+  SubmitQuizAnswersResponse
 } from '../models/quiz.model';
 
 @Injectable({
@@ -171,7 +174,7 @@ export class QuizService {
   }
 
   // Generate AI questions for practice
-  generateAIQuestions(subjectId: number, difficulty: QuestionDifficulty = QuestionDifficulty.Medium, language: QuestionLanguage = QuestionLanguage.English, questionCount: number = 10): Observable<any> {
+  generateAIQuestions(subjectId: number, difficulty: QuestionDifficulty = QuestionDifficulty.Medium, language: QuestionLanguage = QuestionLanguage.English, questionCount: number = 10): Observable<Question[]> {
     const graphqlQuery = {
       query: `
               query GenerateAIQuestions($subjectId: Int!, $difficulty: QuestionDifficulty!, $language: QuestionLanguage!, $questionCount: Int!) {
@@ -198,37 +201,22 @@ export class QuizService {
       }
     };
 
-    console.log('GraphQL Query Variables:', graphqlQuery.variables); // Debug log for variables
-    return this.http.post<any>(`${this.apiUrl}/graphql`, graphqlQuery)
+    return this.http.post<GenerateAIQuestionsResponse>(`${this.apiUrl}/graphql`, graphqlQuery)
       .pipe(
         map(response => {
-          console.log('=== GRAPHQL RESPONSE DEBUG ===');
-          console.log('Full Response:', response); // Debug log
-          console.log('Response data:', response.data); // Debug log
-          console.log('Response errors:', response.errors); // Debug log
-          console.log('Response data keys:', response.data ? Object.keys(response.data) : 'No data keys'); // Debug log
-
-          // Check if generateAIQuestions exists in response.data
           const questions = response.data?.generateAIQuestions;
-          console.log('Questions from response.data.generateAIQuestions:', questions); // Debug log
-          console.log('Questions type:', typeof questions); // Debug log
-          console.log('Questions is array:', Array.isArray(questions)); // Debug log
-          console.log('Questions length:', questions ? questions.length : 'No questions'); // Debug log
-
-          // Also check if the response itself contains the data directly
-          console.log('Direct response generateAIQuestions:', response.generateAIQuestions); // Debug log
-          console.log('Response keys:', Object.keys(response)); // Debug log
 
           if (questions && Array.isArray(questions) && questions.length > 0) {
-            console.log('Processing questions from response.data.generateAIQuestions:', questions.length); // Debug log
             // Transform to match frontend model
             const transformedQuestions = questions.map((q: any) => ({
               id: q.id,
               text: q.questionText,
               explanation: '',
-              difficulty: q.difficulty,
-              language: q.language,
+              difficulty: q.difficulty as QuestionDifficulty,
+              language: q.language as QuestionLanguage,
               subjectId: subjectId,
+              isActive: true,
+              createdAt: new Date().toISOString(),
               options: q.options.map((opt: any) => ({
                 id: opt.id,
                 text: opt.optionText,
@@ -236,44 +224,8 @@ export class QuizService {
                 orderIndex: 0
               }))
             }));
-            console.log('Transformed questions:', transformedQuestions); // Debug log
-            console.log('=== END DEBUG ===');
             return transformedQuestions;
           }
-
-          // Fallback: Check if data is directly in response
-          const directQuestions = response.generateAIQuestions;
-          console.log('Checking direct response for questions:', directQuestions); // Debug log
-          if (directQuestions && Array.isArray(directQuestions) && directQuestions.length > 0) {
-            console.log('Processing questions from direct response:', directQuestions.length); // Debug log
-            // Transform to match frontend model
-            const transformedQuestions = directQuestions.map((q: any) => ({
-              id: q.id,
-              text: q.questionText,
-              explanation: '',
-              difficulty: q.difficulty,
-              language: q.language,
-              subjectId: subjectId,
-              options: q.options.map((opt: any) => ({
-                id: opt.id,
-                text: opt.optionText,
-                isCorrect: opt.isCorrect,
-                orderIndex: 0
-              }))
-            }));
-            console.log('Transformed questions from direct response:', transformedQuestions); // Debug log
-            console.log('=== END DEBUG ===');
-            return transformedQuestions;
-          }
-
-          console.log('No questions found or empty array'); // Debug log
-          console.log('=== END DEBUG ===');
-
-          // Final fallback: Check if the entire response structure is different
-          console.log('=== FINAL FALLBACK DEBUG ===');
-          console.log('Response stringified:', JSON.stringify(response, null, 2)); // Debug log
-          console.log('Response.data stringified:', JSON.stringify(response.data, null, 2)); // Debug log
-          console.log('=== END FINAL DEBUG ===');
 
           return [];
         }),
@@ -285,7 +237,7 @@ export class QuizService {
   }
 
   // Start a quiz attempt
-  startQuizAttempt(userId: number, subjectId: number, questionCount: number = 10, timeLimitMinutes: number = 30): Observable<any> {
+  startQuizAttempt(userId: number, subjectId: number, questionCount: number = 10, timeLimitMinutes: number = 30): Observable<{ success: boolean; attemptId?: number; quizAttempt?: any; message?: string }> {
     const graphqlQuery = {
       query: `
               mutation StartQuizAttempt($userId: Int!, $subjectId: Int!, $questionCount: Int!, $timeLimitMinutes: Int!) {
@@ -314,7 +266,7 @@ export class QuizService {
       }
     };
 
-    return this.http.post<any>(`${this.apiUrl}/graphql`, graphqlQuery)
+    return this.http.post<StartQuizAttemptResponse>(`${this.apiUrl}/graphql`, graphqlQuery)
       .pipe(
         map(response => {
           const result = response.data?.startQuizAttempt;
@@ -387,7 +339,7 @@ export class QuizService {
   }
 
   // Submit quiz answers
-  submitQuizAnswers(quizAttemptId: number, answers: any[]): Observable<any> {
+  submitQuizAnswers(quizAttemptId: number, answers: QuizAnswerInput[]): Observable<{ success: boolean; score?: number; correctAnswers?: number; wrongAnswers?: number; message?: string }> {
     const graphqlQuery = {
       query: `
               mutation SubmitQuizAnswers($quizAttemptId: Int!, $answers: [QuizAnswerInput!]!) {

@@ -114,4 +114,60 @@ export interface StartQuizInput {
     subjectId: number;
     questionCount: number;
     timeLimitMinutes: number;
+}
+
+// GraphQL Response Interfaces
+export interface GraphQLQuestionOption {
+    id: number;
+    optionText: string;
+    optionTextTamil: string;
+    isCorrect: boolean;
+}
+
+export interface GraphQLQuestion {
+    id: number;
+    questionText: string;
+    questionTextTamil: string;
+    difficulty: string;
+    language: string;
+    options: GraphQLQuestionOption[];
+}
+
+export interface GenerateAIQuestionsResponse {
+    data: {
+        generateAIQuestions: GraphQLQuestion[];
+    };
+}
+
+export interface StartQuizAttemptResponse {
+    data: {
+        startQuizAttempt: {
+            success: boolean;
+            message: string;
+            attemptId?: number;
+            quizAttempt?: {
+                id: number;
+                quiz: {
+                    id: number;
+                    title: string;
+                    questionCount: number;
+                    timeLimitMinutes: number;
+                };
+                startedAt: string;
+                status: string;
+            };
+        };
+    };
+}
+
+export interface SubmitQuizAnswersResponse {
+    data: {
+        submitQuizAnswers: {
+            success: boolean;
+            message: string;
+            score: number;
+            correctAnswers: number;
+            wrongAnswers: number;
+        };
+    };
 } 
