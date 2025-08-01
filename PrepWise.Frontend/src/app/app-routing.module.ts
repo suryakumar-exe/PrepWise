@@ -15,8 +15,6 @@ const routes: Routes = [
         path: 'dashboard',
         loadChildren: () => import('./features/dashboard/dashboard.module').then(m => m.DashboardModule)
     },
-    // Temporarily disabled until components are fully fixed
-    /*
     {
         path: 'quiz',
         loadChildren: () => import('./features/quiz/quiz.module').then(m => m.QuizModule)
@@ -41,7 +39,6 @@ const routes: Routes = [
         path: 'profile',
         loadChildren: () => import('./features/profile/profile.module').then(m => m.ProfileModule)
     },
-    */
     {
         path: '**',
         redirectTo: '/dashboard'

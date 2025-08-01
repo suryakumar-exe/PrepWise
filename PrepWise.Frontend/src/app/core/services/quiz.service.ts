@@ -24,26 +24,39 @@ export class QuizService {
 
   // Get all subjects
   getSubjects(): Observable<Subject[]> {
-    return this.http.get<Subject[]>(`${this.apiUrl}/api/subjects`)
+    const graphqlQuery = {
+      query: `
+                query GetSubjects {
+                    subjects {
+                        id
+                        name
+                        description
+                        category
+                        isActive
+                    }
+                }
+            `
+    };
+
+    return this.http.post<any>(`${this.apiUrl}/graphql`, graphqlQuery)
       .pipe(
+        map(response => response.data?.subjects || []),
         catchError(error => {
           console.error('Error fetching subjects:', error);
           // Return mock data for now
           return of([
             {
               id: 1,
-              name: 'Mathematics',
-              description: 'Basic mathematics concepts',
-              icon: 'calculator',
-              color: '#007bff',
+              name: 'Tamil Subject Quiz',
+              description: 'Standard 6th to 10th Tamil',
+              category: 'Tamil',
               isActive: true
             },
             {
               id: 2,
-              name: 'Science',
-              description: 'General science topics',
-              icon: 'flask',
-              color: '#28a745',
+              name: 'Tamil Quiz',
+              description: 'Grammar, Literature, Comprehension',
+              category: 'Tamil',
               isActive: true
             }
           ]);
@@ -57,13 +70,53 @@ export class QuizService {
     difficulty?: QuestionDifficulty,
     language?: QuestionLanguage
   ): Observable<Question[]> {
-    let url = `${this.apiUrl}/api/questions/subject/${subjectId}`;
-    const params: any = {};
-    if (difficulty) params.difficulty = difficulty;
-    if (language) params.language = language;
+    const graphqlQuery = {
+      query: `
+                query GetQuestionsBySubject($subjectId: Int!, $difficulty: QuestionDifficulty, $language: QuestionLanguage) {
+                    questionsBySubject(subjectId: $subjectId, difficulty: $difficulty, language: $language) {
+                        id
+                        questionText
+                        questionTextTamil
+                        difficulty
+                        language
+                        subjectId
+                        options {
+                            id
+                            optionText
+                            optionTextTamil
+                            isCorrect
+                            orderIndex
+                        }
+                        isActive
+                        createdAt
+                    }
+                }
+            `,
+      variables: { subjectId, difficulty, language }
+    };
 
-    return this.http.get<Question[]>(url, { params })
+    return this.http.post<any>(`${this.apiUrl}/graphql`, graphqlQuery)
       .pipe(
+        map(response => {
+          // Transform backend response to match frontend model
+          const questions = response.data?.questionsBySubject || [];
+          return questions.map((q: any) => ({
+            id: q.id,
+            text: q.questionText, // Map questionText to text
+            explanation: q.explanation,
+            difficulty: q.difficulty,
+            language: q.language,
+            subjectId: q.subjectId,
+            options: q.options.map((opt: any) => ({
+              id: opt.id,
+              text: opt.optionText, // Map optionText to text
+              isCorrect: opt.isCorrect,
+              orderIndex: opt.orderIndex
+            })),
+            isActive: q.isActive,
+            createdAt: q.createdAt
+          }));
+        }),
         catchError(error => {
           console.error('Error fetching questions:', error);
           // Return mock data for now
@@ -72,7 +125,7 @@ export class QuizService {
               id: 1,
               text: 'What is 2 + 2?',
               explanation: 'Basic addition',
-              difficulty: 'EASY' as QuestionDifficulty,
+              difficulty: 'MEDIUM' as QuestionDifficulty,
               language: 'ENGLISH' as QuestionLanguage,
               subjectId: subjectId,
               options: [
@@ -96,9 +149,53 @@ export class QuizService {
     difficulty: QuestionDifficulty,
     language: QuestionLanguage
   ): Observable<Question[]> {
-    const payload = { subjectId, questionCount, difficulty, language };
-    return this.http.post<Question[]>(`${this.apiUrl}/api/questions/generate`, payload)
+    const graphqlQuery = {
+      query: `
+                query GenerateAIQuestions($subjectId: Int!, $questionCount: Int!, $difficulty: QuestionDifficulty!, $language: QuestionLanguage!) {
+                    generateAIQuestions(subjectId: $subjectId, questionCount: $questionCount, difficulty: $difficulty, language: $language) {
+                        id
+                        questionText
+                        questionTextTamil
+                        difficulty
+                        language
+                        subjectId
+                        options {
+                            id
+                            optionText
+                            optionTextTamil
+                            isCorrect
+                            orderIndex
+                        }
+                        isActive
+                        createdAt
+                    }
+                }
+            `,
+      variables: { subjectId, questionCount, difficulty, language }
+    };
+
+    return this.http.post<any>(`${this.apiUrl}/graphql`, graphqlQuery)
       .pipe(
+        map(response => {
+          // Transform backend response to match frontend model
+          const questions = response.data?.generateAIQuestions || [];
+          return questions.map((q: any) => ({
+            id: q.id,
+            text: q.questionText, // Map questionText to text
+            explanation: q.explanation,
+            difficulty: q.difficulty,
+            language: q.language,
+            subjectId: q.subjectId,
+            options: q.options.map((opt: any) => ({
+              id: opt.id,
+              text: opt.optionText, // Map optionText to text
+              isCorrect: opt.isCorrect,
+              orderIndex: opt.orderIndex
+            })),
+            isActive: q.isActive,
+            createdAt: q.createdAt
+          }));
+        }),
         catchError(error => {
           console.error('Error generating AI questions:', error);
           return of([]);
@@ -108,8 +205,66 @@ export class QuizService {
 
   // Start a quiz attempt
   startQuizAttempt(quizData: StartQuizInput): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/api/quiz/start`, quizData)
+    const graphqlQuery = {
+      query: `
+                mutation StartQuizAttempt($userId: Int!, $subjectId: Int!, $questionCount: Int!, $timeLimitMinutes: Int!) {
+                    startQuizAttempt(userId: $userId, subjectId: $subjectId, questionCount: $questionCount, timeLimitMinutes: $timeLimitMinutes) {
+                        success
+                        message
+                        quizAttempt {
+                            id
+                            userId
+                            quizId
+                            startedAt
+                            totalQuestions
+                            status
+                        }
+                        questions {
+                            id
+                            questionText
+                            questionTextTamil
+                            difficulty
+                            language
+                            subjectId
+                            options {
+                                id
+                                optionText
+                                optionTextTamil
+                                isCorrect
+                                orderIndex
+                            }
+                        }
+                    }
+                }
+            `,
+      variables: quizData
+    };
+
+    return this.http.post<any>(`${this.apiUrl}/graphql`, graphqlQuery)
       .pipe(
+        map(response => {
+          const result = response.data?.startQuizAttempt;
+          if (result && result.questions) {
+            // Transform questions to match frontend model
+            result.questions = result.questions.map((q: any) => ({
+              id: q.id,
+              text: q.questionText,
+              explanation: q.explanation,
+              difficulty: q.difficulty,
+              language: q.language,
+              subjectId: q.subjectId,
+              options: q.options.map((opt: any) => ({
+                id: opt.id,
+                text: opt.optionText,
+                isCorrect: opt.isCorrect,
+                orderIndex: opt.orderIndex
+              })),
+              isActive: q.isActive,
+              createdAt: q.createdAt
+            }));
+          }
+          return result;
+        }),
         catchError(error => {
           console.error('Error starting quiz:', error);
           return of({
@@ -124,9 +279,25 @@ export class QuizService {
 
   // Submit quiz answers
   submitQuizAnswers(quizAttemptId: number, answers: QuizAnswerInput[]): Observable<QuizResult> {
-    const payload = { quizAttemptId, answers };
-    return this.http.post<QuizResult>(`${this.apiUrl}/api/quiz/submit`, payload)
+    const graphqlQuery = {
+      query: `
+                mutation SubmitQuizAnswers($quizAttemptId: Int!, $answers: [QuizAnswerInput!]!) {
+                    submitQuizAnswers(quizAttemptId: $quizAttemptId, answers: $answers) {
+                        success
+                        message
+                        score
+                        correctAnswers
+                        wrongAnswers
+                        unansweredQuestions
+                    }
+                }
+            `,
+      variables: { quizAttemptId, answers }
+    };
+
+    return this.http.post<any>(`${this.apiUrl}/graphql`, graphqlQuery)
       .pipe(
+        map(response => response.data?.submitQuizAnswers),
         catchError(error => {
           console.error('Error submitting quiz answers:', error);
           return of({
@@ -143,8 +314,39 @@ export class QuizService {
 
   // Get user's quiz attempts
   getUserQuizAttempts(userId: number): Observable<QuizAttempt[]> {
-    return this.http.get<QuizAttempt[]>(`${this.apiUrl}/api/quiz/attempts/${userId}`)
+    const graphqlQuery = {
+      query: `
+                query GetUserQuizAttempts($userId: Int!) {
+                    userQuizAttempts(userId: $userId) {
+                        id
+                        userId
+                        quizId
+                        quiz {
+                            id
+                            title
+                            subject {
+                                id
+                                name
+                            }
+                        }
+                        startedAt
+                        completedAt
+                        timeTaken
+                        score
+                        totalQuestions
+                        correctAnswers
+                        wrongAnswers
+                        unansweredQuestions
+                        status
+                    }
+                }
+            `,
+      variables: { userId }
+    };
+
+    return this.http.post<any>(`${this.apiUrl}/graphql`, graphqlQuery)
       .pipe(
+        map(response => response.data?.userQuizAttempts || []),
         catchError(error => {
           console.error('Error fetching quiz attempts:', error);
           return of([]);

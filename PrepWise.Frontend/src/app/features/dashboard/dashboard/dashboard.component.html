@@ -80,21 +80,21 @@
         </div>
     </section>
 
-    <!-- Subjects Grid -->
-    <section class="subjects-section">
+    <!-- Subjects by Category -->
+    <section class="subjects-section" *ngFor="let category of subjectCategories">
         <div class="container">
             <div class="row">
                 <div class="col-12">
                     <div class="section-header">
-                        <h2 class="section-title">Choose Your Subject</h2>
-                        <p class="section-subtitle">Select a subject to start practicing questions</p>
+                        <h2 class="section-title">{{ category.name }}</h2>
+                        <p class="section-subtitle">{{ category.description }}</p>
                     </div>
                 </div>
             </div>
 
             <div class="row g-4">
                 <div class="col-12 col-sm-6 col-lg-4 col-xl-3"
-                    *ngFor="let subject of subjects; trackBy: trackBySubjectId">
+                    *ngFor="let subject of category.subjects; trackBy: trackBySubjectId">
                     <div class="subject-card" (click)="startQuiz(subject.id)">
                         <div class="subject-header" [style.background-color]="subject.color">
                             <i class="subject-icon" [class]="subject.icon"></i>
