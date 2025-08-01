@@ -163,8 +163,8 @@ export class QuizStartComponent implements OnInit, OnDestroy {
             // Generate AI questions using the correct GraphQL query
             this.quizService.generateAIQuestions(
                 this.selectedSubjectId,
-                formValue.difficulty,
-                formValue.language,
+                formValue.difficulty as QuestionDifficulty,
+                formValue.language as QuestionLanguage,
                 formValue.questionCount
             ).subscribe({
                 next: (questions) => {

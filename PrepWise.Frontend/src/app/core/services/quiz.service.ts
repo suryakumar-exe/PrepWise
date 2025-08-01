@@ -171,10 +171,10 @@ export class QuizService {
   }
 
   // Generate AI questions for practice
-  generateAIQuestions(subjectId: number, difficulty: string = 'MEDIUM', language: string = 'ENGLISH', questionCount: number = 10): Observable<any> {
+  generateAIQuestions(subjectId: number, difficulty: QuestionDifficulty = QuestionDifficulty.Medium, language: QuestionLanguage = QuestionLanguage.English, questionCount: number = 10): Observable<any> {
     const graphqlQuery = {
       query: `
-              query GenerateAIQuestions($subjectId: Int!, $difficulty: String!, $language: String!, $questionCount: Int!) {
+              query GenerateAIQuestions($subjectId: Int!, $difficulty: QuestionDifficulty!, $language: QuestionLanguage!, $questionCount: Int!) {
                   generateAIQuestions(subjectId: $subjectId, difficulty: $difficulty, language: $language, questionCount: $questionCount) {
                       id
                       questionText
@@ -198,6 +198,7 @@ export class QuizService {
       }
     };
 
+    console.log('GraphQL Query Variables:', graphqlQuery.variables); // Debug log for variables
     return this.http.post<any>(`${this.apiUrl}/graphql`, graphqlQuery)
       .pipe(
         map(response => {
