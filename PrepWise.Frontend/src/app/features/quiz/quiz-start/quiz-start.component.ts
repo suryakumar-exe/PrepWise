@@ -175,6 +175,12 @@ export class QuizStartComponent implements OnInit, OnDestroy {
                 next: (result) => {
                     if (result.success && result.attemptId) {
                         this.toastr.success('Quiz started successfully!');
+
+                        // Store attempt details in session storage as fallback
+                        sessionStorage.setItem('quizAttemptId', result.attemptId.toString());
+                        sessionStorage.setItem('quizTimeLimit', formValue.timeLimitMinutes.toString());
+                        sessionStorage.setItem('quizSubjectId', this.selectedSubjectId!.toString());
+
                         this.router.navigate(['/quiz/play', result.attemptId], {
                             state: {
                                 attemptId: result.attemptId,
