@@ -56,7 +56,9 @@ export class MockTestStartComponent implements OnInit {
     }
 
     ngOnInit(): void {
+        console.log('Mock test start component initialized'); // Debug log
         this.mockTestForm.get('testType')?.valueChanges.subscribe(value => {
+            console.log('Test type changed to:', value); // Debug log
             if (value !== 'custom') {
                 const config = this.testConfigurations.find(c => c.id === value);
                 if (config) {
@@ -74,8 +76,12 @@ export class MockTestStartComponent implements OnInit {
         return this.testConfigurations.find(c => c.id === testType);
     }
 
-    async startMockTest() {
+    startMockTest() {
+        console.log('Starting mock test...'); // Debug log
+        console.log('Form value:', this.mockTestForm.value); // Debug log
+
         if (this.mockTestForm.invalid) {
+            console.log('Form is invalid'); // Debug log
             this.toastr.error('Please fill in all required fields correctly.');
             return;
         }
@@ -83,26 +89,30 @@ export class MockTestStartComponent implements OnInit {
         this.isLoading = true;
         const formValue = this.mockTestForm.value;
 
-        try {
-            const title = formValue.customTitle ||
-                `${this.getSelectedConfig()?.title || 'Custom Test'} - ${new Date().toLocaleDateString()}`;
+        const title = formValue.customTitle ||
+            `${this.getSelectedConfig()?.title || 'Custom Test'} - ${new Date().toLocaleDateString()}`;
 
-            const result = await this.mockTestService.startMockTest(1).toPromise();
-
-            if (result?.success) {
-                this.toastr.success('Mock test started successfully!');
-                this.router.navigate(['/mock-test/play'], {
-                    state: { mockTestData: result.quizAttempt }
-                });
-            } else {
-                this.toastr.error(result?.message || 'Failed to start mock test');
+        console.log('Calling mock test service with userId: 1'); // Debug log
+        this.mockTestService.startMockTest(1).subscribe({
+            next: (result) => {
+                console.log('Mock test service response:', result); // Debug log
+                if (result?.success) {
+                    this.toastr.success('Mock test started successfully!');
+                    console.log('Navigating to mock test play with data:', result.quizAttempt); // Debug log
+                    this.router.navigate(['/mock-test/play'], {
+                        state: { mockTestData: result.quizAttempt }
+                    });
+                } else {
+                    this.toastr.error(result?.message || 'Failed to start mock test');
+                }
+                this.isLoading = false;
+            },
+            error: (error) => {
+                console.error('Error starting mock test:', error);
+                this.toastr.error('An error occurred while starting the mock test');
+                this.isLoading = false;
             }
-        } catch (error) {
-            console.error('Error starting mock test:', error);
-            this.toastr.error('An error occurred while starting the mock test');
-        } finally {
-            this.isLoading = false;
-        }
+        });
     }
 
     goBack() {

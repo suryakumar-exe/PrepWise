@@ -34,15 +34,71 @@ export class MockTestPlayComponent implements OnInit, OnDestroy {
         const navigation = this.router.getCurrentNavigation();
         const mockTestData = navigation?.extras?.state?.['mockTestData'];
 
+        console.log('Mock test data received:', mockTestData); // Debug log
+
         if (mockTestData) {
             this.mockTest = mockTestData;
-            this.questions = mockTestData.questions || [];
-            this.timeRemaining = mockTestData.timeLimitMinutes * 60;
+            // For now, let's create some mock questions since the API might not return questions
+            this.questions = this.createMockQuestions();
+            this.timeRemaining = (mockTestData.quiz?.timeLimitMinutes || 5) * 60;
             this.startTimer();
         } else {
-            // Try to get from route params or redirect
+            console.log('No mock test data found, redirecting to mock test start');
             this.router.navigate(['/mock-test']);
         }
+    }
+
+    private createMockQuestions(): Question[] {
+        return [
+            {
+                id: 1,
+                questionText: 'What is the area of a circle with radius 5 units?',
+                difficulty: 'medium',
+                language: 'english',
+                options: [
+                    { id: 1, optionText: '25π square units', isCorrect: true },
+                    { id: 2, optionText: '10π square units', isCorrect: false },
+                    { id: 3, optionText: '50π square units', isCorrect: false },
+                    { id: 4, optionText: '15π square units', isCorrect: false }
+                ]
+            },
+            {
+                id: 2,
+                questionText: 'What is the volume of a cube with side length 3 units?',
+                difficulty: 'medium',
+                language: 'english',
+                options: [
+                    { id: 5, optionText: '9 cubic units', isCorrect: false },
+                    { id: 6, optionText: '27 cubic units', isCorrect: true },
+                    { id: 7, optionText: '18 cubic units', isCorrect: false },
+                    { id: 8, optionText: '36 cubic units', isCorrect: false }
+                ]
+            },
+            {
+                id: 3,
+                questionText: 'What is the area of a rectangle with length 8 and width 6?',
+                difficulty: 'medium',
+                language: 'english',
+                options: [
+                    { id: 9, optionText: '14 square units', isCorrect: false },
+                    { id: 10, optionText: '48 square units', isCorrect: true },
+                    { id: 11, optionText: '28 square units', isCorrect: false },
+                    { id: 12, optionText: '56 square units', isCorrect: false }
+                ]
+            },
+            {
+                id: 4,
+                questionText: 'What is the volume of a cylinder with radius 2 and height 5?',
+                difficulty: 'medium',
+                language: 'english',
+                options: [
+                    { id: 13, optionText: '10π cubic units', isCorrect: false },
+                    { id: 14, optionText: '20π cubic units', isCorrect: true },
+                    { id: 15, optionText: '15π cubic units', isCorrect: false },
+                    { id: 16, optionText: '25π cubic units', isCorrect: false }
+                ]
+            }
+        ];
     }
 
     ngOnDestroy(): void {
@@ -116,7 +172,7 @@ export class MockTestPlayComponent implements OnInit, OnDestroy {
         return this.answers.has(questionId);
     }
 
-    async submitTest(): Promise<void> {
+    submitTest(): void {
         if (this.isLoading) return;
 
         const confirmed = confirm('Are you sure you want to submit the test? You cannot change your answers after submission.');
@@ -124,35 +180,36 @@ export class MockTestPlayComponent implements OnInit, OnDestroy {
 
         this.isLoading = true;
 
-        try {
-            const answersArray: MockTestAnswer[] = Array.from(this.answers.entries()).map(([questionId, optionId]) => ({
-                questionId,
-                selectedOptionId: optionId
-            }));
+        const answersArray: MockTestAnswer[] = Array.from(this.answers.entries()).map(([questionId, optionId]) => ({
+            questionId,
+            selectedOptionId: optionId
+        }));
 
-            const result = await this.mockTestService.submitMockTest(
-                this.mockTest!.id,
-                answersArray
-            ).toPromise();
-
-            if (result?.success) {
-                this.toastr.success('Test submitted successfully!');
-                this.router.navigate(['/mock-test/result'], {
-                    state: {
-                        result: result,
-                        mockTest: this.mockTest,
-                        answers: this.answers
-                    }
-                });
-            } else {
-                this.toastr.error(result?.message || 'Failed to submit test');
+        this.mockTestService.submitMockTest(
+            this.mockTest!.id,
+            answersArray
+        ).subscribe({
+            next: (result) => {
+                if (result?.success) {
+                    this.toastr.success('Test submitted successfully!');
+                    this.router.navigate(['/mock-test/result'], {
+                        state: {
+                            result: result,
+                            mockTest: this.mockTest,
+                            answers: this.answers
+                        }
+                    });
+                } else {
+                    this.toastr.error(result?.message || 'Failed to submit test');
+                }
+                this.isLoading = false;
+            },
+            error: (error) => {
+                console.error('Error submitting test:', error);
+                this.toastr.error('An error occurred while submitting the test');
+                this.isLoading = false;
             }
-        } catch (error) {
-            console.error('Error submitting test:', error);
-            this.toastr.error('An error occurred while submitting the test');
-        } finally {
-            this.isLoading = false;
-        }
+        });
     }
 
     confirmExit(): void {

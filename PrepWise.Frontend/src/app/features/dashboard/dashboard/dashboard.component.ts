@@ -74,7 +74,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
                         category: 'Tamil'
                     },
                     {
-                        id: 2,
+                        id: 1,
                         name: 'Standard 7',
                         description: '7th Standard Tamil Language',
                         icon: 'bi-book',
@@ -82,7 +82,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
                         category: 'Tamil'
                     },
                     {
-                        id: 3,
+                        id: 1,
                         name: 'Standard 8',
                         description: '8th Standard Tamil Language',
                         icon: 'bi-book',
@@ -90,7 +90,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
                         category: 'Tamil'
                     },
                     {
-                        id: 4,
+                        id: 1,
                         name: 'Standard 9',
                         description: '9th Standard Tamil Language',
                         icon: 'bi-book',
@@ -98,7 +98,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
                         category: 'Tamil'
                     },
                     {
-                        id: 5,
+                        id: 1,
                         name: 'Standard 10',
                         description: '10th Standard Tamil Language',
                         icon: 'bi-book',
@@ -106,7 +106,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
                         category: 'Tamil'
                     },
                     {
-                        id: 6,
+                        id: 2,
                         name: 'Tamil Grammar',
                         description: 'Grammar, Literature, Comprehension',
                         icon: 'bi-pencil',
@@ -120,7 +120,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
                 description: 'Mathematical and logical reasoning',
                 subjects: [
                     {
-                        id: 7,
+                        id: 3,
                         name: 'Simplification',
                         description: 'Mathematical Simplification',
                         icon: 'bi-calculator',
@@ -128,7 +128,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
                         category: 'Aptitude'
                     },
                     {
-                        id: 8,
+                        id: 4,
                         name: 'Percentage',
                         description: 'Percentage Calculations',
                         icon: 'bi-percent',
@@ -136,7 +136,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
                         category: 'Aptitude'
                     },
                     {
-                        id: 9,
+                        id: 5,
                         name: 'HCF and LCM',
                         description: 'Highest Common Factor & LCM',
                         icon: 'bi-hash',
@@ -144,7 +144,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
                         category: 'Aptitude'
                     },
                     {
-                        id: 10,
+                        id: 6,
                         name: 'Ratio and Proportion',
                         description: 'Ratio and Proportion Problems',
                         icon: 'bi-pie-chart',
@@ -152,7 +152,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
                         category: 'Aptitude'
                     },
                     {
-                        id: 11,
+                        id: 7,
                         name: 'Area and Volume',
                         description: 'Area and Volume Calculations',
                         icon: 'bi-bounding-box',
@@ -166,7 +166,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
                 description: 'General knowledge and current affairs',
                 subjects: [
                     {
-                        id: 12,
+                        id: 8,
                         name: 'General Science',
                         description: 'Physics, Chemistry, Biology and other sciences',
                         icon: 'bi-atom',
@@ -174,7 +174,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
                         category: 'GeneralStudies'
                     },
                     {
-                        id: 13,
+                        id: 9,
                         name: 'Current Events',
                         description: 'Current Affairs and Latest News',
                         icon: 'bi-newspaper',
@@ -182,7 +182,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
                         category: 'GeneralStudies'
                     },
                     {
-                        id: 14,
+                        id: 10,
                         name: 'Geography',
                         description: 'Indian and World Geography',
                         icon: 'bi-globe',
@@ -190,7 +190,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
                         category: 'GeneralStudies'
                     },
                     {
-                        id: 15,
+                        id: 11,
                         name: 'History and Culture',
                         description: 'Indian History and Culture',
                         icon: 'bi-building',
@@ -198,7 +198,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
                         category: 'GeneralStudies'
                     },
                     {
-                        id: 16,
+                        id: 12,
                         name: 'Indian Polity',
                         description: 'Constitution, Politics and Governance',
                         icon: 'bi-bank',

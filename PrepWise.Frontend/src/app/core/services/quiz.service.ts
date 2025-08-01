@@ -174,7 +174,7 @@ export class QuizService {
   generateAIQuestions(subjectId: number, difficulty: string = 'MEDIUM', language: string = 'ENGLISH', questionCount: number = 10): Observable<any> {
     const graphqlQuery = {
       query: `
-              query GenerateAIQuestions($subjectId: Int!, $difficulty: QuestionDifficulty!, $language: QuestionLanguage!, $questionCount: Int!) {
+              query GenerateAIQuestions($subjectId: Int!, $difficulty: String!, $language: String!, $questionCount: Int!) {
                   generateAIQuestions(subjectId: $subjectId, difficulty: $difficulty, language: $language, questionCount: $questionCount) {
                       id
                       questionText
@@ -201,8 +201,10 @@ export class QuizService {
     return this.http.post<any>(`${this.apiUrl}/graphql`, graphqlQuery)
       .pipe(
         map(response => {
+          console.log('GraphQL Response:', response); // Debug log
           const questions = response.data?.generateAIQuestions;
-          if (questions) {
+          console.log('Questions from response:', questions); // Debug log
+          if (questions && Array.isArray(questions) && questions.length > 0) {
             // Transform to match frontend model
             return questions.map((q: any) => ({
               id: q.id,
@@ -219,6 +221,7 @@ export class QuizService {
               }))
             }));
           }
+          console.log('No questions found or empty array'); // Debug log
           return [];
         }),
         catchError(error => {
