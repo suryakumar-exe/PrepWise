@@ -341,7 +341,7 @@ export class QuizService {
   }
 
   // Submit quiz answers
-  submitQuizAnswers(quizAttemptId: number, answers: QuizAnswerInput[]): Observable<{ success: boolean; score?: number; correctAnswers?: number; wrongAnswers?: number; unansweredQuestions?: number; message?: string }> {
+  submitQuizAnswers(quizAttemptId: number, answers: QuizAnswerInput[]): Observable<{ success: boolean; score?: number; correctAnswers?: number; wrongAnswers?: number; message?: string }> {
     const graphqlQuery = {
       query: `
               mutation SubmitQuizAnswers($quizAttemptId: Int!, $answers: [QuizAnswerInput!]!) {
@@ -370,7 +370,6 @@ export class QuizService {
               score: result.score,
               correctAnswers: result.correctAnswers,
               wrongAnswers: result.wrongAnswers,
-              unansweredQuestions: result.unansweredQuestions,
               message: result.message
             };
           }
@@ -436,15 +435,6 @@ export class QuizService {
                         score
                         correctAnswers
                         wrongAnswers
-                        unansweredQuestions
-                        timeTaken
-                        subjectPerformance {
-                            subjectId
-                            subjectName
-                            correctAnswers
-                            totalQuestions
-                            accuracy
-                        }
                     }
                 }
             `,
@@ -465,10 +455,7 @@ export class QuizService {
               message: result.message,
               score: result.score || 0,
               correctAnswers: result.correctAnswers || 0,
-              wrongAnswers: result.wrongAnswers || 0,
-              unansweredQuestions: result.unansweredQuestions || 0,
-              timeTaken: result.timeTaken || 0,
-              subjectPerformance: result.subjectPerformance || []
+              wrongAnswers: result.wrongAnswers || 0
             };
           }
           return {
@@ -476,10 +463,7 @@ export class QuizService {
             message: 'Result not found',
             score: 0,
             correctAnswers: 0,
-            wrongAnswers: 0,
-            unansweredQuestions: 0,
-            timeTaken: 0,
-            subjectPerformance: []
+            wrongAnswers: 0
           };
         }),
         catchError(error => {

@@ -90,9 +90,6 @@ export interface QuizResult {
     score: number;
     correctAnswers: number;
     wrongAnswers: number;
-    unansweredQuestions: number;
-    timeTaken?: number;
-    subjectPerformance?: SubjectPerformance[];
 }
 
 export interface SubjectPerformance {
@@ -169,7 +166,6 @@ export interface SubmitQuizAnswersResponse {
             score: number;
             correctAnswers: number;
             wrongAnswers: number;
-            unansweredQuestions: number;
         };
     };
 } 
