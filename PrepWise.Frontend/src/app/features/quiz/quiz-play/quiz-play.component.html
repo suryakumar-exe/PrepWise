@@ -28,8 +28,8 @@
 
                 <!-- Question Card -->
                 <div class="question-section" *ngIf="currentQuestion">
-                    <app-question-card [question]="currentQuestion" [selectedAnswer]="selectedAnswer"
-                        [showExplanation]="false" (answerSelected)="onAnswerSelected($event)">
+                    <app-question-card [question]="currentQuestion" [selectedOptionId]="selectedAnswer"
+                        [showExplanation]="false" (optionSelected)="onAnswerSelected($event)">
                     </app-question-card>
                 </div>
 

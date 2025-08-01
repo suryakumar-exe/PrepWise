@@ -59,7 +59,7 @@
                                     <div class="metric-icon text-warning">
                                         <i class="bi bi-clock-fill"></i>
                                     </div>
-                                    <div class="metric-value">{{ quizResult.timeTaken | timeFormat }}</div>
+                                    <div class="metric-value">{{ quizResult.timeTaken || 0 | timeFormat }}</div>
                                     <div class="metric-label">Time Taken</div>
                                 </div>
                             </div>
@@ -75,11 +75,11 @@
                             <div class="subject-item" *ngFor="let subject of quizResult.subjectPerformance">
                                 <div class="subject-info">
                                     <span class="subject-name">{{ subject.subjectName }}</span>
-                                    <span class="subject-score">{{ subject.score }}%</span>
+                                    <span class="subject-score">{{ subject.accuracy }}%</span>
                                 </div>
                                 <div class="progress">
-                                    <div class="progress-bar" [class]="'bg-' + getPerformanceColor(subject.score)"
-                                        [style.width.%]="subject.score"></div>
+                                    <div class="progress-bar" [class]="'bg-' + getPerformanceColor(subject.accuracy)"
+                                        [style.width.%]="subject.accuracy"></div>
                                 </div>
                             </div>
                         </div>

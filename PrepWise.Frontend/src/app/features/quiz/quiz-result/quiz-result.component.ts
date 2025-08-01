@@ -29,7 +29,8 @@ export class QuizResultComponent implements OnInit {
         try {
             const attemptId = this.route.snapshot.params['attemptId'];
             if (attemptId) {
-                this.quizResult = await this.quizService.getQuizResult(attemptId).toPromise();
+                const result = await this.quizService.getQuizResult(attemptId).toPromise();
+                this.quizResult = result || null;
             }
         } catch (error) {
             this.toastr.error('Failed to load quiz result', 'Error');
