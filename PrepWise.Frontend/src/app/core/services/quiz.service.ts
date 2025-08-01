@@ -206,15 +206,21 @@ export class QuizService {
           console.log('Full Response:', response); // Debug log
           console.log('Response data:', response.data); // Debug log
           console.log('Response errors:', response.errors); // Debug log
+          console.log('Response data keys:', response.data ? Object.keys(response.data) : 'No data keys'); // Debug log
 
+          // Check if generateAIQuestions exists in response.data
           const questions = response.data?.generateAIQuestions;
-          console.log('Questions from response:', questions); // Debug log
+          console.log('Questions from response.data.generateAIQuestions:', questions); // Debug log
           console.log('Questions type:', typeof questions); // Debug log
           console.log('Questions is array:', Array.isArray(questions)); // Debug log
           console.log('Questions length:', questions ? questions.length : 'No questions'); // Debug log
 
+          // Also check if the response itself contains the data directly
+          console.log('Direct response generateAIQuestions:', response.generateAIQuestions); // Debug log
+          console.log('Response keys:', Object.keys(response)); // Debug log
+
           if (questions && Array.isArray(questions) && questions.length > 0) {
-            console.log('Processing questions:', questions.length); // Debug log
+            console.log('Processing questions from response.data.generateAIQuestions:', questions.length); // Debug log
             // Transform to match frontend model
             const transformedQuestions = questions.map((q: any) => ({
               id: q.id,
@@ -235,8 +241,40 @@ export class QuizService {
             return transformedQuestions;
           }
 
+          // Fallback: Check if data is directly in response
+          const directQuestions = response.generateAIQuestions;
+          console.log('Checking direct response for questions:', directQuestions); // Debug log
+          if (directQuestions && Array.isArray(directQuestions) && directQuestions.length > 0) {
+            console.log('Processing questions from direct response:', directQuestions.length); // Debug log
+            // Transform to match frontend model
+            const transformedQuestions = directQuestions.map((q: any) => ({
+              id: q.id,
+              text: q.questionText,
+              explanation: '',
+              difficulty: q.difficulty,
+              language: q.language,
+              subjectId: subjectId,
+              options: q.options.map((opt: any) => ({
+                id: opt.id,
+                text: opt.optionText,
+                isCorrect: opt.isCorrect,
+                orderIndex: 0
+              }))
+            }));
+            console.log('Transformed questions from direct response:', transformedQuestions); // Debug log
+            console.log('=== END DEBUG ===');
+            return transformedQuestions;
+          }
+
           console.log('No questions found or empty array'); // Debug log
           console.log('=== END DEBUG ===');
+
+          // Final fallback: Check if the entire response structure is different
+          console.log('=== FINAL FALLBACK DEBUG ===');
+          console.log('Response stringified:', JSON.stringify(response, null, 2)); // Debug log
+          console.log('Response.data stringified:', JSON.stringify(response.data, null, 2)); // Debug log
+          console.log('=== END FINAL DEBUG ===');
+
           return [];
         }),
         catchError(error => {
