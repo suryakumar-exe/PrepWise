@@ -92,7 +92,7 @@ export class MockTestStartComponent implements OnInit {
             if (result?.success) {
                 this.toastr.success('Mock test started successfully!');
                 this.router.navigate(['/mock-test/play'], {
-                    state: { mockTestData: result.mockTestAttempt }
+                    state: { mockTestData: result.quizAttempt }
                 });
             } else {
                 this.toastr.error(result?.message || 'Failed to start mock test');

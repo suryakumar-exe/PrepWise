@@ -23,29 +23,17 @@
     <!-- Quiz Configuration Form -->
     <div class="quiz-config" *ngIf="!isLoading">
         <form [formGroup]="quizForm" (ngSubmit)="onStartQuiz()">
-            <!-- Subject Selection -->
-            <div class="config-section">
+            <!-- Selected Subject Display -->
+            <div class="config-section" *ngIf="getSelectedSubject()">
                 <h3 class="section-title">
                     <i class="bi bi-book me-2"></i>
-                    Choose Subject
+                    Selected Subject
                 </h3>
-                <div class="row g-3">
-                    <div class="col-12 col-md-6 col-lg-4" *ngFor="let subject of subjects">
-                        <div class="subject-option" [class.selected]="selectedSubjectId === subject.id"
-                            (click)="onSubjectSelect(subject.id)">
-                            <div class="subject-content">
-                                <h4 class="subject-name">{{ subject.name }}</h4>
-                                <p class="subject-description">{{ subject.description }}</p>
-                            </div>
-                            <div class="subject-indicator">
-                                <i class="bi bi-check-circle-fill" *ngIf="selectedSubjectId === subject.id"></i>
-                                <i class="bi bi-circle" *ngIf="selectedSubjectId !== subject.id"></i>
-                            </div>
-                        </div>
+                <div class="selected-subject-card">
+                    <div class="subject-content">
+                        <h4 class="subject-name">{{ getSelectedSubject()?.name }}</h4>
+                        <p class="subject-description">{{ getSelectedSubject()?.description }}</p>
                     </div>
-                </div>
-                <div class="invalid-feedback" *ngIf="isFieldInvalid('subjectId')">
-                    {{ getFieldError('subjectId') }}
                 </div>
             </div>
 

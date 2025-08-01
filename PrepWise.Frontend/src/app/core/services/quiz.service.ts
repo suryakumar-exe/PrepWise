@@ -47,14 +47,42 @@ export class QuizService {
           return of([
             {
               id: 1,
-              name: 'Tamil Subject Quiz',
-              description: 'Standard 6th to 10th Tamil',
+              name: 'Standard 6',
+              description: '6th Standard Tamil Language',
               category: 'Tamil',
               isActive: true
             },
             {
               id: 2,
-              name: 'Tamil Quiz',
+              name: 'Standard 7',
+              description: '7th Standard Tamil Language',
+              category: 'Tamil',
+              isActive: true
+            },
+            {
+              id: 3,
+              name: 'Standard 8',
+              description: '8th Standard Tamil Language',
+              category: 'Tamil',
+              isActive: true
+            },
+            {
+              id: 4,
+              name: 'Standard 9',
+              description: '9th Standard Tamil Language',
+              category: 'Tamil',
+              isActive: true
+            },
+            {
+              id: 5,
+              name: 'Standard 10',
+              description: '10th Standard Tamil Language',
+              category: 'Tamil',
+              isActive: true
+            },
+            {
+              id: 6,
+              name: 'Tamil Grammar',
               description: 'Grammar, Literature, Comprehension',
               category: 'Tamil',
               isActive: true
@@ -146,7 +174,7 @@ export class QuizService {
   generateAIQuestions(subjectId: number, difficulty: string = 'MEDIUM', language: string = 'ENGLISH', questionCount: number = 10): Observable<any> {
     const graphqlQuery = {
       query: `
-              query GenerateAIQuestions($subjectId: Int!, $difficulty: String!, $language: String!, $questionCount: Int!) {
+              query GenerateAIQuestions($subjectId: Int!, $difficulty: QuestionDifficulty!, $language: QuestionLanguage!, $questionCount: Int!) {
                   generateAIQuestions(subjectId: $subjectId, difficulty: $difficulty, language: $language, questionCount: $questionCount) {
                       id
                       questionText

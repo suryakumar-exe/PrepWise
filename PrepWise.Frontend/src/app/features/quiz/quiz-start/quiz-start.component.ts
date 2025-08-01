@@ -77,7 +77,6 @@ export class QuizStartComponent implements OnInit, OnDestroy {
 
     private initializeForm(): void {
         this.quizForm = this.formBuilder.group({
-            subjectId: ['', [Validators.required]],
             difficulty: [QuestionDifficulty.Medium, [Validators.required]],
             language: [QuestionLanguage.English, [Validators.required]],
             questionCount: [20, [Validators.required, Validators.min(5), Validators.max(100)]],
@@ -119,35 +118,37 @@ export class QuizStartComponent implements OnInit, OnDestroy {
                 if (params['subject']) {
                     const subjectId = parseInt(params['subject'], 10);
                     this.selectedSubjectId = subjectId;
-                    this.quizForm.patchValue({ subjectId });
+                } else {
+                    // If no subject is provided, redirect to dashboard
+                    this.toastr.error('No subject selected. Please select a subject from the dashboard.');
+                    this.router.navigate(['/dashboard']);
                 }
             });
     }
 
     private getMockSubjects(): SubjectModel[] {
         return [
-            { id: 1, name: 'Tamil Subject Quiz', description: 'Standard 6th to 10th Tamil', isActive: true },
-            { id: 2, name: 'Tamil Grammar', description: 'Grammar, Literature, Comprehension', isActive: true },
-            { id: 3, name: 'Simplification', description: 'Mathematical Simplification', isActive: true },
-            { id: 4, name: 'Percentage', description: 'Percentage Calculations', isActive: true },
-            { id: 5, name: 'HCF and LCM', description: 'Highest Common Factor & LCM', isActive: true },
-            { id: 6, name: 'Ratio and Proportion', description: 'Ratio and Proportion Problems', isActive: true },
-            { id: 7, name: 'Area and Volume', description: 'Area and Volume Calculations', isActive: true },
-            { id: 8, name: 'General Science', description: 'Physics, Chemistry, Biology', isActive: true },
-            { id: 9, name: 'Current Events', description: 'Current Affairs & News', isActive: true },
-            { id: 10, name: 'Geography', description: 'Indian and World Geography', isActive: true },
-            { id: 11, name: 'History and Culture', description: 'Indian History & Culture', isActive: true },
-            { id: 12, name: 'Indian Polity', description: 'Constitution and Politics', isActive: true }
+            { id: 1, name: 'Standard 6', description: '6th Standard Tamil Language', isActive: true },
+            { id: 2, name: 'Standard 7', description: '7th Standard Tamil Language', isActive: true },
+            { id: 3, name: 'Standard 8', description: '8th Standard Tamil Language', isActive: true },
+            { id: 4, name: 'Standard 9', description: '9th Standard Tamil Language', isActive: true },
+            { id: 5, name: 'Standard 10', description: '10th Standard Tamil Language', isActive: true },
+            { id: 6, name: 'Tamil Grammar', description: 'Grammar, Literature, Comprehension', isActive: true },
+            { id: 7, name: 'Simplification', description: 'Mathematical Simplification', isActive: true },
+            { id: 8, name: 'Percentage', description: 'Percentage Calculations', isActive: true },
+            { id: 9, name: 'HCF and LCM', description: 'Highest Common Factor & LCM', isActive: true },
+            { id: 10, name: 'Ratio and Proportion', description: 'Ratio and Proportion Problems', isActive: true },
+            { id: 11, name: 'Area and Volume', description: 'Area and Volume Calculations', isActive: true },
+            { id: 12, name: 'General Science', description: 'Physics, Chemistry, Biology', isActive: true },
+            { id: 13, name: 'Current Events', description: 'Current Affairs & News', isActive: true },
+            { id: 14, name: 'Geography', description: 'Indian and World Geography', isActive: true },
+            { id: 15, name: 'History and Culture', description: 'Indian History & Culture', isActive: true },
+            { id: 16, name: 'Indian Polity', description: 'Constitution and Politics', isActive: true }
         ];
     }
 
-    onSubjectSelect(subjectId: number): void {
-        this.selectedSubjectId = subjectId;
-        this.quizForm.patchValue({ subjectId });
-    }
-
     onStartQuiz(): void {
-        if (this.quizForm.valid && this.currentUser) {
+        if (this.quizForm.valid && this.currentUser && this.selectedSubjectId) {
             this.isStartingQuiz = true;
 
             const formValue = this.quizForm.value;
@@ -159,9 +160,9 @@ export class QuizStartComponent implements OnInit, OnDestroy {
                 return;
             }
 
-            // For practice quiz, we need to generate questions first
+            // Generate AI questions using the correct GraphQL query
             this.quizService.generateAIQuestions(
-                selectedSubject.id,
+                this.selectedSubjectId,
                 formValue.difficulty,
                 formValue.language,
                 formValue.questionCount
@@ -171,7 +172,7 @@ export class QuizStartComponent implements OnInit, OnDestroy {
                         // Start quiz attempt with generated questions
                         this.quizService.startQuizAttempt(
                             this.currentUser!.id,
-                            selectedSubject.id,
+                            this.selectedSubjectId!,
                             formValue.questionCount,
                             formValue.timeLimitMinutes
                         ).subscribe({

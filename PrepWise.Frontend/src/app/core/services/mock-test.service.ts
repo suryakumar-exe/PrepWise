@@ -42,41 +42,47 @@ export class MockTestService {
       );
   }
 
-  startMockTest(testId: number): Observable<any> {
+  startMockTest(userId: number): Observable<any> {
     const graphqlQuery = {
       query: `
-                mutation StartMockTest($testId: Int!) {
-                    startMockTest(testId: $testId) {
+                mutation StartQuizAttempt($userId: Int!, $subjectId: Int!, $questionCount: Int!, $timeLimitMinutes: Int!) {
+                    startQuizAttempt(userId: $userId, subjectId: $subjectId, questionCount: $questionCount, timeLimitMinutes: $timeLimitMinutes) {
                         success
-                        attemptId
-                        questions {
+                        message
+                        quizAttempt {
                             id
-                            text
-                            options {
+                            quiz {
                                 id
-                                text
+                                title
+                                questionCount
+                                timeLimitMinutes
                             }
+                            startedAt
+                            status
                         }
                     }
                 }
             `,
       variables: {
-        testId: testId
+        userId: userId,
+        subjectId: 1, // Default subject for mock test
+        questionCount: 4, // Default question count for mock test
+        timeLimitMinutes: 5 // Default time limit for mock test
       }
     };
 
     return this.http.post<any>(`${this.apiUrl}/graphql`, graphqlQuery)
       .pipe(
         map(response => {
-          const result = response.data?.startMockTest;
+          const result = response.data?.startQuizAttempt;
           if (result?.success) {
             return {
               success: true,
-              attemptId: result.attemptId,
-              questions: result.questions
+              attemptId: result.quizAttempt?.id,
+              quizAttempt: result.quizAttempt
             };
           }
-          return { success: false, message: 'Failed to start mock test' };
+          return { success: false, message: result?.message || 'Failed to start mock test' };
         }),
         catchError(error => {
           console.error('Error starting mock test:', error);
