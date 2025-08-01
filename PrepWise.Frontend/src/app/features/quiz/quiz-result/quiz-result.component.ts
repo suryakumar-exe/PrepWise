@@ -27,31 +27,31 @@ export class QuizResultComponent implements OnInit {
     async loadQuizResult(): Promise<void> {
         this.isLoading = true;
         try {
-            // Try to get result from navigation state first
-            const navigation = this.router.getCurrentNavigation();
-            const state = navigation?.extras?.state;
+            const attemptId = this.route.snapshot.params['attemptId'];
 
-            if (state && state['quizResult']) {
-                // Use result passed from quiz play component
-                this.quizResult = state['quizResult'];
+            if (!attemptId) {
+                this.toastr.error('No quiz attempt ID provided', 'Error');
+                this.router.navigate(['/quiz/start']);
+                return;
+            }
+
+            console.log('Loading quiz result for attempt ID:', attemptId);
+
+            // Fetch quiz result from backend using attempt ID
+            const result = await this.quizService.getQuizResult(attemptId).toPromise();
+
+            if (result) {
+                console.log('Quiz result loaded from backend:', result);
+                this.quizResult = result;
             } else {
-                // Fallback: Try to get from session storage
-                const storedResult = sessionStorage.getItem('quizResult');
-                if (storedResult) {
-                    this.quizResult = JSON.parse(storedResult);
-                    sessionStorage.removeItem('quizResult');
-                } else {
-                    // Final fallback: Try backend
-                    const attemptId = this.route.snapshot.params['attemptId'];
-                    if (attemptId) {
-                        const result = await this.quizService.getQuizResult(attemptId).toPromise();
-                        this.quizResult = result || null;
-                    }
-                }
+                console.log('No result found for attempt ID:', attemptId);
+                this.toastr.error('No quiz result found for this attempt', 'Error');
+                this.router.navigate(['/quiz/start']);
             }
         } catch (error) {
-            this.toastr.error('Failed to load quiz result', 'Error');
             console.error('Error loading quiz result:', error);
+            this.toastr.error('Failed to load quiz result', 'Error');
+            this.router.navigate(['/quiz/start']);
         } finally {
             this.isLoading = false;
         }

@@ -448,20 +448,39 @@ export class QuizService {
                     }
                 }
             `,
-      variables: { attemptId }
+      variables: { attemptId: Number(attemptId) }
     };
+
+    console.log('Fetching quiz result for attempt ID:', attemptId);
+    console.log('GraphQL query:', graphqlQuery);
 
     return this.http.post<any>(`${this.apiUrl}/graphql`, graphqlQuery)
       .pipe(
-        map(response => response.data?.quizResult || {
-          success: false,
-          message: 'Result not found',
-          score: 0,
-          correctAnswers: 0,
-          wrongAnswers: 0,
-          unansweredQuestions: 0,
-          timeTaken: 0,
-          subjectPerformance: []
+        map(response => {
+          console.log('Quiz result response:', response);
+          const result = response.data?.quizResult;
+          if (result) {
+            return {
+              success: result.success,
+              message: result.message,
+              score: result.score || 0,
+              correctAnswers: result.correctAnswers || 0,
+              wrongAnswers: result.wrongAnswers || 0,
+              unansweredQuestions: result.unansweredQuestions || 0,
+              timeTaken: result.timeTaken || 0,
+              subjectPerformance: result.subjectPerformance || []
+            };
+          }
+          return {
+            success: false,
+            message: 'Result not found',
+            score: 0,
+            correctAnswers: 0,
+            wrongAnswers: 0,
+            unansweredQuestions: 0,
+            timeTaken: 0,
+            subjectPerformance: []
+          };
         }),
         catchError(error => {
           console.error('Error fetching quiz result:', error);

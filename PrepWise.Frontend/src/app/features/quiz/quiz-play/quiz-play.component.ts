@@ -353,14 +353,8 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
             .subscribe({
                 next: (result) => {
                     if (result.success) {
-                        // Navigate to result page with backend-calculated results
-                        this.router.navigate(['/quiz/result', this.quizSession!.attemptId], {
-                            state: {
-                                quizResult: result,
-                                questions: this.quizSession!.questions,
-                                answers: Array.from(this.quizSession!.answers.entries())
-                            }
-                        });
+                        // Navigate to result page - it will fetch results from backend
+                        this.router.navigate(['/quiz/result', this.quizSession!.attemptId]);
                     } else {
                         this.toastr.error(result.message || 'Failed to submit quiz');
                         this.quizSession!.isSubmitted = false;
