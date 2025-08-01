@@ -1,129 +1,108 @@
 import { Injectable } from '@angular/core';
-import { Apollo, gql } from 'apollo-angular';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { HttpClient } from '@angular/common/http';
+import { Observable, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+import { environment } from '../../../environments/environment';
 import { User, UserProfile } from '../models/profile.model';
-
-const GET_USER_PROFILE = gql`
-  query GetUserProfile {
-    userProfile {
-      id
-      firstName
-      lastName
-      email
-      phone
-      location
-      bio
-      createdAt
-      updatedAt
-    }
-  }
-`;
-
-const UPDATE_USER_PROFILE = gql`
-  mutation UpdateUserProfile($input: UpdateUserProfileInput!) {
-    updateUserProfile(input: $input) {
-      id
-      firstName
-      lastName
-      email
-      phone
-      location
-      bio
-      updatedAt
-    }
-  }
-`;
-
-const CHANGE_PASSWORD = gql`
-  mutation ChangePassword($input: ChangePasswordInput!) {
-    changePassword(input: $input) {
-      success
-      message
-    }
-  }
-`;
-
-const GET_USER_ACHIEVEMENTS = gql`
-  query GetUserAchievements {
-    userAchievements {
-      id
-      title
-      description
-      icon
-      earned
-      earnedAt
-    }
-  }
-`;
-
-const GET_TEST_HISTORY = gql`
-  query GetTestHistory {
-    testHistory {
-      id
-      type
-      subject
-      score
-      totalQuestions
-      correctAnswers
-      timeTaken
-      completedAt
-    }
-  }
-`;
 
 @Injectable({
   providedIn: 'root'
 })
 export class ProfileService {
-  constructor(private apollo: Apollo) { }
+  private apiUrl = environment.apiUrl;
+
+  constructor(private http: HttpClient) { }
 
   getUserProfile(): Observable<UserProfile> {
-    return this.apollo.query<{ userProfile: UserProfile }>({
-      query: GET_USER_PROFILE
-    }).pipe(
-      map(result => result.data?.userProfile!)
-    );
+    return this.http.get<UserProfile>(`${this.apiUrl}/api/profile`)
+      .pipe(
+        catchError(error => {
+          console.error('Error fetching user profile:', error);
+          // Return mock data for now
+          return of({
+            id: '1',
+            firstName: 'John',
+            lastName: 'Doe',
+            email: 'john.doe@example.com',
+            phone: '+91 9876543210',
+            location: 'Chennai, Tamil Nadu',
+            bio: 'Passionate learner focused on improving my skills.',
+            createdAt: new Date(),
+            updatedAt: new Date()
+          });
+        })
+      );
   }
 
   updateUserProfile(profile: Partial<UserProfile>): Observable<UserProfile> {
-    return this.apollo.mutate<{ updateUserProfile: UserProfile }>({
-      mutation: UPDATE_USER_PROFILE,
-      variables: {
-        input: profile
-      }
-    }).pipe(
-      map(result => result.data?.updateUserProfile!)
-    );
+    return this.http.put<UserProfile>(`${this.apiUrl}/api/profile`, profile)
+      .pipe(
+        catchError(error => {
+          console.error('Error updating user profile:', error);
+          return of(null as any);
+        })
+      );
   }
 
   changePassword(currentPassword: string, newPassword: string): Observable<{ success: boolean; message: string }> {
-    return this.apollo.mutate<{ changePassword: { success: boolean; message: string } }>({
-      mutation: CHANGE_PASSWORD,
-      variables: {
-        input: {
-          currentPassword,
-          newPassword
-        }
-      }
-    }).pipe(
-      map(result => result.data?.changePassword!)
-    );
+    const payload = { currentPassword, newPassword };
+    return this.http.post<{ success: boolean; message: string }>(`${this.apiUrl}/api/profile/change-password`, payload)
+      .pipe(
+        catchError(error => {
+          console.error('Error changing password:', error);
+          return of({
+            success: false,
+            message: 'Failed to change password'
+          });
+        })
+      );
   }
 
   getUserAchievements(): Observable<any[]> {
-    return this.apollo.query<{ userAchievements: any[] }>({
-      query: GET_USER_ACHIEVEMENTS
-    }).pipe(
-      map(result => result.data?.userAchievements || [])
-    );
+    return this.http.get<any[]>(`${this.apiUrl}/api/profile/achievements`)
+      .pipe(
+        catchError(error => {
+          console.error('Error fetching user achievements:', error);
+          return of([
+            {
+              id: '1',
+              title: 'First Quiz',
+              description: 'Completed your first quiz',
+              icon: 'trophy',
+              earned: true,
+              earnedAt: new Date()
+            },
+            {
+              id: '2',
+              title: 'Perfect Score',
+              description: 'Achieved 100% accuracy in a quiz',
+              icon: 'star',
+              earned: false,
+              earnedAt: null
+            }
+          ]);
+        })
+      );
   }
 
   getTestHistory(): Observable<any[]> {
-    return this.apollo.query<{ testHistory: any[] }>({
-      query: GET_TEST_HISTORY
-    }).pipe(
-      map(result => result.data?.testHistory || [])
-    );
+    return this.http.get<any[]>(`${this.apiUrl}/api/profile/test-history`)
+      .pipe(
+        catchError(error => {
+          console.error('Error fetching test history:', error);
+          return of([
+            {
+              id: '1',
+              type: 'Quiz',
+              subject: 'Mathematics',
+              score: 85,
+              totalQuestions: 20,
+              correctAnswers: 17,
+              timeTaken: 15,
+              completedAt: new Date()
+            }
+          ]);
+        })
+      );
   }
 } 

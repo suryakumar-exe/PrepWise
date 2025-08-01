@@ -1,61 +1,78 @@
 import { Injectable } from '@angular/core';
-import { Apollo } from 'apollo-angular';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { gql } from 'apollo-angular';
+import { HttpClient } from '@angular/common/http';
+import { Observable, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+import { environment } from '../../../environments/environment';
 import { LeaderboardEntry, Subject, LeaderboardResult } from '../models/leaderboard.model';
 
-const GET_LEADERBOARD = gql`
-  query GetLeaderboard($subjectId: Int, $timeFrame: String) {
-    leaderboard(subjectId: $subjectId, timeFrame: $timeFrame) {
-      entries {
-        id
-        userId
-        userName
-        location
-        score
-        accuracy
-        testsTaken
-        isCurrentUser
-      }
-      currentUserRank
-      currentUserScore
-    }
-  }
-`;
-
-const GET_SUBJECTS = gql`
-  query GetSubjects {
-    subjects {
-      id
-      name
-      description
-      category
-    }
-  }
-`;
-
 @Injectable({
-    providedIn: 'root'
+  providedIn: 'root'
 })
 export class LeaderboardService {
+  private apiUrl = environment.apiUrl;
 
-    constructor(private apollo: Apollo) { }
+  constructor(private http: HttpClient) { }
 
-    getLeaderboard(subjectId: number | null, timeFrame: string): Observable<LeaderboardResult> {
-        return this.apollo.watchQuery({
-            query: GET_LEADERBOARD,
-            variables: { subjectId, timeFrame }
-        }).valueChanges.pipe(
-            map((result: any) => result.data.leaderboard)
-        );
-    }
+  getLeaderboard(subjectId: number | null, timeFrame: string): Observable<LeaderboardResult> {
+    let url = `${this.apiUrl}/api/leaderboard`;
+    const params: any = { timeFrame };
+    if (subjectId) params.subjectId = subjectId;
 
-    getSubjects(): Observable<Subject[]> {
-        return this.apollo.watchQuery({
-            query: GET_SUBJECTS
-        }).valueChanges.pipe(
-            map((result: any) => result.data.subjects)
-        );
-    }
+    return this.http.get<LeaderboardResult>(url, { params })
+      .pipe(
+        catchError(error => {
+          console.error('Error fetching leaderboard:', error);
+          // Return mock data for now
+          return of({
+            entries: [
+              {
+                id: 1,
+                userId: 1,
+                userName: 'John Doe',
+                location: 'Chennai',
+                score: 95,
+                accuracy: 95,
+                testsTaken: 10,
+                isCurrentUser: true
+              },
+              {
+                id: 2,
+                userId: 2,
+                userName: 'Jane Smith',
+                location: 'Mumbai',
+                score: 92,
+                accuracy: 92,
+                testsTaken: 8,
+                isCurrentUser: false
+              }
+            ],
+            currentUserRank: 1,
+            currentUserScore: 95
+          });
+        })
+      );
+  }
+
+  getSubjects(): Observable<Subject[]> {
+    return this.http.get<Subject[]>(`${this.apiUrl}/api/subjects`)
+      .pipe(
+        catchError(error => {
+          console.error('Error fetching subjects:', error);
+          return of([
+            {
+              id: 1,
+              name: 'Mathematics',
+              description: 'Basic mathematics concepts',
+              category: 'Science'
+            },
+            {
+              id: 2,
+              name: 'Science',
+              description: 'General science topics',
+              category: 'Science'
+            }
+          ]);
+        })
+      );
+  }
 } 

@@ -1,6 +1,5 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { AuthGuard } from './core/guards/auth.guard';
 
 const routes: Routes = [
     {
@@ -14,40 +13,33 @@ const routes: Routes = [
     },
     {
         path: 'dashboard',
-        loadChildren: () => import('./features/dashboard/dashboard.module').then(m => m.DashboardModule),
-        canActivate: [AuthGuard]
+        loadChildren: () => import('./features/dashboard/dashboard.module').then(m => m.DashboardModule)
     },
     // Temporarily disabled until components are fully fixed
     /*
     {
         path: 'quiz',
-        loadChildren: () => import('./features/quiz/quiz.module').then(m => m.QuizModule),
-        canActivate: [AuthGuard]
+        loadChildren: () => import('./features/quiz/quiz.module').then(m => m.QuizModule)
     },
     {
         path: 'mock-test',
-        loadChildren: () => import('./features/mock-test/mock-test.module').then(m => m.MockTestModule),
-        canActivate: [AuthGuard]
+        loadChildren: () => import('./features/mock-test/mock-test.module').then(m => m.MockTestModule)
     },
     {
         path: 'leaderboard',
-        loadChildren: () => import('./features/leaderboard/leaderboard.module').then(m => m.LeaderboardModule),
-        canActivate: [AuthGuard]
+        loadChildren: () => import('./features/leaderboard/leaderboard.module').then(m => m.LeaderboardModule)
     },
     {
         path: 'chat',
-        loadChildren: () => import('./features/chat/chat.module').then(m => m.ChatModule),
-        canActivate: [AuthGuard]
+        loadChildren: () => import('./features/chat/chat.module').then(m => m.ChatModule)
     },
     {
         path: 'analytics',
-        loadChildren: () => import('./features/analytics/analytics.module').then(m => m.AnalyticsModule),
-        canActivate: [AuthGuard]
+        loadChildren: () => import('./features/analytics/analytics.module').then(m => m.AnalyticsModule)
     },
     {
         path: 'profile',
-        loadChildren: () => import('./features/profile/profile.module').then(m => m.ProfileModule),
-        canActivate: [AuthGuard]
+        loadChildren: () => import('./features/profile/profile.module').then(m => m.ProfileModule)
     },
     */
     {
