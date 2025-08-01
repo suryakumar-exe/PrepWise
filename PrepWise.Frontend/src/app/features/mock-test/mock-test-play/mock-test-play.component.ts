@@ -130,10 +130,10 @@ export class MockTestPlayComponent implements OnInit, OnDestroy {
                 selectedOptionId: optionId
             }));
 
-            const result = await this.mockTestService.submitMockTest({
-                mockTestAttemptId: this.mockTest!.id,
-                answers: answersArray
-            }).toPromise();
+            const result = await this.mockTestService.submitMockTest(
+                this.mockTest!.id,
+                answersArray
+            ).toPromise();
 
             if (result?.success) {
                 this.toastr.success('Test submitted successfully!');

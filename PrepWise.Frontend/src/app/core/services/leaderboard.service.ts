@@ -70,6 +70,50 @@ export class LeaderboardService {
     return this.getLeaderboard(subjectId, timeFrame);
   }
 
+  getSubjects(): Observable<any[]> {
+    const graphqlQuery = {
+      query: `
+                query GetSubjects {
+                    subjects {
+                        id
+                        name
+                        description
+                        category
+                    }
+                }
+            `
+    };
+
+    return this.http.post<any>(`${this.apiUrl}/graphql`, graphqlQuery)
+      .pipe(
+        map(response => {
+          const subjects = response.data?.subjects;
+          return subjects || this.getMockSubjects();
+        }),
+        catchError(error => {
+          console.error('Error fetching subjects:', error);
+          return of(this.getMockSubjects());
+        })
+      );
+  }
+
+  private getMockSubjects(): any[] {
+    return [
+      {
+        id: 1,
+        name: 'Mathematics',
+        description: 'Basic mathematics concepts',
+        category: 'Science'
+      },
+      {
+        id: 2,
+        name: 'Science',
+        description: 'General science topics',
+        category: 'Science'
+      }
+    ];
+  }
+
   private getMockLeaderboardData(): LeaderboardResult {
     return {
       entries: [

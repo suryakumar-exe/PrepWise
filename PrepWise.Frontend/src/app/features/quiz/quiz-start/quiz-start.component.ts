@@ -155,15 +155,15 @@ export class QuizStartComponent implements OnInit, OnDestroy {
                 timeLimitMinutes: this.quizForm.value.timeLimitMinutes
             };
 
-            this.quizService.startQuizAttempt(quizData)
+            this.quizService.startQuizAttempt(quizData.userId, quizData.subjectId)
                 .pipe(
                     takeUntil(this.destroy$),
                     finalize(() => this.isStartingQuiz = false)
                 )
                 .subscribe({
                     next: (result) => {
-                        if (result.success && result.quizAttempt) {
-                            this.router.navigate(['/quiz/play', result.quizAttempt.id]);
+                        if (result.success && result.attemptId) {
+                            this.router.navigate(['/quiz/play', result.attemptId]);
                         }
                     },
                     error: (error) => {

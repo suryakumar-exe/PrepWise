@@ -129,6 +129,10 @@ export class AuthService {
         return !!this.getCurrentUser();
     }
 
+    isLoggedIn(): boolean {
+        return this.isAuthenticated();
+    }
+
     private setCurrentUser(user: User): void {
         this.currentUserSubject.next(user);
         localStorage.setItem('currentUser', JSON.stringify(user));

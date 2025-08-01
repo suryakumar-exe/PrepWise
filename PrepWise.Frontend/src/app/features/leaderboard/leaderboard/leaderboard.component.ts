@@ -53,7 +53,7 @@ export class LeaderboardComponent implements OnInit {
         this.isLoading = true;
         try {
             const result = await this.leaderboardService.getLeaderboard(
-                this.selectedSubjectId,
+                this.selectedSubjectId || undefined,
                 this.selectedTimeFrame
             ).toPromise();
 

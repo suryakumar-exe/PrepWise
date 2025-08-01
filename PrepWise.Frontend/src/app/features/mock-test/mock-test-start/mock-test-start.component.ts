@@ -87,11 +87,7 @@ export class MockTestStartComponent implements OnInit {
             const title = formValue.customTitle ||
                 `${this.getSelectedConfig()?.title || 'Custom Test'} - ${new Date().toLocaleDateString()}`;
 
-            const result = await this.mockTestService.startMockTest({
-                title: title,
-                questionCount: formValue.customQuestionCount,
-                timeLimitMinutes: formValue.customTimeLimit
-            }).toPromise();
+            const result = await this.mockTestService.startMockTest(1).toPromise();
 
             if (result?.success) {
                 this.toastr.success('Mock test started successfully!');
