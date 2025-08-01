@@ -424,12 +424,15 @@ export class QuizService {
       );
   }
 
-  // Get quiz result by attempt ID
+  // Get quiz result by attempt ID using submitQuizAnswers mutation
   getQuizResult(attemptId: number): Observable<QuizResult> {
+    console.log('=== FETCHING QUIZ RESULT ===');
+    console.log('Attempt ID:', attemptId);
+
     const graphqlQuery = {
       query: `
-                query GetQuizResult($attemptId: Int!) {
-                    quizResult(attemptId: $attemptId) {
+                mutation SubmitQuizAnswers($quizAttemptId: Int!, $answers: [QuizAnswerInput!]!) {
+                    submitQuizAnswers(quizAttemptId: $quizAttemptId, answers: $answers) {
                         success
                         message
                         score
@@ -438,11 +441,12 @@ export class QuizService {
                     }
                 }
             `,
-      variables: { attemptId: Number(attemptId) }
+      variables: {
+        quizAttemptId: Number(attemptId),
+        answers: [] // Empty answers array to get results without submitting new answers
+      }
     };
 
-    console.log('=== FETCHING QUIZ RESULT ===');
-    console.log('Attempt ID:', attemptId);
     console.log('GraphQL Query:', JSON.stringify(graphqlQuery, null, 2));
     console.log('API URL:', `${this.apiUrl}/graphql`);
 
@@ -454,7 +458,7 @@ export class QuizService {
           console.log('Response data:', response.data);
           console.log('Response errors:', response.errors);
 
-          const result = response.data?.quizResult;
+          const result = response.data?.submitQuizAnswers;
           console.log('Quiz result from response:', result);
 
           if (result) {
