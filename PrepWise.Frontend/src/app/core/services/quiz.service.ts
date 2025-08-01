@@ -194,10 +194,10 @@ export class QuizService {
               }
           `,
       variables: {
-        subjectId: subjectId,
+        subjectId: Number(subjectId),
         difficulty: difficulty,
         language: language,
-        questionCount: questionCount
+        questionCount: Number(questionCount)
       }
     };
 
@@ -259,10 +259,10 @@ export class QuizService {
               }
           `,
       variables: {
-        userId: userId,
-        subjectId: subjectId,
-        questionCount: questionCount,
-        timeLimitMinutes: timeLimitMinutes
+        userId: Number(userId),
+        subjectId: Number(subjectId),
+        questionCount: Number(questionCount),
+        timeLimitMinutes: Number(timeLimitMinutes)
       }
     };
 
@@ -353,12 +353,12 @@ export class QuizService {
               }
           `,
       variables: {
-        quizAttemptId: quizAttemptId,
+        quizAttemptId: Number(quizAttemptId),
         answers: answers
       }
     };
 
-    return this.http.post<any>(`${this.apiUrl}/graphql`, graphqlQuery)
+    return this.http.post<SubmitQuizAnswersResponse>(`${this.apiUrl}/graphql`, graphqlQuery)
       .pipe(
         map(response => {
           const result = response.data?.submitQuizAnswers;
