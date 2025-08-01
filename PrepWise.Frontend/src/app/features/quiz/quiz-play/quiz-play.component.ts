@@ -119,55 +119,70 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
             return;
         }
 
-        // Get time limit from navigation state or session storage
+        // Try to get questions from navigation state first
         const navigation = this.router.getCurrentNavigation();
         const state = navigation?.extras?.state;
-        let timeLimitMinutes = state?.['timeLimitMinutes'] || 5;
 
-        // If not in navigation state, try session storage
-        if (!state?.['timeLimitMinutes']) {
-            const storedTimeLimit = sessionStorage.getItem('quizTimeLimit');
-            if (storedTimeLimit) {
-                timeLimitMinutes = parseInt(storedTimeLimit);
-            }
+        if (state && state['questions']) {
+            // Use questions passed from quiz start component
+            const questions = state['questions'];
+            const timeLimitMinutes = state['timeLimitMinutes'] || 5;
+
+            console.log('Using questions from navigation state:', questions.length);
+            this.initializeQuizSession(questions, timeLimitMinutes, parseInt(attemptId));
+        } else {
+            // Fallback: Try to get from session storage
+            this.loadFromSessionStorage(attemptId);
         }
-
-        // Load quiz attempt details from backend
-        this.quizService.getQuizAttempt(attemptId).subscribe({
-            next: (attempt: any) => {
-                if (attempt && attempt.questions && attempt.questions.length > 0) {
-                    this.initializeQuizSession(attempt.questions, timeLimitMinutes, parseInt(attemptId));
-                } else {
-                    // Fallback: Try to get from session storage
-                    this.loadFromSessionStorage(attemptId, timeLimitMinutes);
-                }
-            },
-            error: (error: any) => {
-                console.error('Error loading quiz session from backend:', error);
-                // Fallback: Try to get from session storage
-                this.loadFromSessionStorage(attemptId, timeLimitMinutes);
-            }
-        });
     }
 
-    private loadFromSessionStorage(attemptId: string, timeLimitMinutes: number): void {
+    private loadFromSessionStorage(attemptId: string): void {
+        console.log('=== LOADING FROM SESSION STORAGE ===');
+
         // Try to get stored attempt details
         const storedAttemptId = sessionStorage.getItem('quizAttemptId');
         const storedSubjectId = sessionStorage.getItem('quizSubjectId');
+        const storedTimeLimit = sessionStorage.getItem('quizTimeLimit');
+
+        console.log('Stored attempt ID:', storedAttemptId);
+        console.log('Stored subject ID:', storedSubjectId);
+        console.log('Stored time limit:', storedTimeLimit);
 
         if (storedAttemptId && storedSubjectId) {
-            // Generate some sample questions for testing
-            const sampleQuestions = this.generateSampleQuestions(parseInt(storedSubjectId));
-            this.initializeQuizSession(sampleQuestions, timeLimitMinutes, parseInt(attemptId));
+            console.log('Session storage data found, checking for stored questions');
+            // Get time limit from session storage
+            const timeLimitMinutes = storedTimeLimit ? parseInt(storedTimeLimit) : 5;
+
+            // Try to get stored questions first
+            const storedQuestions = sessionStorage.getItem('quizQuestions');
+            if (storedQuestions) {
+                try {
+                    const questions = JSON.parse(storedQuestions);
+                    console.log('Using stored questions:', questions.length);
+                    this.initializeQuizSession(questions, timeLimitMinutes, parseInt(attemptId));
+                } catch (error) {
+                    console.log('Failed to parse stored questions, using sample questions');
+                    const sampleQuestions = this.generateSampleQuestions(parseInt(storedSubjectId));
+                    this.initializeQuizSession(sampleQuestions, timeLimitMinutes, parseInt(attemptId));
+                }
+            } else {
+                console.log('No stored questions found, using sample questions');
+                const sampleQuestions = this.generateSampleQuestions(parseInt(storedSubjectId));
+                this.initializeQuizSession(sampleQuestions, timeLimitMinutes, parseInt(attemptId));
+            }
 
             // Clear session storage after successful load
             sessionStorage.removeItem('quizAttemptId');
             sessionStorage.removeItem('quizTimeLimit');
             sessionStorage.removeItem('quizSubjectId');
+            sessionStorage.removeItem('quizQuestions');
+            console.log('Session storage cleared');
         } else {
+            console.log('No session storage data found, redirecting to quiz start');
             this.toastr.error('No quiz data available. Please try again.');
             this.router.navigate(['/quiz/start']);
         }
+        console.log('=== END SESSION STORAGE LOAD ===');
     }
 
     private generateSampleQuestions(subjectId: number): any[] {

@@ -165,7 +165,7 @@ export class QuizStartComponent implements OnInit, OnDestroy {
 
 
 
-            // Start quiz attempt directly using the mutation
+            // Start quiz attempt directly - it will return questions
             this.quizService.startQuizAttempt(
                 this.currentUser!.id,
                 this.selectedSubjectId!,
@@ -173,23 +173,43 @@ export class QuizStartComponent implements OnInit, OnDestroy {
                 formValue.timeLimitMinutes
             ).subscribe({
                 next: (result) => {
-                    if (result.success && result.attemptId) {
+                    if (result.success && result.attemptId && result.questions && result.questions.length > 0) {
                         this.toastr.success('Quiz started successfully!');
 
-                        // Store attempt details in session storage as fallback
+                        // Transform questions to match frontend format
+                        const transformedQuestions = result.questions.map((q: any) => ({
+                            id: q.id,
+                            text: q.questionText,
+                            explanation: '',
+                            difficulty: 'MEDIUM',
+                            language: 'ENGLISH',
+                            subjectId: this.selectedSubjectId,
+                            isActive: true,
+                            createdAt: new Date().toISOString(),
+                            options: q.options.map((opt: any) => ({
+                                id: opt.id,
+                                text: opt.optionText,
+                                isCorrect: false, // Backend will handle this
+                                orderIndex: 0
+                            }))
+                        }));
+
+                        // Store questions and attempt details in session storage
+                        sessionStorage.setItem('quizQuestions', JSON.stringify(transformedQuestions));
                         sessionStorage.setItem('quizAttemptId', result.attemptId.toString());
                         sessionStorage.setItem('quizTimeLimit', formValue.timeLimitMinutes.toString());
                         sessionStorage.setItem('quizSubjectId', this.selectedSubjectId!.toString());
 
                         this.router.navigate(['/quiz/play', result.attemptId], {
                             state: {
+                                questions: transformedQuestions,
                                 attemptId: result.attemptId,
                                 timeLimitMinutes: formValue.timeLimitMinutes,
                                 subjectId: this.selectedSubjectId
                             }
                         });
                     } else {
-                        this.toastr.error(result.message || 'Failed to start quiz');
+                        this.toastr.error(result.message || 'No questions available for this subject');
                         this.isStartingQuiz = false;
                     }
                 },

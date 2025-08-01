@@ -144,18 +144,19 @@ export interface StartQuizAttemptResponse {
         startQuizAttempt: {
             success: boolean;
             message: string;
-            attemptId?: number;
             quizAttempt?: {
                 id: number;
-                quiz: {
-                    id: number;
-                    title: string;
-                    questionCount: number;
-                    timeLimitMinutes: number;
-                };
                 startedAt: string;
-                status: string;
+                totalQuestions: number;
             };
+            questions?: {
+                id: number;
+                questionText: string;
+                options: {
+                    id: number;
+                    optionText: string;
+                }[];
+            }[];
         };
     };
 }
@@ -168,6 +169,7 @@ export interface SubmitQuizAnswersResponse {
             score: number;
             correctAnswers: number;
             wrongAnswers: number;
+            unansweredQuestions: number;
         };
     };
 } 

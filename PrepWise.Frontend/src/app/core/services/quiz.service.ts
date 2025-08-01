@@ -237,7 +237,7 @@ export class QuizService {
   }
 
   // Start a quiz attempt
-  startQuizAttempt(userId: number, subjectId: number, questionCount: number = 2, timeLimitMinutes: number = 30): Observable<{ success: boolean; attemptId?: number; quizAttempt?: any; message?: string }> {
+  startQuizAttempt(userId: number, subjectId: number, questionCount: number = 2, timeLimitMinutes: number = 30): Observable<{ success: boolean; attemptId?: number; questions?: any[]; message?: string }> {
     const graphqlQuery = {
       query: `
               mutation StartQuizAttempt($userId: Int!, $subjectId: Int!, $questionCount: Int!, $timeLimitMinutes: Int!) {
@@ -246,14 +246,16 @@ export class QuizService {
                       message
                       quizAttempt {
                           id
-                          quiz {
-                              id
-                              title
-                              questionCount
-                              timeLimitMinutes
-                          }
                           startedAt
-                          status
+                          totalQuestions
+                      }
+                      questions {
+                          id
+                          questionText
+                          options {
+                              id
+                              optionText
+                          }
                       }
                   }
               }
@@ -274,7 +276,7 @@ export class QuizService {
             return {
               success: true,
               attemptId: result.quizAttempt?.id,
-              quizAttempt: result.quizAttempt
+              questions: result.questions || []
             };
           }
           return { success: false, message: 'Failed to start quiz' };
@@ -339,7 +341,7 @@ export class QuizService {
   }
 
   // Submit quiz answers
-  submitQuizAnswers(quizAttemptId: number, answers: QuizAnswerInput[]): Observable<{ success: boolean; score?: number; correctAnswers?: number; wrongAnswers?: number; message?: string }> {
+  submitQuizAnswers(quizAttemptId: number, answers: QuizAnswerInput[]): Observable<{ success: boolean; score?: number; correctAnswers?: number; wrongAnswers?: number; unansweredQuestions?: number; message?: string }> {
     const graphqlQuery = {
       query: `
               mutation SubmitQuizAnswers($quizAttemptId: Int!, $answers: [QuizAnswerInput!]!) {
@@ -368,6 +370,7 @@ export class QuizService {
               score: result.score,
               correctAnswers: result.correctAnswers,
               wrongAnswers: result.wrongAnswers,
+              unansweredQuestions: result.unansweredQuestions,
               message: result.message
             };
           }
