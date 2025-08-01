@@ -74,7 +74,7 @@
                             <div class="trend-indicator">
                                 <i class="bi" [class]="getTrendIcon(analyticsData.accuracyTrend)"></i>
                                 <span [class]="getTrendColor(analyticsData.accuracyTrend)">
-                                    {{ Math.abs(analyticsData.accuracyTrend) }}%
+                                    {{ Math.abs(getTrendValue(analyticsData.accuracyTrend)) }}%
                                 </span>
                             </div>
                         </div>
@@ -92,7 +92,7 @@
                             <div class="trend-indicator">
                                 <i class="bi" [class]="getTrendIcon(analyticsData.questionsTrend)"></i>
                                 <span [class]="getTrendColor(analyticsData.questionsTrend)">
-                                    {{ Math.abs(analyticsData.questionsTrend) }}%
+                                    {{ Math.abs(getTrendValue(analyticsData.questionsTrend)) }}%
                                 </span>
                             </div>
                         </div>
@@ -110,7 +110,7 @@
                             <div class="trend-indicator">
                                 <i class="bi" [class]="getTrendIcon(analyticsData.timeTrend)"></i>
                                 <span [class]="getTrendColor(analyticsData.timeTrend)">
-                                    {{ Math.abs(analyticsData.timeTrend) }}%
+                                    {{ Math.abs(getTrendValue(analyticsData.timeTrend)) }}%
                                 </span>
                             </div>
                         </div>

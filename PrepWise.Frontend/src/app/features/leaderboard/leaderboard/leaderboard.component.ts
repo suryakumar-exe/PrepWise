@@ -103,6 +103,18 @@ export class LeaderboardComponent implements OnInit {
         return timeFrame ? timeFrame.label : 'All Time';
     }
 
+    getAverageScore(): number {
+        if (this.leaderboardData.length === 0) return 0;
+        const totalScore = this.leaderboardData.reduce((sum, entry) => sum + entry.score, 0);
+        return Math.round(totalScore / this.leaderboardData.length);
+    }
+
+    getAverageTestsTaken(): number {
+        if (this.leaderboardData.length === 0) return 0;
+        const totalTests = this.leaderboardData.reduce((sum, entry) => sum + entry.testsTaken, 0);
+        return Math.round(totalTests / this.leaderboardData.length);
+    }
+
     goToDashboard(): void {
         this.router.navigate(['/dashboard']);
     }

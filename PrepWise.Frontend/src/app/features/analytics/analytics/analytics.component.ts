@@ -75,13 +75,21 @@ export class AnalyticsComponent implements OnInit {
         return 'Needs Improvement';
     }
 
-    getTrendIcon(trend: number): string {
+    // Calculate trend from array (last value - first value)
+    getTrendValue(trendArray: number[]): number {
+        if (!trendArray || trendArray.length < 2) return 0;
+        return trendArray[trendArray.length - 1] - trendArray[0];
+    }
+
+    getTrendIcon(trendArray: number[]): string {
+        const trend = this.getTrendValue(trendArray);
         if (trend > 0) return 'bi-arrow-up';
         if (trend < 0) return 'bi-arrow-down';
         return 'bi-dash';
     }
 
-    getTrendColor(trend: number): string {
+    getTrendColor(trendArray: number[]): string {
+        const trend = this.getTrendValue(trendArray);
         if (trend > 0) return 'text-success';
         if (trend < 0) return 'text-danger';
         return 'text-muted';

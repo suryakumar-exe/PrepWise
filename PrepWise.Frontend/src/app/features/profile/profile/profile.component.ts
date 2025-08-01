@@ -1,10 +1,11 @@
 import { Component, OnInit } from '@angular/core';
-import { Router, ActivatedRoute } from '@angular/router';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ToastrService } from 'ngx-toastr';
+import { Router, ActivatedRoute } from '@angular/router';
 import { ProfileService } from '../../../core/services/profile.service';
+import { ToastrService } from 'ngx-toastr';
 import { LanguageService } from '../../../core/services/language.service';
-import { User, UserProfile } from '../../../core/models/profile.model';
+import { User } from '../../../core/models/user.model';
+import { UserProfile } from '../../../core/models/profile.model';
 
 @Component({
     selector: 'app-profile',
@@ -25,7 +26,6 @@ export class ProfileComponent implements OnInit {
 
     tabs = [
         { id: 'profile', label: 'Profile', icon: 'bi-person' },
-        { id: 'settings', label: 'Settings', icon: 'bi-gear' },
         { id: 'achievements', label: 'Achievements', icon: 'bi-trophy' },
         { id: 'history', label: 'Test History', icon: 'bi-clock-history' }
     ];
@@ -42,20 +42,22 @@ export class ProfileComponent implements OnInit {
             firstName: ['', [Validators.required, Validators.minLength(2)]],
             lastName: ['', [Validators.required, Validators.minLength(2)]],
             email: ['', [Validators.required, Validators.email]],
-            phoneNumber: ['', [Validators.pattern(/^[0-9]{10}$/)]],
+            phoneNumber: [''],
             location: [''],
             bio: ['']
         });
 
         this.passwordForm = this.formBuilder.group({
-            currentPassword: ['', [Validators.required]],
-            newPassword: ['', [Validators.required, Validators.minLength(8)]],
+            currentPassword: ['', [Validators.required, Validators.minLength(6)]],
+            newPassword: ['', [Validators.required, Validators.minLength(6)]],
             confirmPassword: ['', [Validators.required]]
         }, { validators: this.passwordMatchValidator });
     }
 
     ngOnInit(): void {
         this.loadUserProfile();
+        this.loadAchievements();
+        this.loadTestHistory();
     }
 
     async loadUserProfile(): Promise<void> {
@@ -63,9 +65,12 @@ export class ProfileComponent implements OnInit {
         try {
             const userId = this.route.snapshot.queryParams['userId'];
             if (userId) {
-                this.user = await this.profileService.getUserProfile(userId).toPromise();
+                // For viewing other user's profile - this would need a different endpoint
+                const userProfile = await this.profileService.getUserProfile().toPromise();
+                this.user = this.convertUserProfileToUser(userProfile);
             } else {
-                this.user = await this.profileService.getCurrentUserProfile().toPromise();
+                const userProfile = await this.profileService.getUserProfile().toPromise();
+                this.user = this.convertUserProfileToUser(userProfile);
             }
 
             if (this.user) {
@@ -73,9 +78,7 @@ export class ProfileComponent implements OnInit {
                     firstName: this.user.firstName,
                     lastName: this.user.lastName,
                     email: this.user.email,
-                    phoneNumber: this.user.phone,
-                    location: this.user.location,
-                    bio: this.user.bio
+                    phoneNumber: this.user.phoneNumber
                 });
             }
         } catch (error) {
@@ -83,6 +86,37 @@ export class ProfileComponent implements OnInit {
             this.toastr.error('Failed to load profile');
         } finally {
             this.isLoading = false;
+        }
+    }
+
+    private convertUserProfileToUser(userProfile: UserProfile | undefined): User | null {
+        if (!userProfile) return null;
+
+        return {
+            id: parseInt(userProfile.id),
+            email: userProfile.email,
+            firstName: userProfile.firstName,
+            lastName: userProfile.lastName,
+            phoneNumber: userProfile.phone,
+            createdAt: userProfile.createdAt.toISOString(),
+            lastLoginAt: userProfile.updatedAt.toISOString(),
+            isActive: true
+        };
+    }
+
+    async loadAchievements(): Promise<void> {
+        try {
+            this.achievements = await this.profileService.getUserAchievements().toPromise() || [];
+        } catch (error) {
+            console.error('Error loading achievements:', error);
+        }
+    }
+
+    async loadTestHistory(): Promise<void> {
+        try {
+            this.testHistory = await this.profileService.getTestHistory().toPromise() || [];
+        } catch (error) {
+            console.error('Error loading test history:', error);
         }
     }
 
@@ -94,14 +128,14 @@ export class ProfileComponent implements OnInit {
 
         this.isLoading = true;
         try {
-            const result = await this.profileService.updateProfile(this.profileForm.value).toPromise();
+            const result = await this.profileService.updateUserProfile(this.profileForm.value).toPromise();
 
-            if (result?.success) {
+            if (result) {
                 this.toastr.success('Profile updated successfully!');
                 this.isEditing = false;
                 this.loadUserProfile(); // Refresh data
             } else {
-                this.toastr.error(result?.message || 'Failed to update profile');
+                this.toastr.error('Failed to update profile');
             }
         } catch (error) {
             console.error('Error updating profile:', error);
@@ -119,7 +153,11 @@ export class ProfileComponent implements OnInit {
 
         this.isLoading = true;
         try {
-            const result = await this.profileService.changePassword(this.passwordForm.value).toPromise();
+            const formValue = this.passwordForm.value;
+            const result = await this.profileService.changePassword(
+                formValue.currentPassword,
+                formValue.newPassword
+            ).toPromise();
 
             if (result?.success) {
                 this.toastr.success('Password changed successfully!');

@@ -13,7 +13,7 @@
                                     totalQuestions }}</p>
                             </div>
                             <div class="col-md-6 text-end">
-                                <app-timer [duration]="timeLimit" [remainingTime]="remainingTime" (timeUp)="onTimeUp()">
+                                <app-timer [totalSeconds]="timeLimit" [autoStart]="true" (timeUp)="onTimeUp()">
                                 </app-timer>
                             </div>
                         </div>

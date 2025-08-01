@@ -48,6 +48,30 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
         return this.getAnsweredQuestionsCount();
     }
 
+    get currentQuiz(): any {
+        return {
+            title: 'Quiz Session',
+            timeLimit: this.quizSession?.timeLimitSeconds || 1200
+        };
+    }
+
+    get timeLimit(): number {
+        return this.quizSession?.timeLimitSeconds || 1200;
+    }
+
+    get currentQuestion(): QuestionData | null {
+        return this.getCurrentQuestion();
+    }
+
+    get selectedAnswer(): number | null {
+        if (!this.currentQuestion) return null;
+        return this.getSelectedOptionId(this.currentQuestion.id);
+    }
+
+    get progressPercentage(): number {
+        return this.getProgressPercentage();
+    }
+
     private destroy$ = new Subject<void>();
     private autoSaveInterval: any;
     private timerInterval: any;
@@ -220,6 +244,10 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
 
     goToQuestion(index: number): void {
         this.navigateToQuestion(index);
+    }
+
+    previousQuestion(): void {
+        this.goToPreviousQuestion();
     }
 
     getQuestionNumberClass(index: number): string {
