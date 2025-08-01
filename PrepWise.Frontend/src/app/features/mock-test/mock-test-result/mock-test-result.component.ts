@@ -37,7 +37,7 @@ export class MockTestResultComponent implements OnInit {
     }
 
     get scorePercentage(): number {
-        if (!this.result) return 0;
+        if (!this.result?.correctAnswers || !this.result?.totalQuestions) return 0;
         return Math.round((this.result.correctAnswers / this.result.totalQuestions) * 100);
     }
 
@@ -61,13 +61,21 @@ export class MockTestResultComponent implements OnInit {
     }
 
     get accuracyRate(): number {
-        if (!this.result) return 0;
+        if (!this.result?.correctAnswers || !this.result?.totalQuestions) return 0;
         return Math.round((this.result.correctAnswers / this.result.totalQuestions) * 100);
     }
 
     get averageTimePerQuestion(): number {
-        if (!this.result || !this.result.totalQuestions) return 0;
+        if (!this.result?.timeTakenMinutes || !this.result?.totalQuestions) return 0;
         return Math.round(this.result.timeTakenMinutes / this.result.totalQuestions);
+    }
+
+    get hasUnansweredQuestions(): boolean {
+        return (this.result?.unansweredQuestions || 0) > 0;
+    }
+
+    get subjectPerformance(): any[] {
+        return this.result?.subjectPerformance || [];
     }
 
     goToDashboard(): void {
