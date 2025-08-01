@@ -344,6 +344,9 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
             selectedOptionId: optionId
         }));
 
+        // Store answers in session storage for result calculation
+        sessionStorage.setItem('quizSubmittedAnswers', JSON.stringify(answers));
+
         // Submit answers to backend using the mutation
         this.quizService.submitQuizAnswers(this.quizSession!.attemptId, answers)
             .pipe(

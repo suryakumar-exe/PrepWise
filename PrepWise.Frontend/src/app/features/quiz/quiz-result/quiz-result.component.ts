@@ -52,6 +52,9 @@ export class QuizResultComponent implements OnInit {
                 console.log('✅ Quiz result loaded successfully:', result);
                 this.quizResult = result;
 
+                // Clear stored answers after successful result fetch
+                sessionStorage.removeItem('quizSubmittedAnswers');
+
                 // Add a small delay before showing success message to ensure UI is ready
                 setTimeout(() => {
                     this.toastr.success('Results loaded successfully!', 'Success');
@@ -70,6 +73,10 @@ export class QuizResultComponent implements OnInit {
                 if (retryResult && retryResult.success) {
                     console.log('✅ Quiz result loaded on retry:', retryResult);
                     this.quizResult = retryResult;
+
+                    // Clear stored answers after successful result fetch
+                    sessionStorage.removeItem('quizSubmittedAnswers');
+
                     setTimeout(() => {
                         this.toastr.success('Results loaded successfully!', 'Success');
                     }, 500);

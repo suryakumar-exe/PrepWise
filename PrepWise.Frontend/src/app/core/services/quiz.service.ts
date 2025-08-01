@@ -429,6 +429,22 @@ export class QuizService {
     console.log('=== FETCHING QUIZ RESULT ===');
     console.log('Attempt ID:', attemptId);
 
+    // Get stored answers from session storage
+    const storedAnswers = sessionStorage.getItem('quizSubmittedAnswers');
+    let answers: QuizAnswerInput[] = [];
+
+    if (storedAnswers) {
+      try {
+        answers = JSON.parse(storedAnswers);
+        console.log('✅ Retrieved stored answers:', answers);
+      } catch (error) {
+        console.error('❌ Error parsing stored answers:', error);
+        answers = [];
+      }
+    } else {
+      console.log('❌ No stored answers found in session storage');
+    }
+
     const graphqlQuery = {
       query: `
                 mutation SubmitQuizAnswers($quizAttemptId: Int!, $answers: [QuizAnswerInput!]!) {
@@ -443,7 +459,7 @@ export class QuizService {
             `,
       variables: {
         quizAttemptId: Number(attemptId),
-        answers: [] // Empty answers array to get results without submitting new answers
+        answers: answers // Use the stored answers instead of empty array
       }
     };
 
