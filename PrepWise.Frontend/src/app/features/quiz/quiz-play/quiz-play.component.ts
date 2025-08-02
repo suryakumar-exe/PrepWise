@@ -8,6 +8,7 @@ import { QuizService } from '../../../core/services/quiz.service';
 import { LanguageService } from '../../../core/services/language.service';
 import { QuestionData } from '../../../shared/components/question-card/question-card.component';
 import { QuizAnswerInput } from '../../../core/models/quiz.model';
+import { TimerComponent } from '../../../shared/components/timer/timer.component';
 
 interface QuizSession {
     attemptId: number;
@@ -77,6 +78,8 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
     private destroy$ = new Subject<void>();
     private autoSaveInterval: any;
     private timerInterval: any;
+
+    @ViewChild(TimerComponent) timerComponent!: TimerComponent;
 
     constructor(
         private route: ActivatedRoute,
@@ -290,6 +293,9 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
             question.language = language.toUpperCase();
         });
 
+        // Force change detection by creating a new array reference
+        this.quizSession.questions = [...this.quizSession.questions];
+
         console.log('✅ Questions updated for new language');
     }
 
@@ -303,7 +309,43 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
             question.difficulty = this.selectedDifficulty;
         });
 
+        // Force change detection by creating a new array reference
+        this.quizSession.questions = [...this.quizSession.questions];
+
+        // Update timer based on difficulty
+        this.updateTimerForDifficulty();
+
         console.log('✅ Questions updated for new difficulty');
+    }
+
+    private updateTimerForDifficulty(): void {
+        if (!this.quizSession) return;
+
+        let timeMultiplier = 1;
+        switch (this.selectedDifficulty) {
+            case 'EASY':
+                timeMultiplier = 0.8; // 20% less time
+                break;
+            case 'HARD':
+                timeMultiplier = 1.5; // 50% more time
+                break;
+            default: // MEDIUM
+                timeMultiplier = 1.0;
+                break;
+        }
+
+        const baseTimeMinutes = 5; // Base time in minutes
+        const newTimeMinutes = Math.round(baseTimeMinutes * timeMultiplier);
+
+        this.quizSession.timeLimitSeconds = newTimeMinutes * 60;
+        this.remainingTime = this.quizSession.timeLimitSeconds;
+
+        // Reset the timer component with new time
+        if (this.timerComponent) {
+            this.timerComponent.reset();
+        }
+
+        console.log(`⏰ Timer updated: ${newTimeMinutes} minutes for ${this.selectedDifficulty} difficulty`);
     }
 
     getCurrentQuestion(): QuestionData | null {

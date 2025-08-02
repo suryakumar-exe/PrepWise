@@ -121,10 +121,10 @@ export class QuizStartComponent implements OnInit, OnDestroy {
                 if (params['subject']) {
                     const subjectId = parseInt(params['subject'], 10);
                     this.selectedSubjectId = subjectId;
+                    console.log(`Subject selected from query params: ${subjectId}`);
                 } else {
-                    // If no subject is provided, redirect to dashboard
-                    this.toastr.error('No subject selected. Please select a subject from the dashboard.');
-                    this.router.navigate(['/dashboard']);
+                    // If no subject is provided, just log it - don't redirect
+                    console.log('No subject in query params - user can select from dropdown');
                 }
             });
     }
