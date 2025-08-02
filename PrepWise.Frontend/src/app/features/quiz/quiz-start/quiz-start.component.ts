@@ -71,33 +71,6 @@ export class QuizStartComponent implements OnInit, OnDestroy {
         this.loadCurrentUser();
         this.loadSubjects();
         this.checkQueryParams();
-
-        // Test which subjects have questions (for debugging)
-        this.testSubjectAvailability();
-    }
-
-    private testSubjectAvailability(): void {
-        console.log('=== TESTING SUBJECT AVAILABILITY ===');
-        const testSubjects = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
-        const currentUser = sessionStorage.getItem('currentUser');
-        const userId = currentUser ? JSON.parse(currentUser).id : 1;
-
-        testSubjects.forEach(subjectId => {
-            this.quizService.startQuizAttemptWithFallback(
-                userId,
-                subjectId,
-                2, // Test with 2 questions
-                5  // Test with 5 minutes
-            ).subscribe({
-                next: (result) => {
-                    const status = result.success && result.questions && result.questions.length > 0 ? '✅ WORKING' : '❌ NO QUESTIONS';
-                    console.log(`Subject ${subjectId}: ${status} - Questions: ${result.questions?.length || 0}`);
-                },
-                error: (error) => {
-                    console.log(`Subject ${subjectId}: ❌ ERROR - ${error.status || 'Unknown error'}`);
-                }
-            });
-        });
     }
 
     ngOnDestroy(): void {
@@ -196,7 +169,7 @@ export class QuizStartComponent implements OnInit, OnDestroy {
 
 
             // Start quiz attempt directly - it will return questions
-            this.quizService.startQuizAttemptWithFallback(
+            this.quizService.startQuizAttempt(
                 this.currentUser!.id,
                 this.selectedSubjectId!,
                 formValue.questionCount,

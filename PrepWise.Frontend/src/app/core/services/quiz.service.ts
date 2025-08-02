@@ -340,52 +340,6 @@ export class QuizService {
       );
   }
 
-  // Enhanced startQuizAttempt with AI fallback
-  startQuizAttemptWithFallback(userId: number, subjectId: number, questionCount: number = 2, timeLimitMinutes: number = 30): Observable<{ success: boolean; attemptId?: number; questions?: any[]; message?: string }> {
-    console.log(`🎯 Starting quiz attempt with fallback - Subject: ${subjectId}, Questions: ${questionCount}`);
-
-    return this.startQuizAttempt(userId, subjectId, questionCount, timeLimitMinutes)
-      .pipe(
-        switchMap(result => {
-          if (result.success && result.questions && result.questions.length >= questionCount) {
-            console.log(`✅ Backend provided ${result.questions.length} questions for subject ${subjectId}`);
-            return of(result);
-          } else {
-            console.log(`⚠️ Backend provided ${result.questions?.length || 0} questions, need ${questionCount}. Using AI fallback for subject ${subjectId}`);
-
-            // Use AI question generation as fallback
-            return this.generateAIQuestions(subjectId, QuestionDifficulty.Medium, QuestionLanguage.English, questionCount)
-              .pipe(
-                map(aiQuestions => {
-                  if (aiQuestions && aiQuestions.length > 0) {
-                    console.log(`✅ AI generated ${aiQuestions.length} questions for subject ${subjectId}`);
-                    return {
-                      success: true,
-                      attemptId: Math.floor(Math.random() * 1000000) + 100000, // Generate a proper integer ID
-                      questions: aiQuestions,
-                      message: 'Questions generated using AI'
-                    };
-                  } else {
-                    console.error(`❌ AI also failed to generate questions for subject ${subjectId}`);
-                    return {
-                      success: false,
-                      message: `No questions available for subject ${subjectId}. Please try another subject.`
-                    };
-                  }
-                }),
-                catchError(aiError => {
-                  console.error(`❌ AI question generation failed for subject ${subjectId}:`, aiError);
-                  return of({
-                    success: false,
-                    message: `Failed to generate questions for subject ${subjectId}. Please try another subject.`
-                  });
-                })
-              );
-          }
-        })
-      );
-  }
-
   // Get quiz attempt details
   getQuizAttempt(attemptId: number): Observable<any> {
     const graphqlQuery = {
