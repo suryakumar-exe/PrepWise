@@ -30,7 +30,7 @@
 
     <!-- Options -->
     <div class="question-options">
-        <div class="option-container" *ngFor="let option of question.options; trackBy: trackByOptionId">
+        <div class="option-container" *ngFor="let option of question.options; let i = index; trackBy: trackByOptionId">
             <label [class]="getOptionClass(option)" [for]="'option-' + option.id">
 
                 <input [type]="allowMultipleSelection ? 'checkbox' : 'radio'" [id]="'option-' + option.id"
@@ -38,7 +38,7 @@
                     [disabled]="disabled" (change)="selectOption(option.id)" class="option-input">
 
                 <div class="option-marker">
-                    <span class="option-letter">{{ String.fromCharCode(65 + $index) }}</span>
+                    <span class="option-letter">{{ String.fromCharCode(65 + i) }}</span>
                 </div>
 
                 <div class="option-content">
