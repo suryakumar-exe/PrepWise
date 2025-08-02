@@ -287,9 +287,12 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
 
         console.log(`🔄 Updating questions for language: ${language}`);
 
+        // Convert string to enum value
+        const languageEnum = language.toUpperCase() === 'TAMIL' ? 'TAMIL' : 'ENGLISH';
+
         // Update the language property for all questions
         this.quizSession.questions.forEach(question => {
-            question.language = language.toUpperCase();
+            question.language = languageEnum as any;
         });
 
         // Force change detection by creating a new array reference
