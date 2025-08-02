@@ -212,6 +212,20 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
     }
 
     private initializeQuizSession(questions: any[], timeLimitMinutes: number, attemptId: number): void {
+        console.log(`🎮 INITIALIZING QUIZ SESSION:`);
+        console.log(`   Attempt ID: ${attemptId}`);
+        console.log(`   Total Questions: ${questions.length}`);
+        console.log(`   Time Limit: ${timeLimitMinutes} minutes`);
+        console.log(`   Questions loaded:`);
+        questions.forEach((question, index) => {
+            console.log(`     Question ${index + 1} (ID: ${question.id}): ${question.text}`);
+            console.log(`       Options:`);
+            question.options.forEach((option: any) => {
+                console.log(`         Option ${option.id}: ${option.text} (IsCorrect: ${option.isCorrect})`);
+            });
+        });
+        console.log(`--- END QUIZ INITIALIZATION ---\n`);
+
         this.quizSession = {
             attemptId: attemptId,
             questions: questions,
@@ -265,7 +279,23 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
 
         const currentQuestion = this.getCurrentQuestion();
         if (currentQuestion) {
+            console.log(`🎯 ANSWER SELECTED:`);
+            console.log(`   Question ID: ${currentQuestion.id}`);
+            console.log(`   Question Text: ${currentQuestion.text}`);
+            console.log(`   Selected Option ID: ${optionId}`);
+            console.log(`   Selected Option Text: ${currentQuestion.options.find(opt => opt.id === optionId)?.text || 'Unknown'}`);
+
+            // Log all options for this question
+            console.log(`   All options for this question:`);
+            currentQuestion.options.forEach(option => {
+                console.log(`     Option ${option.id}: ${option.text} (IsCorrect: ${option.isCorrect})`);
+            });
+
             this.quizSession.answers.set(currentQuestion.id, optionId);
+
+            console.log(`   ✅ Answer saved for Question ${currentQuestion.id}`);
+            console.log(`   Current answers map:`, Array.from(this.quizSession.answers.entries()));
+            console.log(`--- END ANSWER SELECTION ---\n`);
         }
     }
 
@@ -344,6 +374,16 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
             selectedOptionId: optionId
         }));
 
+        console.log(`📤 SUBMITTING QUIZ ANSWERS:`);
+        console.log(`   Attempt ID: ${this.quizSession!.attemptId}`);
+        console.log(`   Total answers to submit: ${answers.length}`);
+        console.log(`   Answers being sent:`);
+        answers.forEach(answer => {
+            console.log(`     Question ${answer.questionId}: Selected Option ${answer.selectedOptionId}`);
+        });
+        console.log(`   Full answers array:`, answers);
+        console.log(`--- END SUBMISSION DATA ---\n`);
+
         // Submit answers to backend using the mutation
         this.quizService.submitQuizAnswers(this.quizSession!.attemptId, answers)
             .pipe(
@@ -352,6 +392,16 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
             )
             .subscribe({
                 next: (result) => {
+                    console.log(`📥 QUIZ SUBMISSION RESPONSE:`);
+                    console.log(`   Success: ${result.success}`);
+                    console.log(`   Message: ${result.message}`);
+                    console.log(`   Score: ${result.score}`);
+                    console.log(`   Correct Answers: ${result.correctAnswers}`);
+                    console.log(`   Wrong Answers: ${result.wrongAnswers}`);
+                    console.log(`   Unanswered Questions: ${result.unansweredQuestions || 0}`);
+                    console.log(`   Full response:`, result);
+                    console.log(`--- END RESPONSE ---\n`);
+
                     if (result.success) {
                         // Navigate to result page - it will fetch results from backend
                         this.router.navigate(['/quiz/result', this.quizSession!.attemptId]);
