@@ -114,7 +114,16 @@ export class LeaderboardComponent implements OnInit, OnDestroy {
     }
 
     onSubjectChange(): void {
-        console.log('Subject changed to:', this.selectedSubjectId);
+        console.log('=== SUBJECT CHANGE ===');
+        console.log('Selected Subject ID (before conversion):', this.selectedSubjectId, 'Type:', typeof this.selectedSubjectId);
+
+        // Convert string to number if it's not null
+        if (this.selectedSubjectId !== null && this.selectedSubjectId !== undefined) {
+            this.selectedSubjectId = Number(this.selectedSubjectId);
+        }
+
+        console.log('Selected Subject ID (after conversion):', this.selectedSubjectId, 'Type:', typeof this.selectedSubjectId);
+        console.log('Available Subjects:', this.subjects);
         this.loadLeaderboard();
     }
 
@@ -202,5 +211,23 @@ export class LeaderboardComponent implements OnInit, OnDestroy {
         if (!this.selectedSubjectId) return 'All Subjects';
         const subject = this.subjects.find(s => s.id === this.selectedSubjectId);
         return subject ? subject.name : 'All Subjects';
+    }
+
+    // Test method to manually test the leaderboard query
+    testLeaderboardQuery(): void {
+        console.log('=== MANUAL TEST ===');
+        this.leaderboardService.testLeaderboardQuery(12).subscribe({
+            next: (result) => {
+                console.log('Manual test result:', result);
+                this.leaderboardData = result.entries;
+                this.currentUserRank = result.currentUserRank;
+                this.currentUserScore = result.currentUserScore;
+                this.toastr.success('Test query completed! Check console for details.');
+            },
+            error: (error) => {
+                console.error('Manual test error:', error);
+                this.toastr.error('Test query failed! Check console for details.');
+            }
+        });
     }
 } 

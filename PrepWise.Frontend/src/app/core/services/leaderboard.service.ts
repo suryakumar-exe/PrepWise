@@ -40,43 +40,138 @@ export class LeaderboardService {
   getLeaderboard(subjectId?: number, timeFrame: string = 'all'): Observable<LeaderboardResult> {
     const currentUser = this.authService.getCurrentUser();
     if (!currentUser) {
+      console.log('No current user found, returning empty data');
       return of(this.getEmptyLeaderboardData());
     }
 
     // If no subject is selected, we'll use optimistic logic for overall performance
     const querySubjectId = subjectId || 0; // 0 for overall/all subjects
 
-    const graphqlQuery = {
-      query: `
-        query GetLeaderboard($subjectId: Int!) {
-          leaderboard(subjectId: $subjectId) {
-            id
-            score
-            user {
+    console.log('=== LEADERBOARD REQUEST ===');
+    console.log('Current User ID:', currentUser.id);
+    console.log('Selected Subject ID:', subjectId);
+    console.log('Query Subject ID:', querySubjectId);
+    console.log('Time Frame:', timeFrame);
+
+    // Try different query approaches based on whether subject is selected
+    let graphqlQuery;
+
+    if (subjectId) {
+      // Specific subject query
+      graphqlQuery = {
+        query: `
+          query GetLeaderboard($subjectId: Int!) {
+            leaderboard(subjectId: $subjectId) {
               id
-              firstName
-              lastName
-            }
-            subject {
-              id
-              name
+              score
+              user {
+                id
+                firstName
+                lastName
+              }
+              subject {
+                id
+                name
+              }
             }
           }
+        `,
+        variables: {
+          subjectId: subjectId
         }
-      `,
-      variables: {
-        subjectId: querySubjectId
-      }
-    };
+      };
+    } else {
+      // Overall leaderboard query - try without subjectId parameter
+      graphqlQuery = {
+        query: `
+          query GetLeaderboard {
+            leaderboard {
+              id
+              score
+              user {
+                id
+                firstName
+                lastName
+              }
+              subject {
+                id
+                name
+              }
+            }
+          }
+        `
+      };
+    }
+
+    console.log('GraphQL Query:', JSON.stringify(graphqlQuery, null, 2));
 
     return this.http.post<LeaderboardGraphQLResponse>(`${this.apiUrl}/graphql`, graphqlQuery)
       .pipe(
         map(response => {
+          console.log('=== LEADERBOARD RESPONSE ===');
+          console.log('Full Response:', response);
+          console.log('Response Data:', response.data);
+          console.log('Leaderboard Data:', response.data?.leaderboard);
+
           const leaderboardData = response.data?.leaderboard || [];
-          return this.processLeaderboardData(leaderboardData, currentUser.id, subjectId);
+          console.log('Processed Leaderboard Data:', leaderboardData);
+
+          // If no data and we're querying for a specific subject, try a fallback
+          if (leaderboardData.length === 0 && subjectId) {
+            console.log('No data found for specific subject, trying fallback query...');
+            // This will be handled by the error catch below
+            throw new Error('No data found for specific subject');
+          }
+
+          const result = this.processLeaderboardData(leaderboardData, currentUser.id, subjectId);
+          console.log('Final Processed Result:', result);
+          console.log('=== END LEADERBOARD RESPONSE ===');
+
+          return result;
         }),
         catchError(error => {
+          console.error('=== LEADERBOARD ERROR ===');
           console.error('Error fetching leaderboard:', error);
+          console.error('Error details:', error.error);
+
+          // If this was a specific subject query that failed, try the overall query
+          if (subjectId && error.message === 'No data found for specific subject') {
+            console.log('Trying overall leaderboard query as fallback...');
+            const fallbackQuery = {
+              query: `
+                query GetLeaderboard {
+                  leaderboard {
+                    id
+                    score
+                    user {
+                      id
+                      firstName
+                      lastName
+                    }
+                    subject {
+                      id
+                      name
+                    }
+                  }
+                }
+              `
+            };
+
+            return this.http.post<LeaderboardGraphQLResponse>(`${this.apiUrl}/graphql`, fallbackQuery)
+              .pipe(
+                map(fallbackResponse => {
+                  console.log('Fallback response:', fallbackResponse);
+                  const fallbackData = fallbackResponse.data?.leaderboard || [];
+                  return this.processLeaderboardData(fallbackData, currentUser.id, subjectId);
+                }),
+                catchError(fallbackError => {
+                  console.error('Fallback query also failed:', fallbackError);
+                  return of(this.getEmptyLeaderboardData());
+                })
+              );
+          }
+
+          console.error('=== END LEADERBOARD ERROR ===');
           return of(this.getEmptyLeaderboardData());
         })
       );
@@ -87,32 +182,49 @@ export class LeaderboardService {
     currentUserId: number,
     selectedSubjectId?: number
   ): LeaderboardResult {
+    console.log('=== PROCESSING LEADERBOARD DATA ===');
+    console.log('Input leaderboardData:', leaderboardData);
+    console.log('Current User ID:', currentUserId);
+    console.log('Selected Subject ID:', selectedSubjectId);
+
     if (leaderboardData.length === 0) {
+      console.log('No leaderboard data found, returning empty result');
       return this.getEmptyLeaderboardData();
     }
 
     // Sort by score in descending order
     const sortedData = [...leaderboardData].sort((a, b) => b.score - a.score);
+    console.log('Sorted data:', sortedData);
 
     // Add rank to each entry
-    const entries: LeaderboardEntry[] = sortedData.map((entry, index) => ({
-      id: entry.id,
-      userId: entry.user.id,
-      userName: `${entry.user.firstName} ${entry.user.lastName}`,
-      score: entry.score,
-      accuracy: this.calculateAccuracy(entry.score), // Optimistic calculation
-      testsTaken: this.calculateTestsTaken(entry.score), // Optimistic calculation
-      rank: index + 1,
-      lastActive: new Date().toISOString(),
-      isCurrentUser: entry.user.id === currentUserId
-    }));
+    const entries: LeaderboardEntry[] = sortedData.map((entry, index) => {
+      const processedEntry = {
+        id: entry.id,
+        userId: entry.user.id,
+        userName: `${entry.user.firstName} ${entry.user.lastName}`,
+        score: entry.score,
+        accuracy: this.calculateAccuracy(entry.score), // Optimistic calculation
+        testsTaken: this.calculateTestsTaken(entry.score), // Optimistic calculation
+        rank: index + 1,
+        lastActive: new Date().toISOString(),
+        isCurrentUser: entry.user.id === currentUserId
+      };
+      console.log(`Processed entry ${index + 1}:`, processedEntry);
+      return processedEntry;
+    });
+
+    console.log('All processed entries:', entries);
 
     // Find current user's rank and score
     const currentUserEntry = entries.find(entry => entry.userId === currentUserId);
     const currentUserRank = currentUserEntry ? currentUserEntry.rank : null;
     const currentUserScore = currentUserEntry ? currentUserEntry.score : null;
 
-    return {
+    console.log('Current user entry:', currentUserEntry);
+    console.log('Current user rank:', currentUserRank);
+    console.log('Current user score:', currentUserScore);
+
+    const result = {
       entries,
       totalParticipants: entries.length,
       userRank: currentUserRank || 0,
@@ -120,6 +232,11 @@ export class LeaderboardService {
       currentUserRank: currentUserRank || null,
       currentUserScore: currentUserScore || null
     };
+
+    console.log('Final result:', result);
+    console.log('=== END PROCESSING LEADERBOARD DATA ===');
+
+    return result;
   }
 
   private calculateAccuracy(score: number): number {
@@ -143,6 +260,8 @@ export class LeaderboardService {
   }
 
   getSubjects(): Observable<Subject[]> {
+    console.log('=== LOADING SUBJECTS ===');
+
     const graphqlQuery = {
       query: `
         query GetSubjects {
@@ -156,19 +275,29 @@ export class LeaderboardService {
       `
     };
 
+    console.log('Subjects GraphQL Query:', JSON.stringify(graphqlQuery, null, 2));
+
     return this.http.post<any>(`${this.apiUrl}/graphql`, graphqlQuery)
       .pipe(
         map(response => {
+          console.log('Subjects Response:', response);
           const subjects = response.data?.subjects || [];
-          return subjects.map((subject: any) => ({
+          console.log('Raw subjects from response:', subjects);
+
+          const processedSubjects = subjects.map((subject: any) => ({
             id: subject.id,
             name: subject.name,
             description: subject.description || '',
             category: subject.category || 'General'
           }));
+
+          console.log('Processed subjects:', processedSubjects);
+          console.log('=== END LOADING SUBJECTS ===');
+          return processedSubjects;
         }),
         catchError(error => {
           console.error('Error fetching subjects:', error);
+          console.error('Error details:', error.error);
           return of([]);
         })
       );
@@ -183,5 +312,56 @@ export class LeaderboardService {
       currentUserRank: null,
       currentUserScore: null
     };
+  }
+
+  // Test method to manually test the leaderboard query
+  testLeaderboardQuery(subjectId: number = 12): Observable<LeaderboardResult> {
+    console.log('=== TESTING LEADERBOARD QUERY ===');
+    console.log('Testing with subject ID:', subjectId);
+
+    const testQuery = {
+      query: `
+        query GetLeaderboard($subjectId: Int!) {
+          leaderboard(subjectId: $subjectId) {
+            id
+            score
+            user {
+              id
+              firstName
+              lastName
+            }
+            subject {
+              id
+              name
+            }
+          }
+        }
+      `,
+      variables: {
+        subjectId: subjectId
+      }
+    };
+
+    console.log('Test Query:', JSON.stringify(testQuery, null, 2));
+
+    return this.http.post<LeaderboardGraphQLResponse>(`${this.apiUrl}/graphql`, testQuery)
+      .pipe(
+        map(response => {
+          console.log('Test Response:', response);
+          const leaderboardData = response.data?.leaderboard || [];
+          console.log('Test Leaderboard Data:', leaderboardData);
+
+          const currentUser = this.authService.getCurrentUser();
+          const result = this.processLeaderboardData(leaderboardData, currentUser?.id || 1, subjectId);
+          console.log('Test Result:', result);
+          console.log('=== END TESTING LEADERBOARD QUERY ===');
+
+          return result;
+        }),
+        catchError(error => {
+          console.error('Test Query Error:', error);
+          return of(this.getEmptyLeaderboardData());
+        })
+      );
   }
 } 
