@@ -9,6 +9,9 @@ import { AuthService } from './auth.service';
 interface LeaderboardResponse {
   id: number;
   score: number;
+  totalAttempts: number;
+  correctAnswers: number;
+  totalQuestions: number;
   user: {
     id: number;
     firstName: string;
@@ -68,6 +71,9 @@ export class LeaderboardService {
             leaderboard(subjectId: $subjectId) {
               id
               score
+              totalAttempts
+              correctAnswers
+              totalQuestions
               user {
                 id
                 firstName
@@ -92,6 +98,9 @@ export class LeaderboardService {
             leaderboard {
               id
               score
+              totalAttempts
+              correctAnswers
+              totalQuestions
               user {
                 id
                 firstName
@@ -124,6 +133,10 @@ export class LeaderboardService {
               console.log(`Entry ${index + 1}:`, {
                 id: entry.id,
                 score: entry.score,
+                totalAttempts: entry.totalAttempts,
+                correctAnswers: entry.correctAnswers,
+                totalQuestions: entry.totalQuestions,
+                calculatedAccuracy: entry.totalQuestions > 0 ? Math.round((entry.correctAnswers / entry.totalQuestions) * 100) : 0,
                 userId: entry.user.id,
                 userName: `${entry.user.firstName} ${entry.user.lastName}`,
                 subjectId: entry.subject.id,
@@ -155,6 +168,9 @@ export class LeaderboardService {
                   leaderboard {
                     id
                     score
+                    totalAttempts
+                    correctAnswers
+                    totalQuestions
                     user {
                       id
                       firstName
@@ -228,13 +244,18 @@ export class LeaderboardService {
 
     // Add rank to each entry
     const entries: LeaderboardEntry[] = sortedData.map((entry, index) => {
+      // Calculate actual accuracy from correctAnswers and totalQuestions
+      const accuracy = entry.totalQuestions > 0
+        ? Math.round((entry.correctAnswers / entry.totalQuestions) * 100)
+        : 0;
+
       const processedEntry = {
         id: entry.id,
         userId: entry.user.id,
         userName: `${entry.user.firstName} ${entry.user.lastName}`,
         score: entry.score,
-        accuracy: this.calculateAccuracy(entry.score), // Optimistic calculation
-        testsTaken: this.calculateTestsTaken(entry.score), // Optimistic calculation
+        accuracy: accuracy, // Use actual calculated accuracy
+        testsTaken: entry.totalAttempts, // Use actual totalAttempts
         rank: index + 1,
         lastActive: new Date().toISOString(),
         isCurrentUser: entry.user.id === currentUserId
@@ -267,18 +288,6 @@ export class LeaderboardService {
     console.log('=== END PROCESSING LEADERBOARD DATA ===');
 
     return result;
-  }
-
-  private calculateAccuracy(score: number): number {
-    // Optimistic calculation: assume accuracy is proportional to score
-    // This is a simplified calculation - in real scenario, this would come from backend
-    return Math.min(100, Math.max(0, Math.round(score * 1.2)));
-  }
-
-  private calculateTestsTaken(score: number): number {
-    // Optimistic calculation: assume more tests = higher score potential
-    // This is a simplified calculation - in real scenario, this would come from backend
-    return Math.max(1, Math.round(score / 10));
   }
 
   getGlobalLeaderboard(timeFrame: string = 'all'): Observable<LeaderboardResult> {
@@ -355,6 +364,9 @@ export class LeaderboardService {
           leaderboard(subjectId: $subjectId) {
             id
             score
+            totalAttempts
+            correctAnswers
+            totalQuestions
             user {
               id
               firstName
