@@ -103,14 +103,11 @@ export class LeaderboardComponent implements OnInit, OnDestroy {
                 timeFrame: this.selectedTimeFrame
             });
 
-            console.log('=== CALLING SERVICE METHOD ===');
-            console.log('Service method: getLeaderboard');
-            console.log('Service instance:', this.leaderboardService);
-            console.log('Service constructor:', this.leaderboardService.constructor.name);
+            console.log('=== USING TEST QUERY LOGIC ===');
 
-            const result = await this.leaderboardService.getLeaderboard(
-                this.selectedSubjectId || undefined,
-                this.selectedTimeFrame
+            // Use the test query logic which works correctly
+            const result = await this.leaderboardService.testLeaderboardQuery(
+                this.selectedSubjectId || undefined
             ).toPromise();
 
             console.log('Raw result from service:', result);
@@ -279,7 +276,7 @@ export class LeaderboardComponent implements OnInit, OnDestroy {
     // Test method to manually test the leaderboard query
     testLeaderboardQuery(): void {
         console.log('=== MANUAL TEST ===');
-        this.leaderboardService.testLeaderboardQuery(12).subscribe({
+        this.leaderboardService.testLeaderboardQuery(this.selectedSubjectId || undefined).subscribe({
             next: (result) => {
                 console.log('Manual test result:', result);
                 this.leaderboardData = result.entries;

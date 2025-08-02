@@ -377,35 +377,68 @@ export class LeaderboardService {
   }
 
   // Test method to manually test the leaderboard query
-  testLeaderboardQuery(subjectId: number = 12): Observable<LeaderboardResult> {
+  testLeaderboardQuery(subjectId?: number): Observable<LeaderboardResult> {
     console.log('=== TESTING LEADERBOARD QUERY ===');
     console.log('Testing with subject ID:', subjectId);
 
-    const testQuery = {
-      query: `
-        query GetLeaderboard($subjectId: Int!) {
-          leaderboard(subjectId: $subjectId) {
-            id
-            score
-            totalAttempts
-            correctAnswers
-            totalQuestions
-            user {
+    let testQuery;
+
+    if (subjectId) {
+      // Specific subject query
+      testQuery = {
+        query: `
+          query GetLeaderboard($subjectId: Int!) {
+            leaderboard(subjectId: $subjectId) {
               id
-              firstName
-              lastName
-            }
-            subject {
-              id
-              name
+              score
+              totalAttempts
+              correctAnswers
+              totalQuestions
+              user {
+                id
+                firstName
+                lastName
+              }
+              subject {
+                id
+                name
+              }
             }
           }
+        `,
+        variables: {
+          subjectId: subjectId,
+          version: "2.0"
         }
-      `,
-      variables: {
-        subjectId: subjectId
-      }
-    };
+      };
+    } else {
+      // Overall leaderboard query
+      testQuery = {
+        query: `
+          query GetLeaderboard {
+            leaderboard {
+              id
+              score
+              totalAttempts
+              correctAnswers
+              totalQuestions
+              user {
+                id
+                firstName
+                lastName
+              }
+              subject {
+                id
+                name
+              }
+            }
+          }
+        `,
+        variables: {
+          version: "2.0"
+        }
+      };
+    }
 
     console.log('Test Query:', JSON.stringify(testQuery, null, 2));
 
