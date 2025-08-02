@@ -89,7 +89,7 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
         // Listen for navigation attempts
         this.router.events.pipe(
             takeUntil(this.destroy$),
-            filter(event => event instanceof NavigationStart)
+            filter((event): event is NavigationStart => event instanceof NavigationStart)
         ).subscribe((event: NavigationStart) => {
             if (this.quizSession && !this.quizSession.isSubmitted && !this.navigationAttempted) {
                 this.navigationAttempted = true;
