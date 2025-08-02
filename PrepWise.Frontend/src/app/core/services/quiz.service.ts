@@ -278,7 +278,7 @@ export class QuizService {
       }
     };
 
-    return this.http.post<StartQuizAttemptResponse>(`${this.apiUrl}/graphql`, graphqlQuery)
+    return this.http.post<StartQuizAttemptResponse>(`${this.apiUrl}/graphql?v=${Date.now()}`, graphqlQuery)
       .pipe(
         map(response => {
           const result = response.data?.startQuizAttempt;

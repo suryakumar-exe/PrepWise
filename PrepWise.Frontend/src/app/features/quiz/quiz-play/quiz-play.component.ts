@@ -117,6 +117,12 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
         if (this.timerInterval) {
             clearInterval(this.timerInterval);
         }
+
+        // Clear session storage if quiz was not submitted
+        if (this.quizSession && !this.quizSession.isSubmitted) {
+            console.log('Quiz not submitted, clearing session storage on destroy');
+            this.clearSessionStorage();
+        }
     }
 
     private loadQuizSession(): void {
@@ -186,6 +192,9 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
                     // Verify question count matches
                     if (questions.length !== questionCount) {
                         console.warn(`Question count mismatch! Expected: ${questionCount}, Got: ${questions.length}`);
+                        // Use the actual number of questions found
+                        const actualQuestionCount = questions.length;
+                        console.log(`Using actual question count: ${actualQuestionCount}`);
                     }
 
                     this.initializeQuizSession(questions, timeLimitMinutes, parseInt(attemptId));
@@ -200,13 +209,8 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
                 this.initializeQuizSession(sampleQuestions, timeLimitMinutes, parseInt(attemptId));
             }
 
-            // Clear session storage after successful load
-            sessionStorage.removeItem('quizAttemptId');
-            sessionStorage.removeItem('quizTimeLimit');
-            sessionStorage.removeItem('quizSubjectId');
-            sessionStorage.removeItem('quizQuestions');
-            sessionStorage.removeItem('quizQuestionCount');
-            console.log('Session storage cleared');
+            // Don't clear session storage immediately - keep it for potential refresh/reload
+            console.log('Session storage kept for potential refresh');
         } else {
             console.log('No session storage data found, redirecting to quiz start');
             this.toastr.error('No quiz data available. Please try again.');
@@ -240,6 +244,16 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
 
         console.log(`✅ Generated ${questions.length} sample questions`);
         return questions;
+    }
+
+    private clearSessionStorage(): void {
+        console.log('Clearing session storage...');
+        sessionStorage.removeItem('quizAttemptId');
+        sessionStorage.removeItem('quizTimeLimit');
+        sessionStorage.removeItem('quizSubjectId');
+        sessionStorage.removeItem('quizQuestions');
+        sessionStorage.removeItem('quizQuestionCount');
+        console.log('Session storage cleared');
     }
 
     private initializeQuizSession(questions: any[], timeLimitMinutes: number, attemptId: number): void {
@@ -448,6 +462,9 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
                     console.log(`--- END RESPONSE ---\n`);
 
                     if (result.success) {
+                        // Clear session storage after successful submission
+                        this.clearSessionStorage();
+
                         // Store the result in session storage and navigate to result page
                         sessionStorage.setItem('quizResult', JSON.stringify(result));
                         this.router.navigate(['/quiz/result', this.quizSession!.attemptId]);
