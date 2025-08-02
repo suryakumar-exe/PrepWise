@@ -425,7 +425,7 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
         }));
 
         console.log(`📤 SUBMITTING QUIZ ANSWERS:`);
-        console.log(`   Attempt ID: ${this.quizSession!.attemptId}`);
+        console.log(`   Attempt ID: ${this.quizSession!.attemptId} (type: ${typeof this.quizSession!.attemptId})`);
         console.log(`   Total answers to submit: ${answers.length}`);
         console.log(`   Answers being sent:`);
         answers.forEach(answer => {
@@ -434,8 +434,12 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
         console.log(`   Full answers array:`, answers);
         console.log(`--- END SUBMISSION DATA ---\n`);
 
+        // Ensure attemptId is a number
+        const attemptId = parseInt(this.quizSession!.attemptId.toString(), 10);
+        console.log(`🔢 Converted attempt ID: ${attemptId} (type: ${typeof attemptId})`);
+
         // Submit answers to backend using the mutation
-        this.quizService.submitQuizAnswers(this.quizSession!.attemptId, answers)
+        this.quizService.submitQuizAnswers(attemptId, answers)
             .pipe(
                 takeUntil(this.destroy$),
                 finalize(() => this.isSubmitting = false)

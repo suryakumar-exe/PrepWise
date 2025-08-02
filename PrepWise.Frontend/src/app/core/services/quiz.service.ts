@@ -361,7 +361,7 @@ export class QuizService {
                     console.log(`✅ AI generated ${aiQuestions.length} questions for subject ${subjectId}`);
                     return {
                       success: true,
-                      attemptId: Date.now(), // Generate a temporary attempt ID
+                      attemptId: Math.floor(Math.random() * 1000000) + 100000, // Generate a proper integer ID
                       questions: aiQuestions,
                       message: 'Questions generated using AI'
                     };
@@ -440,6 +440,16 @@ export class QuizService {
 
   // Submit quiz answers
   submitQuizAnswers(quizAttemptId: number, answers: QuizAnswerInput[]): Observable<{ success: boolean; score?: number; correctAnswers?: number; wrongAnswers?: number; unansweredQuestions?: number; message?: string }> {
+    // Ensure quizAttemptId is a proper integer
+    const attemptId = parseInt(quizAttemptId.toString(), 10);
+
+    if (isNaN(attemptId)) {
+      console.error('❌ Invalid quizAttemptId:', quizAttemptId);
+      return of({ success: false, message: 'Invalid quiz attempt ID' });
+    }
+
+    console.log(`📝 Submitting answers for attempt ID: ${attemptId} (type: ${typeof attemptId})`);
+
     const graphqlQuery = {
       query: `
               mutation SubmitQuizAnswers($quizAttemptId: Int!, $answers: [QuizAnswerInput!]!) {
@@ -454,14 +464,17 @@ export class QuizService {
               }
           `,
       variables: {
-        quizAttemptId: Number(quizAttemptId),
+        quizAttemptId: attemptId,
         answers: answers
       }
     };
 
+    console.log('GraphQL Query Variables:', graphqlQuery.variables);
+
     return this.http.post<SubmitQuizAnswersResponse>(`${this.apiUrl}/graphql`, graphqlQuery)
       .pipe(
         map(response => {
+          console.log('Submit answers response:', response);
           const result = response.data?.submitQuizAnswers;
           if (result?.success) {
             return {
@@ -473,10 +486,11 @@ export class QuizService {
               message: result.message
             };
           }
-          return { success: false, message: 'Failed to submit answers' };
+          return { success: false, message: result?.message || 'Failed to submit answers' };
         }),
         catchError(error => {
-          console.error('Error submitting quiz answers:', error);
+          console.error('❌ Error submitting quiz answers:', error);
+          console.error('Error details:', error.error);
           return of({ success: false, message: 'Failed to submit answers' });
         })
       );
