@@ -71,6 +71,30 @@ export class QuizStartComponent implements OnInit, OnDestroy {
         this.loadCurrentUser();
         this.loadSubjects();
         this.checkQueryParams();
+
+        // Test which subjects have questions (for debugging)
+        this.testSubjectAvailability();
+    }
+
+    private testSubjectAvailability(): void {
+        console.log('=== TESTING SUBJECT AVAILABILITY ===');
+        const testSubjects = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
+        const currentUser = sessionStorage.getItem('currentUser');
+        const userId = currentUser ? JSON.parse(currentUser).id : 1;
+
+        testSubjects.forEach(subjectId => {
+            this.quizService.startQuizAttempt(userId, subjectId, 2, 5)
+                .pipe(takeUntil(this.destroy$))
+                .subscribe({
+                    next: (result) => {
+                        const status = result.success && result.questions && result.questions.length > 0 ? '✅ WORKING' : '❌ NO QUESTIONS';
+                        console.log(`Subject ${subjectId}: ${status} - Questions: ${result.questions?.length || 0}`);
+                    },
+                    error: (error) => {
+                        console.log(`Subject ${subjectId}: ❌ ERROR - ${error.status || 'Unknown error'}`);
+                    }
+                });
+        });
     }
 
     ngOnDestroy(): void {
@@ -131,18 +155,23 @@ export class QuizStartComponent implements OnInit, OnDestroy {
 
     private getMockSubjects(): SubjectModel[] {
         return [
+            // Subjects that are confirmed to work (1, 7, 10, 12)
             { id: 1, name: 'Standard 6', description: '6th Standard Tamil Language', isActive: true },
+            { id: 7, name: 'Area and Volume', description: 'Area and Volume Calculations', isActive: true },
+            { id: 10, name: 'HCF and LCM', description: 'Highest Common Factor & LCM', isActive: true },
+            { id: 12, name: 'General Science', description: 'Physics, Chemistry, Biology', isActive: true },
+
+            // Subject with question count mismatch - let's try with a different ID
             { id: 2, name: 'Standard 7', description: '7th Standard Tamil Language', isActive: true },
+
+            // Additional subjects that might work (using sequential IDs)
             { id: 3, name: 'Standard 8', description: '8th Standard Tamil Language', isActive: true },
             { id: 4, name: 'Standard 9', description: '9th Standard Tamil Language', isActive: true },
             { id: 5, name: 'Standard 10', description: '10th Standard Tamil Language', isActive: true },
             { id: 6, name: 'Tamil Grammar', description: 'Grammar, Literature, Comprehension', isActive: true },
-            { id: 7, name: 'Area and Volume', description: 'Area and Volume Calculations', isActive: true },
             { id: 8, name: 'Simplification', description: 'Mathematical Simplification', isActive: true },
             { id: 9, name: 'Percentage', description: 'Percentage Calculations', isActive: true },
-            { id: 10, name: 'HCF and LCM', description: 'Highest Common Factor & LCM', isActive: true },
             { id: 11, name: 'Ratio and Proportion', description: 'Ratio and Proportion Problems', isActive: true },
-            { id: 12, name: 'General Science', description: 'Physics, Chemistry, Biology', isActive: true },
             { id: 13, name: 'Current Events', description: 'Current Affairs & News', isActive: true },
             { id: 14, name: 'Geography', description: 'Indian and World Geography', isActive: true },
             { id: 15, name: 'History and Culture', description: 'Indian History & Culture', isActive: true },
@@ -174,6 +203,7 @@ export class QuizStartComponent implements OnInit, OnDestroy {
             ).subscribe({
                 next: (result) => {
                     console.log(`Quiz start - Subject: ${this.selectedSubjectId}, Questions: ${result.questions?.length}, Success: ${result.success}`);
+                    console.log('Full result:', result);
 
                     if (result.success && result.attemptId && result.questions && result.questions.length > 0) {
                         this.toastr.success('Quiz started successfully!');
@@ -215,14 +245,35 @@ export class QuizStartComponent implements OnInit, OnDestroy {
                             }
                         });
                     } else {
-                        this.toastr.error(result.message || 'No questions available for this subject');
+                        console.error('Quiz start failed:', result);
+                        let errorMessage = result.message || 'No questions available for this subject';
+
+                        // Provide more specific error messages based on the issue
+                        if (result.success && result.attemptId && (!result.questions || result.questions.length === 0)) {
+                            errorMessage = `No questions available for "${selectedSubject?.name}". Please try another subject.`;
+                        } else if (!result.success) {
+                            errorMessage = `Failed to start quiz: ${result.message}`;
+                        }
+
+                        this.toastr.error(errorMessage, 'Quiz Start Failed');
                         this.isStartingQuiz = false;
                     }
                 },
                 error: (error) => {
                     console.error('Error starting quiz:', error);
                     console.error('Error details:', error.error);
-                    this.toastr.error('Failed to start quiz');
+
+                    let errorMessage = 'Failed to start quiz';
+
+                    if (error.status === 404) {
+                        errorMessage = `Subject "${selectedSubject?.name}" not found. Please select a valid subject.`;
+                    } else if (error.status === 500) {
+                        errorMessage = 'Server error. Please try again later.';
+                    } else if (error.error?.message) {
+                        errorMessage = error.error.message;
+                    }
+
+                    this.toastr.error(errorMessage, 'Error');
                     this.isStartingQuiz = false;
                 }
             });
