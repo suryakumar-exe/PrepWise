@@ -43,9 +43,11 @@ export class LeaderboardService {
 
   getLeaderboard(subjectId?: number, timeFrame: string = 'all'): Observable<LeaderboardResult> {
     this.callCounter++;
-    console.log(`=== LEADERBOARD SERVICE CALL #${this.callCounter} ===`);
+    const uniqueId = `call_${Date.now()}_${Math.random()}`;
+    console.log(`=== LEADERBOARD SERVICE CALL #${this.callCounter} (${uniqueId}) ===`);
     console.log(`=== SERVICE VERSION: 2.0 (Updated Fields) ===`);
     console.log(`=== CALL STACK: ${new Error().stack?.split('\n')[2] || 'Unknown'} ===`);
+    console.log(`=== UNIQUE ID: ${uniqueId} ===`);
 
     const currentUser = this.authService.getCurrentUser();
     if (!currentUser) {
@@ -61,6 +63,11 @@ export class LeaderboardService {
     console.log('Selected Subject ID:', subjectId);
     console.log('Query Subject ID:', querySubjectId);
     console.log('Time Frame:', timeFrame);
+    console.log('=== PARAMETER VERIFICATION ===');
+    console.log('Subject ID Type:', typeof subjectId);
+    console.log('Subject ID Value:', subjectId);
+    console.log('Time Frame Type:', typeof timeFrame);
+    console.log('Time Frame Value:', timeFrame);
 
     // Try different query approaches based on whether subject is selected
     let graphqlQuery;
@@ -89,7 +96,8 @@ export class LeaderboardService {
           }
         `,
         variables: {
-          subjectId: subjectId
+          subjectId: subjectId,
+          version: "2.0"
         }
       };
     } else {
@@ -114,7 +122,10 @@ export class LeaderboardService {
               }
             }
           }
-        `
+        `,
+        variables: {
+          version: "2.0"
+        }
       };
     }
 

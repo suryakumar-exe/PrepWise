@@ -103,6 +103,11 @@ export class LeaderboardComponent implements OnInit, OnDestroy {
                 timeFrame: this.selectedTimeFrame
             });
 
+            console.log('=== CALLING SERVICE METHOD ===');
+            console.log('Service method: getLeaderboard');
+            console.log('Service instance:', this.leaderboardService);
+            console.log('Service constructor:', this.leaderboardService.constructor.name);
+
             const result = await this.leaderboardService.getLeaderboard(
                 this.selectedSubjectId || undefined,
                 this.selectedTimeFrame
