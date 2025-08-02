@@ -182,8 +182,8 @@ export class QuizStartComponent implements OnInit, OnDestroy {
                             text: q.questionText,
                             textTamil: q.questionTextTamil,
                             explanation: '',
-                            difficulty: 'MEDIUM',
-                            language: 'ENGLISH',
+                            difficulty: formValue.difficulty, // Use the selected difficulty from form
+                            language: formValue.language, // Use the selected language from form
                             subjectId: this.selectedSubjectId,
                             isActive: true,
                             createdAt: new Date().toISOString(),

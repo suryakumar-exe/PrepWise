@@ -2,6 +2,7 @@ import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angu
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { LanguageService } from '../../../core/services/language.service';
+import { QuestionDifficulty, QuestionLanguage } from '../../../core/models/quiz.model';
 
 export interface QuestionOption {
     id: number;
@@ -16,8 +17,8 @@ export interface QuestionData {
     text: string;
     textTamil?: string;
     explanation?: string;
-    difficulty: string;
-    language: string;
+    difficulty: QuestionDifficulty;
+    language: QuestionLanguage;
     subjectId: number;
     options: QuestionOption[];
 }
@@ -43,7 +44,7 @@ export class QuestionCardComponent implements OnInit, OnDestroy {
 
     isFlagged: boolean = false;
     String = String;
-    currentLanguage: string = 'ENGLISH';
+    currentLanguage: QuestionLanguage = QuestionLanguage.English;
     private destroy$ = new Subject<void>();
 
     constructor(private languageService: LanguageService) { }
@@ -56,7 +57,7 @@ export class QuestionCardComponent implements OnInit, OnDestroy {
 
         // Subscribe to language changes
         this.languageService.currentLanguage$.subscribe(language => {
-            this.currentLanguage = language.toUpperCase();
+            this.currentLanguage = language.toUpperCase() as QuestionLanguage;
         });
     }
 
