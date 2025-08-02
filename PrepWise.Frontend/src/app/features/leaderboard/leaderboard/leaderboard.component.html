@@ -47,7 +47,7 @@
     </div>
 
     <!-- Current User Rank -->
-    <div class="current-user-section" *ngIf="currentUserRank && currentUserScore">
+    <div class="current-user-section" *ngIf="currentUserRank && currentUserScore && hasData()">
         <div class="container">
             <div class="current-user-card">
                 <div class="user-rank-info">
@@ -72,7 +72,7 @@
     </div>
 
     <!-- Leaderboard Table -->
-    <div class="leaderboard-content">
+    <div class="leaderboard-content" *ngIf="hasData()">
         <div class="container">
             <div class="leaderboard-card">
                 <div class="card-header">
@@ -81,8 +81,7 @@
                         Top Performers
                     </h3>
                     <p class="card-subtitle">
-                        {{ selectedSubjectId ? 'Subject-specific rankings' : 'Overall rankings' }}
-                        • {{ getTimeFrameLabel() }}
+                        {{ getSelectedSubjectName() }} rankings • {{ getTimeFrameLabel() }}
                     </p>
                 </div>
 
@@ -103,8 +102,8 @@
                                 <tr *ngFor="let entry of leaderboardData; let i = index"
                                     [class.current-user]="entry.isCurrentUser" class="leaderboard-row">
                                     <td class="rank-cell">
-                                        <div class="rank-display" [class]="getRankClass(i + 1)">
-                                            <span class="rank-number">{{ getRankBadge(i + 1) }}</span>
+                                        <div class="rank-display" [class]="getRankClass(entry.rank || i + 1)">
+                                            <span class="rank-number">{{ getRankBadge(entry.rank || i + 1) }}</span>
                                         </div>
                                     </td>
                                     <td class="user-cell">
@@ -146,36 +145,42 @@
                             </tbody>
                         </table>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-                    <!-- Empty State -->
-                    <div class="empty-state" *ngIf="!isLoading && leaderboardData.length === 0">
-                        <div class="empty-icon">
-                            <i class="bi bi-trophy"></i>
-                        </div>
-                        <h4 class="empty-title">No Rankings Yet</h4>
-                        <p class="empty-description">
-                            Be the first to take a test and claim the top spot!
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="!isLoading && !hasData()">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-6 text-center">
+                    <div class="empty-state-content">
+                        <i class="bi bi-trophy empty-state-icon"></i>
+                        <h3 class="empty-state-title">No Leaderboard Data Available</h3>
+                        <p class="empty-state-description">
+                            Start taking quizzes to see your ranking and compete with others!
                         </p>
-                        <button class="btn btn-primary" (click)="goToDashboard()">
+                        <button class="btn btn-primary btn-lg" (click)="goToDashboard()">
                             <i class="bi bi-play-circle me-2"></i>
-                            Start Your First Test
+                            Start Your First Quiz
                         </button>
-                    </div>
-
-                    <!-- Loading State -->
-                    <div class="loading-state" *ngIf="isLoading">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                        <p class="loading-text">Loading leaderboard...</p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Loading State -->
+    <div class="loading-container" *ngIf="isLoading">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="loading-text">Loading leaderboard...</p>
+    </div>
+
     <!-- Statistics Section -->
-    <div class="statistics-section">
+    <div class="statistics-section" *ngIf="hasData()">
         <div class="container">
             <div class="row g-4">
                 <div class="col-md-4">
@@ -184,7 +189,7 @@
                             <i class="bi bi-people"></i>
                         </div>
                         <div class="stat-content">
-                            <h4 class="stat-value">{{ leaderboardData.length }}</h4>
+                            <h4 class="stat-value">{{ getActiveParticipants() }}</h4>
                             <p class="stat-label">Active Participants</p>
                         </div>
                     </div>
