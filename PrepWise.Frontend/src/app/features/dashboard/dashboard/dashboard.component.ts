@@ -67,42 +67,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
                 subjects: [
                     {
                         id: 1,
-                        name: 'Standard 6',
-                        description: '6th Standard Tamil Language',
+                        name: 'Standard6to10',
+                        description: '6th to 10th Standard Tamil Language',
                         icon: 'bi-book',
                         color: '#e74c3c',
-                        category: 'Tamil'
-                    },
-                    {
-                        id: 1,
-                        name: 'Standard 7',
-                        description: '7th Standard Tamil Language',
-                        icon: 'bi-book',
-                        color: '#c0392b',
-                        category: 'Tamil'
-                    },
-                    {
-                        id: 1,
-                        name: 'Standard 8',
-                        description: '8th Standard Tamil Language',
-                        icon: 'bi-book',
-                        color: '#a93226',
-                        category: 'Tamil'
-                    },
-                    {
-                        id: 1,
-                        name: 'Standard 9',
-                        description: '9th Standard Tamil Language',
-                        icon: 'bi-book',
-                        color: '#922b21',
-                        category: 'Tamil'
-                    },
-                    {
-                        id: 1,
-                        name: 'Standard 10',
-                        description: '10th Standard Tamil Language',
-                        icon: 'bi-book',
-                        color: '#7b241c',
                         category: 'Tamil'
                     },
                     {

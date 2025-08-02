@@ -143,37 +143,55 @@
 
 .subject-card {
     background: white;
-    border-radius: 1.25rem;
+    border-radius: 1rem;
     overflow: hidden;
     cursor: pointer;
     transition: all 0.3s ease;
     box-shadow: var(--shadow);
     height: 100%;
-    border: 1px solid var(--border-color);
+    border: 2px solid transparent;
 }
 
 .subject-card:hover {
-    transform: translateY(-6px);
+    transform: translateY(-4px);
     box-shadow: var(--shadow-lg);
 }
 
+/* Featured subject styling for Standard6to10 */
+.featured-subject {
+    border: 2px solid #ffc107;
+    box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+}
+
+.featured-subject:hover {
+    box-shadow: 0 8px 25px rgba(255, 193, 7, 0.4);
+    transform: translateY(-6px);
+}
+
 .subject-header {
-    height: 80px;
+    position: relative;
+    padding: 2rem;
+    text-align: center;
+    color: white;
+    min-height: 120px;
     display: flex;
     align-items: center;
     justify-content: center;
-    position: relative;
-    overflow: hidden;
 }
 
-.subject-header::before {
-    content: '';
+/* Badge styling for Standard6to10 */
+.subject-badge {
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(45deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.3));
+    top: 10px;
+    right: 10px;
+}
+
+.subject-badge .badge {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.3rem 0.6rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .subject-icon {

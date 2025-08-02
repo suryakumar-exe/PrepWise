@@ -50,44 +50,86 @@ export class QuizService {
           return of([
             {
               id: 1,
-              name: 'Standard 6',
-              description: '6th Standard Tamil Language',
+              name: 'Standard6to10',
+              description: '6th to 10th Standard Tamil Language',
               category: 'Tamil',
               isActive: true
             },
             {
               id: 2,
-              name: 'Standard 7',
-              description: '7th Standard Tamil Language',
+              name: 'Tamil Grammar',
+              description: 'Grammar, Literature, Comprehension',
               category: 'Tamil',
               isActive: true
             },
             {
               id: 3,
-              name: 'Standard 8',
-              description: '8th Standard Tamil Language',
-              category: 'Tamil',
+              name: 'Area and Volume',
+              description: 'Area and Volume Calculations',
+              category: 'Mathematics',
               isActive: true
             },
             {
               id: 4,
-              name: 'Standard 9',
-              description: '9th Standard Tamil Language',
-              category: 'Tamil',
+              name: 'Simplification',
+              description: 'Mathematical Simplification',
+              category: 'Mathematics',
               isActive: true
             },
             {
               id: 5,
-              name: 'Standard 10',
-              description: '10th Standard Tamil Language',
-              category: 'Tamil',
+              name: 'Percentage',
+              description: 'Percentage Calculations',
+              category: 'Mathematics',
               isActive: true
             },
             {
               id: 6,
-              name: 'Tamil Grammar',
-              description: 'Grammar, Literature, Comprehension',
-              category: 'Tamil',
+              name: 'HCF and LCM',
+              description: 'Highest Common Factor & LCM',
+              category: 'Mathematics',
+              isActive: true
+            },
+            {
+              id: 7,
+              name: 'Ratio and Proportion',
+              description: 'Ratio and Proportion Problems',
+              category: 'Mathematics',
+              isActive: true
+            },
+            {
+              id: 8,
+              name: 'General Science',
+              description: 'Physics, Chemistry, Biology',
+              category: 'Science & GK',
+              isActive: true
+            },
+            {
+              id: 9,
+              name: 'Current Events',
+              description: 'Current Affairs & News',
+              category: 'Science & GK',
+              isActive: true
+            },
+            {
+              id: 10,
+              name: 'Geography',
+              description: 'Indian and World Geography',
+              category: 'Science & GK',
+              isActive: true
+            },
+            {
+              id: 11,
+              name: 'History and Culture',
+              description: 'Indian History & Culture',
+              category: 'Science & GK',
+              isActive: true
+            },
+            {
+              id: 12,
+              name: 'Indian Polity',
+              description: 'Constitution and Politics',
+              category: 'Science & GK',
               isActive: true
             }
           ]);

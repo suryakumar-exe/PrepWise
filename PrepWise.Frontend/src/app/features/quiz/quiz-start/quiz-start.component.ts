@@ -78,7 +78,7 @@ export class QuizStartComponent implements OnInit, OnDestroy {
 
     private testSubjectAvailability(): void {
         console.log('=== TESTING SUBJECT AVAILABILITY ===');
-        const testSubjects = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
+        const testSubjects = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
         const currentUser = sessionStorage.getItem('currentUser');
         const userId = currentUser ? JSON.parse(currentUser).id : 1;
 
@@ -155,27 +155,25 @@ export class QuizStartComponent implements OnInit, OnDestroy {
 
     private getMockSubjects(): SubjectModel[] {
         return [
-            // Subjects that are confirmed to work (1, 7, 10, 12)
-            { id: 1, name: 'Standard 6', description: '6th Standard Tamil Language', isActive: true },
-            { id: 7, name: 'Area and Volume', description: 'Area and Volume Calculations', isActive: true },
-            { id: 10, name: 'HCF and LCM', description: 'Highest Common Factor & LCM', isActive: true },
-            { id: 12, name: 'General Science', description: 'Physics, Chemistry, Biology', isActive: true },
+            // Standard Subjects (6-10) - Grouped together
+            { id: 1, name: 'Standard6to10', description: '6th to 10th Standard Tamil Language', isActive: true },
 
-            // Subject with question count mismatch - let's try with a different ID
-            { id: 2, name: 'Standard 7', description: '7th Standard Tamil Language', isActive: true },
+            // Language & Literature
+            { id: 2, name: 'Tamil Grammar', description: 'Grammar, Literature, Comprehension', isActive: true },
 
-            // Additional subjects that might work (using sequential IDs)
-            { id: 3, name: 'Standard 8', description: '8th Standard Tamil Language', isActive: true },
-            { id: 4, name: 'Standard 9', description: '9th Standard Tamil Language', isActive: true },
-            { id: 5, name: 'Standard 10', description: '10th Standard Tamil Language', isActive: true },
-            { id: 6, name: 'Tamil Grammar', description: 'Grammar, Literature, Comprehension', isActive: true },
-            { id: 8, name: 'Simplification', description: 'Mathematical Simplification', isActive: true },
-            { id: 9, name: 'Percentage', description: 'Percentage Calculations', isActive: true },
-            { id: 11, name: 'Ratio and Proportion', description: 'Ratio and Proportion Problems', isActive: true },
-            { id: 13, name: 'Current Events', description: 'Current Affairs & News', isActive: true },
-            { id: 14, name: 'Geography', description: 'Indian and World Geography', isActive: true },
-            { id: 15, name: 'History and Culture', description: 'Indian History & Culture', isActive: true },
-            { id: 16, name: 'Indian Polity', description: 'Constitution and Politics', isActive: true }
+            // Mathematics Subjects
+            { id: 3, name: 'Area and Volume', description: 'Area and Volume Calculations', isActive: true },
+            { id: 4, name: 'Simplification', description: 'Mathematical Simplification', isActive: true },
+            { id: 5, name: 'Percentage', description: 'Percentage Calculations', isActive: true },
+            { id: 6, name: 'HCF and LCM', description: 'Highest Common Factor & LCM', isActive: true },
+            { id: 7, name: 'Ratio and Proportion', description: 'Ratio and Proportion Problems', isActive: true },
+
+            // Science & General Knowledge
+            { id: 8, name: 'General Science', description: 'Physics, Chemistry, Biology', isActive: true },
+            { id: 9, name: 'Current Events', description: 'Current Affairs & News', isActive: true },
+            { id: 10, name: 'Geography', description: 'Indian and World Geography', isActive: true },
+            { id: 11, name: 'History and Culture', description: 'Indian History & Culture', isActive: true },
+            { id: 12, name: 'Indian Polity', description: 'Constitution and Politics', isActive: true }
         ];
     }
 
