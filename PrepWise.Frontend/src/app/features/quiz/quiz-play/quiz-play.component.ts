@@ -132,15 +132,24 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
         const navigation = this.router.getCurrentNavigation();
         const state = navigation?.extras?.state;
 
+        console.log('=== LOADING QUIZ SESSION ===');
+        console.log('Attempt ID:', attemptId);
+        console.log('Navigation state:', state);
+
         if (state && state['questions']) {
             // Use questions passed from quiz start component
             const questions = state['questions'];
             const timeLimitMinutes = state['timeLimitMinutes'] || 5;
+            const questionCount = state['questionCount'] || questions.length;
 
             console.log('Using questions from navigation state:', questions.length);
+            console.log('Question count from state:', questionCount);
+            console.log('Time limit from state:', timeLimitMinutes);
+
             this.initializeQuizSession(questions, timeLimitMinutes, parseInt(attemptId));
         } else {
             // Fallback: Try to get from session storage
+            console.log('No navigation state found, using session storage');
             this.loadFromSessionStorage(attemptId);
         }
     }
@@ -165,12 +174,20 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
             const timeLimitMinutes = storedTimeLimit ? parseInt(storedTimeLimit) : 5;
             const questionCount = storedQuestionCount ? parseInt(storedQuestionCount) : 5;
 
+            console.log('Using question count from session storage:', questionCount);
+
             // Try to get stored questions first
             const storedQuestions = sessionStorage.getItem('quizQuestions');
             if (storedQuestions) {
                 try {
                     const questions = JSON.parse(storedQuestions);
                     console.log('Using stored questions:', questions.length);
+
+                    // Verify question count matches
+                    if (questions.length !== questionCount) {
+                        console.warn(`Question count mismatch! Expected: ${questionCount}, Got: ${questions.length}`);
+                    }
+
                     this.initializeQuizSession(questions, timeLimitMinutes, parseInt(attemptId));
                 } catch (error) {
                     console.log('Failed to parse stored questions, using sample questions');

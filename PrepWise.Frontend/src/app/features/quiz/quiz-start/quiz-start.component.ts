@@ -208,7 +208,8 @@ export class QuizStartComponent implements OnInit, OnDestroy {
                                 questions: transformedQuestions,
                                 attemptId: result.attemptId,
                                 timeLimitMinutes: formValue.timeLimitMinutes,
-                                subjectId: this.selectedSubjectId
+                                subjectId: this.selectedSubjectId,
+                                questionCount: formValue.questionCount
                             }
                         });
                     } else {
