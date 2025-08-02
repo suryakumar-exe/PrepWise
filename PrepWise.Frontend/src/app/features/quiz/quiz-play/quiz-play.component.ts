@@ -35,15 +35,21 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
 
     // Properties for template access
     get currentQuestionIndex(): number {
-        return this.quizSession?.currentQuestionIndex || 0;
+        const index = this.quizSession?.currentQuestionIndex || 0;
+        console.log(`🔍 currentQuestionIndex getter: ${index}`);
+        return index;
     }
 
     get totalQuestions(): number {
-        return this.quizSession?.questions.length || 0;
+        const total = this.quizSession?.questions.length || 0;
+        console.log(`🔍 totalQuestions getter: ${total}`);
+        return total;
     }
 
     get questions(): QuestionData[] {
-        return this.quizSession?.questions || [];
+        const questions = this.quizSession?.questions || [];
+        console.log(`🔍 questions getter: ${questions.length} questions`);
+        return questions;
     }
 
     get answeredQuestions(): number {

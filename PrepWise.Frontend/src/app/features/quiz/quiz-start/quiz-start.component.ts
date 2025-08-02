@@ -173,6 +173,13 @@ export class QuizStartComponent implements OnInit, OnDestroy {
                 formValue.timeLimitMinutes
             ).subscribe({
                 next: (result) => {
+                    console.log('=== QUIZ START RESULT ===');
+                    console.log('Backend result:', result);
+                    console.log('Success:', result.success);
+                    console.log('Message:', result.message);
+                    console.log('Attempt ID:', result.attemptId);
+                    console.log('Questions count:', result.questions?.length);
+
                     if (result.success && result.attemptId && result.questions && result.questions.length > 0) {
                         this.toastr.success('Quiz started successfully!');
 
@@ -195,6 +202,10 @@ export class QuizStartComponent implements OnInit, OnDestroy {
                                 orderIndex: index
                             }))
                         }));
+
+                        console.log('=== TRANSFORMED QUESTIONS ===');
+                        console.log('Transformed questions count:', transformedQuestions.length);
+                        console.log('Form values:', formValue);
 
                         // Store questions and attempt details in session storage
                         sessionStorage.setItem('quizQuestions', JSON.stringify(transformedQuestions));
