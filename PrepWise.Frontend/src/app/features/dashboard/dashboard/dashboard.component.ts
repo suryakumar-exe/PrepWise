@@ -120,7 +120,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
                 description: 'Mathematical and logical reasoning',
                 subjects: [
                     {
-                        id: 7,
+                        id: 3,
                         name: 'Area and Volume',
                         description: 'Area and Volume Calculations',
                         icon: 'bi-bounding-box',
@@ -128,7 +128,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
                         category: 'Aptitude'
                     },
                     {
-                        id: 8,
+                        id: 4,
                         name: 'Simplification',
                         description: 'Mathematical Simplification',
                         icon: 'bi-calculator',
@@ -136,7 +136,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
                         category: 'Aptitude'
                     },
                     {
-                        id: 9,
+                        id: 5,
                         name: 'Percentage',
                         description: 'Percentage Calculations',
                         icon: 'bi-percent',
@@ -144,7 +144,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
                         category: 'Aptitude'
                     },
                     {
-                        id: 10,
+                        id: 6,
                         name: 'HCF and LCM',
                         description: 'Highest Common Factor & LCM',
                         icon: 'bi-hash',
@@ -152,7 +152,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
                         category: 'Aptitude'
                     },
                     {
-                        id: 11,
+                        id: 7,
                         name: 'Ratio and Proportion',
                         description: 'Ratio and Proportion Problems',
                         icon: 'bi-pie-chart',
@@ -166,7 +166,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
                 description: 'General knowledge and current affairs',
                 subjects: [
                     {
-                        id: 12,
+                        id: 8,
                         name: 'General Science',
                         description: 'Physics, Chemistry, Biology and other sciences',
                         icon: 'bi-atom',
@@ -174,7 +174,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
                         category: 'GeneralStudies'
                     },
                     {
-                        id: 13,
+                        id: 9,
                         name: 'Current Events',
                         description: 'Current Affairs and Latest News',
                         icon: 'bi-newspaper',
@@ -182,7 +182,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
                         category: 'GeneralStudies'
                     },
                     {
-                        id: 14,
+                        id: 10,
                         name: 'Geography',
                         description: 'Indian and World Geography',
                         icon: 'bi-globe',
@@ -190,7 +190,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
                         category: 'GeneralStudies'
                     },
                     {
-                        id: 15,
+                        id: 11,
                         name: 'History and Culture',
                         description: 'Indian History and Culture',
                         icon: 'bi-building',
@@ -198,7 +198,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
                         category: 'GeneralStudies'
                     },
                     {
-                        id: 16,
+                        id: 12,
                         name: 'Indian Polity',
                         description: 'Constitution, Politics and Governance',
                         icon: 'bi-bank',

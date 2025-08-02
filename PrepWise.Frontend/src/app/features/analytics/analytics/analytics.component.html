@@ -17,11 +17,11 @@
                 </div>
                 <div class="col-auto">
                     <div class="header-actions">
-                        <button class="btn btn-outline-light me-2" (click)="exportAnalytics()">
+                        <button class="btn btn-outline-light me-2" (click)="exportAnalytics()" [disabled]="!hasData()">
                             <i class="bi bi-download me-2"></i>
                             Export
                         </button>
-                        <button class="btn btn-outline-light" (click)="shareAnalytics()">
+                        <button class="btn btn-outline-light" (click)="shareAnalytics()" [disabled]="!hasData()">
                             <i class="bi bi-share me-2"></i>
                             Share
                         </button>
@@ -59,7 +59,7 @@
     </div>
 
     <!-- Main Content -->
-    <div class="analytics-content" *ngIf="analyticsData">
+    <div class="analytics-content" *ngIf="analyticsData && hasData()">
         <div class="container">
             <!-- Overview Cards -->
             <div class="row g-4 mb-4">
@@ -74,7 +74,7 @@
                             <div class="trend-indicator">
                                 <i class="bi" [class]="getTrendIcon(analyticsData.accuracyTrend)"></i>
                                 <span [class]="getTrendColor(analyticsData.accuracyTrend)">
-                                    {{ Math.abs(getTrendValue(analyticsData.accuracyTrend)) }}%
+                                    {{ Math.abs(getTrendPercentage(analyticsData.accuracyTrend)) }}%
                                 </span>
                             </div>
                         </div>
@@ -92,7 +92,7 @@
                             <div class="trend-indicator">
                                 <i class="bi" [class]="getTrendIcon(analyticsData.questionsTrend)"></i>
                                 <span [class]="getTrendColor(analyticsData.questionsTrend)">
-                                    {{ Math.abs(getTrendValue(analyticsData.questionsTrend)) }}%
+                                    {{ Math.abs(getTrendPercentage(analyticsData.questionsTrend)) }}%
                                 </span>
                             </div>
                         </div>
@@ -110,7 +110,7 @@
                             <div class="trend-indicator">
                                 <i class="bi" [class]="getTrendIcon(analyticsData.timeTrend)"></i>
                                 <span [class]="getTrendColor(analyticsData.timeTrend)">
-                                    {{ Math.abs(getTrendValue(analyticsData.timeTrend)) }}%
+                                    {{ Math.abs(getTrendPercentage(analyticsData.timeTrend)) }}%
                                 </span>
                             </div>
                         </div>
@@ -154,7 +154,7 @@
                                             {{ subject.accuracy }}%
                                         </span>
                                     </div>
-                                    <div class="progress">
+                                    <div class="progress mb-3">
                                         <div class="progress-bar" [style.width.%]="subject.accuracy"
                                             [class]="'bg-' + getPerformanceColor(subject.accuracy)">
                                         </div>
@@ -172,6 +172,13 @@
                                             <i class="bi bi-clock text-info"></i>
                                             {{ subject.averageTime }} min
                                         </span>
+                                    </div>
+                                    <div class="subject-actions mt-3">
+                                        <button class="btn btn-sm btn-primary"
+                                            (click)="startQuizForSubject(subject.id)">
+                                            <i class="bi bi-play-circle me-1"></i>
+                                            Practice More
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -260,6 +267,27 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="!isLoading && (!analyticsData || !hasData())">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-6 text-center">
+                    <div class="empty-state-content">
+                        <i class="bi bi-graph-up empty-state-icon"></i>
+                        <h3 class="empty-state-title">No Analytics Data Available</h3>
+                        <p class="empty-state-description">
+                            Start taking quizzes to see your performance analytics and track your progress.
+                        </p>
+                        <button class="btn btn-primary btn-lg" (click)="goToDashboard()">
+                            <i class="bi bi-play-circle me-2"></i>
+                            Start Your First Quiz
+                        </button>
                     </div>
                 </div>
             </div>
