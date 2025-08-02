@@ -31,6 +31,7 @@ interface LeaderboardGraphQLResponse {
 })
 export class LeaderboardService {
   private apiUrl = environment.apiUrl;
+  private callCounter = 0; // Track service calls
 
   constructor(
     private http: HttpClient,
@@ -38,6 +39,9 @@ export class LeaderboardService {
   ) { }
 
   getLeaderboard(subjectId?: number, timeFrame: string = 'all'): Observable<LeaderboardResult> {
+    this.callCounter++;
+    console.log(`=== LEADERBOARD SERVICE CALL #${this.callCounter} ===`);
+
     const currentUser = this.authService.getCurrentUser();
     if (!currentUser) {
       console.log('No current user found, returning empty data');
@@ -112,22 +116,30 @@ export class LeaderboardService {
           console.log('Full Response:', response);
           console.log('Response Data:', response.data);
           console.log('Leaderboard Data:', response.data?.leaderboard);
+          console.log('Leaderboard Data Length:', response.data?.leaderboard?.length);
 
-          const leaderboardData = response.data?.leaderboard || [];
-          console.log('Processed Leaderboard Data:', leaderboardData);
-
-          // If no data and we're querying for a specific subject, try a fallback
-          if (leaderboardData.length === 0 && subjectId) {
-            console.log('No data found for specific subject, trying fallback query...');
-            // This will be handled by the error catch below
-            throw new Error('No data found for specific subject');
+          if (response.data?.leaderboard) {
+            console.log('=== DETAILED LEADERBOARD DATA ===');
+            response.data.leaderboard.forEach((entry, index) => {
+              console.log(`Entry ${index + 1}:`, {
+                id: entry.id,
+                score: entry.score,
+                userId: entry.user.id,
+                userName: `${entry.user.firstName} ${entry.user.lastName}`,
+                subjectId: entry.subject.id,
+                subjectName: entry.subject.name
+              });
+            });
           }
 
-          const result = this.processLeaderboardData(leaderboardData, currentUser.id, subjectId);
-          console.log('Final Processed Result:', result);
-          console.log('=== END LEADERBOARD RESPONSE ===');
+          const leaderboardData = response.data?.leaderboard || [];
 
-          return result;
+          if (leaderboardData.length === 0 && subjectId) {
+            console.log('No data found for specific subject, trying fallback query...');
+            throw new Error('No data found for specific subject'); // Trigger catchError
+          }
+
+          return this.processLeaderboardData(leaderboardData, currentUser.id, subjectId);
         }),
         catchError(error => {
           console.error('=== LEADERBOARD ERROR ===');
@@ -192,18 +204,23 @@ export class LeaderboardService {
       return this.getEmptyLeaderboardData();
     }
 
-    // Remove duplicates based on user ID and score combination
-    const uniqueData = leaderboardData.reduce((acc, current) => {
-      const key = `${current.user.id}-${current.score}`;
-      if (!acc.find(item => `${item.user.id}-${item.score}` === key)) {
-        acc.push(current);
-      } else {
-        console.log('Removing duplicate entry:', current);
-      }
-      return acc;
-    }, [] as LeaderboardResponse[]);
+    // Remove duplicates based on user ID only - keep the highest score for each user
+    const userMap = new Map<number, LeaderboardResponse>();
 
-    console.log('After deduplication:', uniqueData);
+    leaderboardData.forEach(entry => {
+      const existingEntry = userMap.get(entry.user.id);
+      if (!existingEntry || entry.score > existingEntry.score) {
+        userMap.set(entry.user.id, entry);
+        if (existingEntry) {
+          console.log(`Replacing lower score entry for user ${entry.user.id}: ${existingEntry.score} -> ${entry.score}`);
+        }
+      } else {
+        console.log(`Skipping lower score entry for user ${entry.user.id}: ${entry.score} (existing: ${existingEntry.score})`);
+      }
+    });
+
+    const uniqueData = Array.from(userMap.values());
+    console.log('After deduplication (by user ID):', uniqueData);
 
     // Sort by score in descending order
     const sortedData = [...uniqueData].sort((a, b) => b.score - a.score);

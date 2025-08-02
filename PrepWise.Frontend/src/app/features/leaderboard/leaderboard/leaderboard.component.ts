@@ -45,7 +45,7 @@ export class LeaderboardComponent implements OnInit, OnDestroy {
     ngOnInit(): void {
         this.loadCurrentUser();
         this.loadSubjects();
-        this.loadLeaderboard();
+        // Don't call loadLeaderboard here - wait for user to be loaded
     }
 
     ngOnDestroy(): void {
@@ -61,6 +61,9 @@ export class LeaderboardComponent implements OnInit, OnDestroy {
                 if (!user) {
                     this.toastr.error('Please login to view leaderboard');
                     this.router.navigate(['/login']);
+                } else {
+                    // Only load leaderboard after user is loaded
+                    this.loadLeaderboard();
                 }
             });
     }
@@ -101,6 +104,17 @@ export class LeaderboardComponent implements OnInit, OnDestroy {
             ).toPromise();
 
             console.log('Raw result from service:', result);
+
+            // Check if the raw data already contains duplicates
+            if (result?.entries) {
+                const rawUserIds = result.entries.map(entry => entry.userId);
+                const uniqueRawUserIds = [...new Set(rawUserIds)];
+                if (rawUserIds.length !== uniqueRawUserIds.length) {
+                    console.warn('DUPLICATES IN RAW SERVICE DATA!');
+                    console.warn('Raw entries count:', rawUserIds.length);
+                    console.warn('Unique users in raw data:', uniqueRawUserIds.length);
+                }
+            }
 
             this.leaderboardData = result?.entries || [];
             this.currentUserRank = result?.currentUserRank || null;
