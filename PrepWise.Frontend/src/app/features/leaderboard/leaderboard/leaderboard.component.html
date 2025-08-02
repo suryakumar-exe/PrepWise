@@ -32,9 +32,9 @@
                 <div class="col-md-6">
                     <label for="subjectFilter" class="form-label">Subject</label>
                     <select id="subjectFilter" class="form-select" [(ngModel)]="selectedSubjectId"
-                        (change)="onSubjectChange()">
-                        <option [value]="null">All Subjects</option>
-                        <option *ngFor="let subject of subjects" [value]="subject.id">
+                        (ngModelChange)="onSubjectChange()">
+                        <option [ngValue]="null">All Subjects</option>
+                        <option *ngFor="let subject of subjects" [ngValue]="subject.id">
                             {{ subject.name }}
                         </option>
                     </select>

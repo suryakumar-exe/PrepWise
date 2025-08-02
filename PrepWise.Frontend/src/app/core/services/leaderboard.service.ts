@@ -192,8 +192,21 @@ export class LeaderboardService {
       return this.getEmptyLeaderboardData();
     }
 
+    // Remove duplicates based on user ID and score combination
+    const uniqueData = leaderboardData.reduce((acc, current) => {
+      const key = `${current.user.id}-${current.score}`;
+      if (!acc.find(item => `${item.user.id}-${item.score}` === key)) {
+        acc.push(current);
+      } else {
+        console.log('Removing duplicate entry:', current);
+      }
+      return acc;
+    }, [] as LeaderboardResponse[]);
+
+    console.log('After deduplication:', uniqueData);
+
     // Sort by score in descending order
-    const sortedData = [...leaderboardData].sort((a, b) => b.score - a.score);
+    const sortedData = [...uniqueData].sort((a, b) => b.score - a.score);
     console.log('Sorted data:', sortedData);
 
     // Add rank to each entry

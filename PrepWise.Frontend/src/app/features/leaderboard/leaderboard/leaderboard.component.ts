@@ -23,6 +23,7 @@ export class LeaderboardComponent implements OnInit, OnDestroy {
     currentUserScore: number | null = null;
     currentUser: any = null;
     Math = Math;
+    private isDataLoading = false; // Prevent multiple simultaneous calls
 
     timeFrames = [
         { value: 'all', label: 'All Time' },
@@ -80,27 +81,51 @@ export class LeaderboardComponent implements OnInit, OnDestroy {
             return;
         }
 
+        // Prevent multiple simultaneous calls
+        if (this.isDataLoading) {
+            console.log('Data loading already in progress, skipping...');
+            return;
+        }
+
+        this.isDataLoading = true;
         this.isLoading = true;
+
         try {
+            console.log('=== LOADING LEADERBOARD ===');
             console.log('Loading leaderboard for subject:', this.selectedSubjectId);
+            console.log('Current user:', this.currentUser);
 
             const result = await this.leaderboardService.getLeaderboard(
                 this.selectedSubjectId || undefined,
                 this.selectedTimeFrame
             ).toPromise();
 
+            console.log('Raw result from service:', result);
+
             this.leaderboardData = result?.entries || [];
             this.currentUserRank = result?.currentUserRank || null;
             this.currentUserScore = result?.currentUserScore || null;
 
-            console.log('Leaderboard data loaded:', {
-                entries: this.leaderboardData.length,
+            console.log('Processed leaderboard data:', {
+                entriesCount: this.leaderboardData.length,
                 currentUserRank: this.currentUserRank,
-                currentUserScore: this.currentUserScore
+                currentUserScore: this.currentUserScore,
+                entries: this.leaderboardData
             });
 
             if (this.leaderboardData.length === 0) {
                 this.toastr.info('No leaderboard data available for this selection.');
+            } else {
+                console.log('Leaderboard entries:', this.leaderboardData);
+                // Check for duplicates
+                const userIds = this.leaderboardData.map(entry => entry.userId);
+                const uniqueUserIds = [...new Set(userIds)];
+                if (userIds.length !== uniqueUserIds.length) {
+                    console.warn('DUPLICATE ENTRIES DETECTED!');
+                    console.warn('Total entries:', userIds.length);
+                    console.warn('Unique users:', uniqueUserIds.length);
+                    console.warn('Duplicate user IDs:', userIds.filter((id, index) => userIds.indexOf(id) !== index));
+                }
             }
         } catch (error) {
             console.error('Error loading leaderboard:', error);
@@ -110,6 +135,7 @@ export class LeaderboardComponent implements OnInit, OnDestroy {
             this.currentUserScore = null;
         } finally {
             this.isLoading = false;
+            this.isDataLoading = false;
         }
     }
 
@@ -119,12 +145,22 @@ export class LeaderboardComponent implements OnInit, OnDestroy {
 
         // Convert string to number if it's not null
         if (this.selectedSubjectId !== null && this.selectedSubjectId !== undefined) {
+            const originalValue = this.selectedSubjectId;
             this.selectedSubjectId = Number(this.selectedSubjectId);
+            console.log(`Converted ${originalValue} (${typeof originalValue}) to ${this.selectedSubjectId} (${typeof this.selectedSubjectId})`);
         }
 
         console.log('Selected Subject ID (after conversion):', this.selectedSubjectId, 'Type:', typeof this.selectedSubjectId);
         console.log('Available Subjects:', this.subjects);
-        this.loadLeaderboard();
+
+        // Find the selected subject for debugging
+        const selectedSubject = this.subjects.find(s => s.id === this.selectedSubjectId);
+        console.log('Selected Subject:', selectedSubject);
+
+        // Add a small delay to prevent rapid successive calls
+        setTimeout(() => {
+            this.loadLeaderboard();
+        }, 100);
     }
 
     onTimeFrameChange(): void {
