@@ -27,10 +27,11 @@ export class QuizResultComponent implements OnInit {
     async loadQuizResult(): Promise<void> {
         this.isLoading = true;
         try {
-            const attemptId = this.route.snapshot.params['attemptId'];
+            const attemptIdParam = this.route.snapshot.params['attemptId'];
+            const attemptId = Number(attemptIdParam);
 
-            if (!attemptId) {
-                this.toastr.error('No quiz attempt ID provided', 'Error');
+            if (!attemptId || isNaN(attemptId)) {
+                this.toastr.error('Invalid quiz attempt ID provided', 'Error');
                 this.router.navigate(['/quiz/start']);
                 return;
             }
@@ -38,22 +39,23 @@ export class QuizResultComponent implements OnInit {
             console.log('=== LOADING QUIZ RESULT ===');
             console.log('Attempt ID:', attemptId);
 
-            // Add a longer delay to ensure backend has processed the submission and data is ready
-            console.log('Waiting for backend to process data...');
-            await new Promise(resolve => setTimeout(resolve, 5000));
-
             // Fetch quiz result from backend using attempt ID
             console.log('Fetching result from backend...');
+            console.log('Attempt ID being sent:', attemptId);
+            console.log('Attempt ID type:', typeof attemptId);
+
             const result = await this.quizService.getQuizResult(attemptId).toPromise();
 
             console.log('Backend response:', result);
+            console.log('Response type:', typeof result);
+            console.log('Response success:', result?.success);
+            console.log('Response score:', result?.score);
+            console.log('Response correctAnswers:', result?.correctAnswers);
+            console.log('Response wrongAnswers:', result?.wrongAnswers);
 
             if (result && result.success) {
                 console.log('✅ Quiz result loaded successfully:', result);
                 this.quizResult = result;
-
-                // Clear stored answers after successful result fetch
-                sessionStorage.removeItem('quizSubmittedAnswers');
 
                 // Add a small delay before showing success message to ensure UI is ready
                 setTimeout(() => {
@@ -73,9 +75,6 @@ export class QuizResultComponent implements OnInit {
                 if (retryResult && retryResult.success) {
                     console.log('✅ Quiz result loaded on retry:', retryResult);
                     this.quizResult = retryResult;
-
-                    // Clear stored answers after successful result fetch
-                    sessionStorage.removeItem('quizSubmittedAnswers');
 
                     setTimeout(() => {
                         this.toastr.success('Results loaded successfully!', 'Success');

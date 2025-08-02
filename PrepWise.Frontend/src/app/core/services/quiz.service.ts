@@ -341,7 +341,7 @@ export class QuizService {
   }
 
   // Submit quiz answers
-  submitQuizAnswers(quizAttemptId: number, answers: QuizAnswerInput[]): Observable<{ success: boolean; score?: number; correctAnswers?: number; wrongAnswers?: number; message?: string }> {
+  submitQuizAnswers(quizAttemptId: number, answers: QuizAnswerInput[]): Observable<{ success: boolean; score?: number; correctAnswers?: number; wrongAnswers?: number; unansweredQuestions?: number; message?: string }> {
     const graphqlQuery = {
       query: `
               mutation SubmitQuizAnswers($quizAttemptId: Int!, $answers: [QuizAnswerInput!]!) {
@@ -351,6 +351,7 @@ export class QuizService {
                       score
                       correctAnswers
                       wrongAnswers
+                      unansweredQuestions
                   }
               }
           `,
@@ -370,6 +371,7 @@ export class QuizService {
               score: result.score,
               correctAnswers: result.correctAnswers,
               wrongAnswers: result.wrongAnswers,
+              unansweredQuestions: result.unansweredQuestions || 0,
               message: result.message
             };
           }
@@ -429,37 +431,21 @@ export class QuizService {
     console.log('=== FETCHING QUIZ RESULT ===');
     console.log('Attempt ID:', attemptId);
 
-    // Get stored answers from session storage
-    const storedAnswers = sessionStorage.getItem('quizSubmittedAnswers');
-    let answers: QuizAnswerInput[] = [];
-
-    if (storedAnswers) {
-      try {
-        answers = JSON.parse(storedAnswers);
-        console.log('✅ Retrieved stored answers:', answers);
-      } catch (error) {
-        console.error('❌ Error parsing stored answers:', error);
-        answers = [];
-      }
-    } else {
-      console.log('❌ No stored answers found in session storage');
-    }
-
     const graphqlQuery = {
       query: `
-                mutation SubmitQuizAnswers($quizAttemptId: Int!, $answers: [QuizAnswerInput!]!) {
-                    submitQuizAnswers(quizAttemptId: $quizAttemptId, answers: $answers) {
+                query GetQuizResult($quizAttemptId: Int!) {
+                    getQuizResult(quizAttemptId: $quizAttemptId) {
                         success
                         message
                         score
                         correctAnswers
                         wrongAnswers
+                        unansweredQuestions
                     }
                 }
             `,
       variables: {
-        quizAttemptId: Number(attemptId),
-        answers: answers // Use the stored answers instead of empty array
+        quizAttemptId: Number(attemptId)
       }
     };
 
@@ -474,7 +460,7 @@ export class QuizService {
           console.log('Response data:', response.data);
           console.log('Response errors:', response.errors);
 
-          const result = response.data?.submitQuizAnswers;
+          const result = response.data?.getQuizResult;
           console.log('Quiz result from response:', result);
 
           if (result) {
@@ -483,7 +469,8 @@ export class QuizService {
               message: result.message,
               score: result.score || 0,
               correctAnswers: result.correctAnswers || 0,
-              wrongAnswers: result.wrongAnswers || 0
+              wrongAnswers: result.wrongAnswers || 0,
+              unansweredQuestions: result.unansweredQuestions || 0
             };
             console.log('✅ Transformed result:', transformedResult);
             return transformedResult;
@@ -495,7 +482,8 @@ export class QuizService {
             message: 'Result not found',
             score: 0,
             correctAnswers: 0,
-            wrongAnswers: 0
+            wrongAnswers: 0,
+            unansweredQuestions: 0
           };
         }),
         catchError(error => {
@@ -511,7 +499,8 @@ export class QuizService {
             message: 'Failed to load result',
             score: 0,
             correctAnswers: 0,
-            wrongAnswers: 0
+            wrongAnswers: 0,
+            unansweredQuestions: 0
           });
         })
       );

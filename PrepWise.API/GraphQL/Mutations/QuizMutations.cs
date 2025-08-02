@@ -91,12 +91,17 @@ public class QuizMutations
         List<QuizAnswerInput> answers,
         [Service] PrepWiseDbContext context)
     {
+        Console.WriteLine($"=== SUBMIT QUIZ ANSWERS ===");
+        Console.WriteLine($"Quiz Attempt ID: {quizAttemptId}");
+        Console.WriteLine($"Answers Count: {answers?.Count ?? 0}");
+        
         var quizAttempt = await context.QuizAttempts
             .Include(qa => qa.Quiz)
             .FirstOrDefaultAsync(qa => qa.Id == quizAttemptId);
 
         if (quizAttempt == null)
         {
+            Console.WriteLine($"❌ Quiz attempt not found for ID: {quizAttemptId}");
             return new QuizResult
             {
                 Success = false,
@@ -104,8 +109,11 @@ public class QuizMutations
             };
         }
 
+        Console.WriteLine($"✅ Quiz attempt found - Status: {quizAttempt.Status}");
+        
         if (quizAttempt.Status != QuizAttemptStatus.InProgress)
         {
+            Console.WriteLine($"❌ Quiz attempt is not in progress. Current status: {quizAttempt.Status}");
             return new QuizResult
             {
                 Success = false,
@@ -157,6 +165,13 @@ public class QuizMutations
         int totalQuestions = answers.Count;
         int score = (int)((double)correctAnswers / totalQuestions * 100);
 
+        Console.WriteLine($"📊 Quiz Results:");
+        Console.WriteLine($"   Total Questions: {totalQuestions}");
+        Console.WriteLine($"   Correct Answers: {correctAnswers}");
+        Console.WriteLine($"   Wrong Answers: {wrongAnswers}");
+        Console.WriteLine($"   Unanswered: {unansweredQuestions}");
+        Console.WriteLine($"   Score: {score}%");
+
         // Update quiz attempt
         quizAttempt.CompletedAt = DateTime.UtcNow;
         quizAttempt.Score = score;
@@ -171,7 +186,9 @@ public class QuizMutations
 
         await context.SaveChangesAsync();
 
-        return new QuizResult
+        Console.WriteLine($"✅ Quiz attempt updated and saved successfully");
+
+        var result = new QuizResult
         {
             Success = true,
             Message = "Quiz submitted successfully",
@@ -180,6 +197,9 @@ public class QuizMutations
             WrongAnswers = wrongAnswers,
             UnansweredQuestions = unansweredQuestions
         };
+
+        Console.WriteLine($"🎯 Returning result: {System.Text.Json.JsonSerializer.Serialize(result)}");
+        return result;
     }
 
     [GraphQLDescription("Start mock test")]

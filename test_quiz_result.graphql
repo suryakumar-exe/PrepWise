@@ -1,0 +1,37 @@
+# Test the new GetQuizResult query
+query GetQuizResult($quizAttemptId: Int!) {
+    getQuizResult(quizAttemptId: $quizAttemptId) {
+        success
+        message
+        score
+        correctAnswers
+        wrongAnswers
+        unansweredQuestions
+    }
+}
+
+# Variables for the query
+{
+    "quizAttemptId": 35
+}
+
+# Test the SubmitQuizAnswers mutation
+mutation SubmitQuizAnswers($quizAttemptId: Int!, $answers: [QuizAnswerInput!]!) {
+    submitQuizAnswers(quizAttemptId: $quizAttemptId, answers: $answers) {
+        success
+        message
+        score
+        correctAnswers
+        wrongAnswers
+        unansweredQuestions
+    }
+}
+
+# Variables for the mutation
+{
+    "quizAttemptId": 35,
+    "answers": [
+        {"questionId": 41, "selectedOptionId": 2},
+        {"questionId": 56, "selectedOptionId": 1}
+    ]
+} 

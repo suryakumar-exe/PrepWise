@@ -134,4 +134,43 @@ public class QuizQueries
             .Take(50)
             .AsQueryable(); // Last 50 messages
     }
+
+    [GraphQLDescription("Get quiz result by attempt ID")]
+    public async Task<QuizResult?> GetQuizResult(
+        int quizAttemptId,
+        [Service] PrepWiseDbContext context)
+    {
+        Console.WriteLine($"=== GET QUIZ RESULT ===");
+        Console.WriteLine($"Quiz Attempt ID: {quizAttemptId}");
+
+        var quizAttempt = await context.QuizAttempts
+            .Include(qa => qa.Quiz)
+            .FirstOrDefaultAsync(qa => qa.Id == quizAttemptId);
+
+        if (quizAttempt == null)
+        {
+            Console.WriteLine($"❌ Quiz attempt not found for ID: {quizAttemptId}");
+            return null;
+        }
+
+        Console.WriteLine($"✅ Quiz attempt found:");
+        Console.WriteLine($"   Status: {quizAttempt.Status}");
+        Console.WriteLine($"   Score: {quizAttempt.Score}");
+        Console.WriteLine($"   Correct Answers: {quizAttempt.CorrectAnswers}");
+        Console.WriteLine($"   Wrong Answers: {quizAttempt.WrongAnswers}");
+        Console.WriteLine($"   Unanswered: {quizAttempt.UnansweredQuestions}");
+
+        var result = new QuizResult
+        {
+            Success = true,
+            Message = "Quiz result retrieved successfully",
+            Score = quizAttempt.Score,
+            CorrectAnswers = quizAttempt.CorrectAnswers,
+            WrongAnswers = quizAttempt.WrongAnswers,
+            UnansweredQuestions = quizAttempt.UnansweredQuestions ?? 0
+        };
+
+        Console.WriteLine($"🎯 Returning result: {System.Text.Json.JsonSerializer.Serialize(result)}");
+        return result;
+    }
 } 
