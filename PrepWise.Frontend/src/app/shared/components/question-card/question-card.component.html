@@ -25,7 +25,7 @@
 
     <!-- Question Text -->
     <div class="question-content">
-        <div class="question-text" [innerHTML]="question.text"></div>
+        <div class="question-text" [innerHTML]="getQuestionText()"></div>
     </div>
 
     <!-- Options -->
@@ -42,7 +42,7 @@
                 </div>
 
                 <div class="option-content">
-                    <div class="option-text" [innerHTML]="option.text"></div>
+                    <div class="option-text" [innerHTML]="getOptionText(option)"></div>
                 </div>
 
                 <!-- Result Icons -->

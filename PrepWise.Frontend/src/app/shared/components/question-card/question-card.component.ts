@@ -1,8 +1,12 @@
-import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+import { LanguageService } from '../../../core/services/language.service';
 
 export interface QuestionOption {
     id: number;
     text: string;
+    textTamil?: string;
     isCorrect?: boolean;
     orderIndex: number;
 }
@@ -10,6 +14,7 @@ export interface QuestionOption {
 export interface QuestionData {
     id: number;
     text: string;
+    textTamil?: string;
     explanation?: string;
     difficulty: string;
     language: string;
@@ -22,7 +27,7 @@ export interface QuestionData {
     templateUrl: './question-card.component.html',
     styleUrls: ['./question-card.component.css']
 })
-export class QuestionCardComponent implements OnInit {
+export class QuestionCardComponent implements OnInit, OnDestroy {
     @Input() question!: QuestionData;
     @Input() questionNumber: number = 1;
     @Input() totalQuestions: number = 1;
@@ -38,12 +43,26 @@ export class QuestionCardComponent implements OnInit {
 
     isFlagged: boolean = false;
     String = String;
+    currentLanguage: string = 'ENGLISH';
+    private destroy$ = new Subject<void>();
+
+    constructor(private languageService: LanguageService) { }
 
     ngOnInit(): void {
         // Sort options by orderIndex
         if (this.question?.options) {
             this.question.options.sort((a, b) => a.orderIndex - b.orderIndex);
         }
+
+        // Subscribe to language changes
+        this.languageService.currentLanguage$.subscribe(language => {
+            this.currentLanguage = language.toUpperCase();
+        });
+    }
+
+    ngOnDestroy(): void {
+        this.destroy$.next();
+        this.destroy$.complete();
     }
 
     selectOption(optionId: number): void {
@@ -106,5 +125,19 @@ export class QuestionCardComponent implements OnInit {
 
     trackByOptionId(index: number, option: QuestionOption): number {
         return option.id;
+    }
+
+    getQuestionText(): string {
+        if (this.currentLanguage === 'TAMIL' && this.question.textTamil) {
+            return this.question.textTamil;
+        }
+        return this.question.text;
+    }
+
+    getOptionText(option: QuestionOption): string {
+        if (this.currentLanguage === 'TAMIL' && option.textTamil) {
+            return option.textTamil;
+        }
+        return option.text;
     }
 } 

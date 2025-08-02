@@ -32,7 +32,6 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
     isSubmitting = false;
     showConfirmSubmit = false;
     remainingTime = 0;
-    selectedDifficulty = 'MEDIUM';
 
     // Properties for template access
     get currentQuestionIndex(): number {
@@ -299,54 +298,7 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
         console.log('✅ Questions updated for new language');
     }
 
-    onDifficultyChange(): void {
-        if (!this.quizSession) return;
 
-        console.log(`🔄 Updating questions for difficulty: ${this.selectedDifficulty}`);
-
-        // Update the difficulty property for all questions
-        this.quizSession.questions.forEach(question => {
-            question.difficulty = this.selectedDifficulty;
-        });
-
-        // Force change detection by creating a new array reference
-        this.quizSession.questions = [...this.quizSession.questions];
-
-        // Update timer based on difficulty
-        this.updateTimerForDifficulty();
-
-        console.log('✅ Questions updated for new difficulty');
-    }
-
-    private updateTimerForDifficulty(): void {
-        if (!this.quizSession) return;
-
-        let timeMultiplier = 1;
-        switch (this.selectedDifficulty) {
-            case 'EASY':
-                timeMultiplier = 0.8; // 20% less time
-                break;
-            case 'HARD':
-                timeMultiplier = 1.5; // 50% more time
-                break;
-            default: // MEDIUM
-                timeMultiplier = 1.0;
-                break;
-        }
-
-        const baseTimeMinutes = 5; // Base time in minutes
-        const newTimeMinutes = Math.round(baseTimeMinutes * timeMultiplier);
-
-        this.quizSession.timeLimitSeconds = newTimeMinutes * 60;
-        this.remainingTime = this.quizSession.timeLimitSeconds;
-
-        // Reset the timer component with new time
-        if (this.timerComponent) {
-            this.timerComponent.reset();
-        }
-
-        console.log(`⏰ Timer updated: ${newTimeMinutes} minutes for ${this.selectedDifficulty} difficulty`);
-    }
 
     getCurrentQuestion(): QuestionData | null {
         if (!this.quizSession || this.quizSession.questions.length === 0) {

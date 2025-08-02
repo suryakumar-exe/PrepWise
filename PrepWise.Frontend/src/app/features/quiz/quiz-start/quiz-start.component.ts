@@ -176,21 +176,23 @@ export class QuizStartComponent implements OnInit, OnDestroy {
                     if (result.success && result.attemptId && result.questions && result.questions.length > 0) {
                         this.toastr.success('Quiz started successfully!');
 
-                        // Transform questions to match frontend format
+                        // Transform questions to match frontend format with both English and Tamil text
                         const transformedQuestions = result.questions.map((q: any) => ({
                             id: q.id,
                             text: q.questionText,
+                            textTamil: q.questionTextTamil,
                             explanation: '',
                             difficulty: 'MEDIUM',
                             language: 'ENGLISH',
                             subjectId: this.selectedSubjectId,
                             isActive: true,
                             createdAt: new Date().toISOString(),
-                            options: q.options.map((opt: any) => ({
+                            options: q.options.map((opt: any, index: number) => ({
                                 id: opt.id,
                                 text: opt.optionText,
-                                isCorrect: false, // Backend will handle this
-                                orderIndex: 0
+                                textTamil: opt.optionTextTamil,
+                                isCorrect: opt.isCorrect,
+                                orderIndex: index
                             }))
                         }));
 

@@ -247,14 +247,24 @@ export class QuizService {
                       quizAttempt {
                           id
                           startedAt
-                          totalQuestions
+                          status
+                          quiz {
+                              id
+                              title
+                              questionCount
+                              timeLimitMinutes
+                          }
                       }
                       questions {
                           id
                           questionText
+                          questionTextTamil
                           options {
                               id
+                              isCorrect
                               optionText
+                              optionTextTamil
+                              questionId
                           }
                       }
                   }
