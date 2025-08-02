@@ -168,55 +168,46 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
         const storedSubjectId = sessionStorage.getItem('quizSubjectId');
         const storedTimeLimit = sessionStorage.getItem('quizTimeLimit');
         const storedQuestionCount = sessionStorage.getItem('quizQuestionCount');
+        const storedQuestions = sessionStorage.getItem('quizQuestions');
 
         console.log('Stored attempt ID:', storedAttemptId);
         console.log('Stored subject ID:', storedSubjectId);
         console.log('Stored time limit:', storedTimeLimit);
         console.log('Stored question count:', storedQuestionCount);
+        console.log('Stored questions:', storedQuestions ? 'Found' : 'Not found');
 
-        if (storedAttemptId && storedSubjectId) {
-            console.log('Session storage data found, checking for stored questions');
-            // Get time limit from session storage
-            const timeLimitMinutes = storedTimeLimit ? parseInt(storedTimeLimit) : 5;
-            const questionCount = storedQuestionCount ? parseInt(storedQuestionCount) : 5;
+        if (storedAttemptId && storedQuestions && storedAttemptId === attemptId) {
+            try {
+                const questions = JSON.parse(storedQuestions);
+                const timeLimit = parseInt(storedTimeLimit || '30');
 
-            console.log('Using question count from session storage:', questionCount);
+                console.log('Parsed questions:', questions);
+                console.log('Questions length:', questions?.length);
 
-            // Try to get stored questions first
-            const storedQuestions = sessionStorage.getItem('quizQuestions');
-            if (storedQuestions) {
-                try {
-                    const questions = JSON.parse(storedQuestions);
-                    console.log('Using stored questions:', questions.length);
+                if (questions && Array.isArray(questions) && questions.length > 0) {
+                    console.log('✅ Successfully loaded questions from session storage');
+                    console.log(`📊 Question count: ${questions.length} (expected: ${storedQuestionCount})`);
 
-                    // Verify question count matches
-                    if (questions.length !== questionCount) {
-                        console.warn(`Question count mismatch! Expected: ${questionCount}, Got: ${questions.length}`);
-                        // Use the actual number of questions found
-                        const actualQuestionCount = questions.length;
-                        console.log(`Using actual question count: ${actualQuestionCount}`);
-                    }
+                    // Use the actual number of questions found, not the stored count
+                    const actualQuestionCount = questions.length;
+                    sessionStorage.setItem('quizQuestionCount', actualQuestionCount.toString());
 
-                    this.initializeQuizSession(questions, timeLimitMinutes, parseInt(attemptId));
-                } catch (error) {
-                    console.log('Failed to parse stored questions, using sample questions');
-                    const sampleQuestions = this.generateSampleQuestions(parseInt(storedSubjectId), questionCount);
-                    this.initializeQuizSession(sampleQuestions, timeLimitMinutes, parseInt(attemptId));
+                    this.initializeQuizSession(questions, timeLimit, parseInt(attemptId));
+                } else {
+                    console.warn('⚠️ Questions array is empty or invalid');
+                    this.toastr.error('No questions available. Please start a new quiz.', 'Error');
+                    this.router.navigate(['/quiz/start']);
                 }
-            } else {
-                console.log('No stored questions found, using sample questions');
-                const sampleQuestions = this.generateSampleQuestions(parseInt(storedSubjectId), questionCount);
-                this.initializeQuizSession(sampleQuestions, timeLimitMinutes, parseInt(attemptId));
+            } catch (error) {
+                console.error('❌ Error parsing stored questions:', error);
+                this.toastr.error('Failed to load quiz data. Please start a new quiz.', 'Error');
+                this.router.navigate(['/quiz/start']);
             }
-
-            // Don't clear session storage immediately - keep it for potential refresh/reload
-            console.log('Session storage kept for potential refresh');
         } else {
-            console.log('No session storage data found, redirecting to quiz start');
-            this.toastr.error('No quiz data available. Please try again.');
+            console.warn('⚠️ No valid session storage data found, redirecting to quiz start');
+            this.toastr.error('Quiz session expired. Please start a new quiz.', 'Session Expired');
             this.router.navigate(['/quiz/start']);
         }
-        console.log('=== END SESSION STORAGE LOAD ===');
     }
 
     private generateSampleQuestions(subjectId: number, questionCount: number = 5): any[] {

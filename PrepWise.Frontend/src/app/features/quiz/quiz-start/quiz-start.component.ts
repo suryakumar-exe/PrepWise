@@ -83,17 +83,20 @@ export class QuizStartComponent implements OnInit, OnDestroy {
         const userId = currentUser ? JSON.parse(currentUser).id : 1;
 
         testSubjects.forEach(subjectId => {
-            this.quizService.startQuizAttempt(userId, subjectId, 2, 5)
-                .pipe(takeUntil(this.destroy$))
-                .subscribe({
-                    next: (result) => {
-                        const status = result.success && result.questions && result.questions.length > 0 ? '✅ WORKING' : '❌ NO QUESTIONS';
-                        console.log(`Subject ${subjectId}: ${status} - Questions: ${result.questions?.length || 0}`);
-                    },
-                    error: (error) => {
-                        console.log(`Subject ${subjectId}: ❌ ERROR - ${error.status || 'Unknown error'}`);
-                    }
-                });
+            this.quizService.startQuizAttemptWithFallback(
+                userId,
+                subjectId,
+                2, // Test with 2 questions
+                5  // Test with 5 minutes
+            ).subscribe({
+                next: (result) => {
+                    const status = result.success && result.questions && result.questions.length > 0 ? '✅ WORKING' : '❌ NO QUESTIONS';
+                    console.log(`Subject ${subjectId}: ${status} - Questions: ${result.questions?.length || 0}`);
+                },
+                error: (error) => {
+                    console.log(`Subject ${subjectId}: ❌ ERROR - ${error.status || 'Unknown error'}`);
+                }
+            });
         });
     }
 
@@ -193,58 +196,62 @@ export class QuizStartComponent implements OnInit, OnDestroy {
 
 
             // Start quiz attempt directly - it will return questions
-            this.quizService.startQuizAttempt(
+            this.quizService.startQuizAttemptWithFallback(
                 this.currentUser!.id,
                 this.selectedSubjectId!,
                 formValue.questionCount,
                 formValue.timeLimitMinutes
             ).subscribe({
                 next: (result) => {
-                    console.log(`Quiz start - Subject: ${this.selectedSubjectId}, Questions: ${result.questions?.length}, Success: ${result.success}`);
-                    console.log('Full result:', result);
+                    console.log('Quiz start result:', result);
 
-                    if (result.success && result.attemptId && result.questions && result.questions.length > 0) {
-                        this.toastr.success('Quiz started successfully!');
+                    if (result.success && result.attemptId && result.questions) {
+                        console.log('✅ Quiz started successfully');
+                        console.log('Attempt ID:', result.attemptId);
+                        console.log('Questions count:', result.questions.length);
+                        console.log('Message:', result.message);
 
-                        // Transform questions to match frontend format with both English and Tamil text
-                        const transformedQuestions = result.questions.map((q: any) => ({
-                            id: q.id,
-                            text: q.questionText,
-                            textTamil: q.questionTextTamil,
-                            explanation: '',
-                            difficulty: formValue.difficulty, // Use the selected difficulty from form
-                            language: this.languageService.getCurrentLanguage() === 'ta' ? QuestionLanguage.Tamil : QuestionLanguage.English, // Use current language preference
-                            subjectId: this.selectedSubjectId,
-                            isActive: true,
-                            createdAt: new Date().toISOString(),
-                            options: q.options.map((opt: any, index: number) => ({
-                                id: opt.id,
-                                text: opt.optionText,
-                                textTamil: opt.optionTextTamil,
-                                isCorrect: opt.isCorrect,
-                                orderIndex: index
-                            }))
-                        }));
+                        // Validate questions array
+                        if (!Array.isArray(result.questions) || result.questions.length === 0) {
+                            console.error('❌ Questions array is empty or invalid');
+                            this.toastr.error('No questions available for this subject. Please try another subject.', 'No Questions Available');
+                            return;
+                        }
 
-                        // Store questions and attempt details in session storage
-                        sessionStorage.setItem('quizQuestions', JSON.stringify(transformedQuestions));
+                        // Use the actual number of questions received, not the requested count
+                        const actualQuestionCount = result.questions.length;
+                        console.log(`📊 Actual questions received: ${actualQuestionCount} (requested: ${formValue.questionCount})`);
+
+                        // Check if we got the expected number of questions
+                        if (actualQuestionCount < formValue.questionCount) {
+                            console.warn(`⚠️ Got ${actualQuestionCount} questions, requested ${formValue.questionCount}`);
+                            this.toastr.warning(`Only ${actualQuestionCount} questions available for this subject.`, 'Limited Questions');
+                        }
+
+                        // Store questions in session storage with actual count
+                        sessionStorage.setItem('quizQuestions', JSON.stringify(result.questions));
                         sessionStorage.setItem('quizAttemptId', result.attemptId.toString());
+                        sessionStorage.setItem('quizQuestionCount', actualQuestionCount.toString()); // Use actual count
                         sessionStorage.setItem('quizTimeLimit', formValue.timeLimitMinutes.toString());
                         sessionStorage.setItem('quizSubjectId', this.selectedSubjectId!.toString());
-                        sessionStorage.setItem('quizQuestionCount', formValue.questionCount.toString());
 
+                        // Navigate to quiz play with state
                         this.router.navigate(['/quiz/play', result.attemptId], {
                             state: {
-                                questions: transformedQuestions,
-                                attemptId: result.attemptId,
+                                questions: result.questions,
                                 timeLimitMinutes: formValue.timeLimitMinutes,
-                                subjectId: this.selectedSubjectId,
-                                questionCount: formValue.questionCount
+                                attemptId: result.attemptId,
+                                questionCount: actualQuestionCount // Use actual count
                             }
                         });
                     } else {
-                        console.error('Quiz start failed:', result);
-                        let errorMessage = result.message || 'No questions available for this subject';
+                        console.error('❌ Quiz start failed');
+                        console.error('Success:', result.success);
+                        console.error('Attempt ID:', result.attemptId);
+                        console.error('Questions:', result.questions);
+                        console.error('Message:', result.message);
+
+                        let errorMessage = result.message || 'Failed to start quiz';
 
                         // Provide more specific error messages based on the issue
                         if (result.success && result.attemptId && (!result.questions || result.questions.length === 0)) {
