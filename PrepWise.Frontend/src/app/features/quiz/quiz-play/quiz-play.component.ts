@@ -403,7 +403,8 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
                     console.log(`--- END RESPONSE ---\n`);
 
                     if (result.success) {
-                        // Navigate to result page - it will fetch results from backend
+                        // Store the result in session storage and navigate to result page
+                        sessionStorage.setItem('quizResult', JSON.stringify(result));
                         this.router.navigate(['/quiz/result', this.quizSession!.attemptId]);
                     } else {
                         this.toastr.error(result.message || 'Failed to submit quiz');

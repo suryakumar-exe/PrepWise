@@ -39,50 +39,45 @@ export class QuizResultComponent implements OnInit {
             console.log('=== LOADING QUIZ RESULT ===');
             console.log('Attempt ID:', attemptId);
 
-            // Fetch quiz result from backend using attempt ID
-            console.log('Fetching result from backend...');
-            console.log('Attempt ID being sent:', attemptId);
-            console.log('Attempt ID type:', typeof attemptId);
+            // First, try to get the result from session storage (from quiz submission)
+            const storedResult = sessionStorage.getItem('quizResult');
+            if (storedResult) {
+                try {
+                    const result = JSON.parse(storedResult);
+                    console.log('✅ Found stored quiz result:', result);
 
+                    if (result && result.success) {
+                        this.quizResult = result;
+                        // Clear the stored result after using it
+                        sessionStorage.removeItem('quizResult');
+
+                        setTimeout(() => {
+                            this.toastr.success('Results loaded successfully!', 'Success');
+                        }, 500);
+                        return;
+                    }
+                } catch (parseError) {
+                    console.error('❌ Error parsing stored result:', parseError);
+                }
+            }
+
+            // Fallback: If no stored result, try to fetch from backend
+            console.log('No stored result found, fetching from backend...');
             const result = await this.quizService.getQuizResult(attemptId).toPromise();
 
             console.log('Backend response:', result);
-            console.log('Response type:', typeof result);
-            console.log('Response success:', result?.success);
-            console.log('Response score:', result?.score);
-            console.log('Response correctAnswers:', result?.correctAnswers);
-            console.log('Response wrongAnswers:', result?.wrongAnswers);
 
             if (result && result.success) {
-                console.log('✅ Quiz result loaded successfully:', result);
+                console.log('✅ Quiz result loaded from backend:', result);
                 this.quizResult = result;
 
-                // Add a small delay before showing success message to ensure UI is ready
                 setTimeout(() => {
                     this.toastr.success('Results loaded successfully!', 'Success');
                 }, 500);
             } else {
                 console.log('❌ No valid result found for attempt ID:', attemptId);
-                console.log('Result received:', result);
-
-                // Try one more time after a short delay
-                console.log('Retrying after 3 seconds...');
-                await new Promise(resolve => setTimeout(resolve, 3000));
-
-                const retryResult = await this.quizService.getQuizResult(attemptId).toPromise();
-                console.log('Retry result:', retryResult);
-
-                if (retryResult && retryResult.success) {
-                    console.log('✅ Quiz result loaded on retry:', retryResult);
-                    this.quizResult = retryResult;
-
-                    setTimeout(() => {
-                        this.toastr.success('Results loaded successfully!', 'Success');
-                    }, 500);
-                } else {
-                    this.toastr.error('No quiz result found for this attempt. Please try again.', 'Error');
-                    this.router.navigate(['/quiz/start']);
-                }
+                this.toastr.error('No quiz result found for this attempt. Please try again.', 'Error');
+                this.router.navigate(['/quiz/start']);
             }
         } catch (error) {
             console.error('❌ Error loading quiz result:', error);
