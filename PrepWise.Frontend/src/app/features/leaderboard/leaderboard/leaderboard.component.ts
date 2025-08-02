@@ -97,6 +97,11 @@ export class LeaderboardComponent implements OnInit, OnDestroy {
             console.log('=== LOADING LEADERBOARD ===');
             console.log('Loading leaderboard for subject:', this.selectedSubjectId);
             console.log('Current user:', this.currentUser);
+            console.log('Time frame:', this.selectedTimeFrame);
+            console.log('Service call parameters:', {
+                subjectId: this.selectedSubjectId || undefined,
+                timeFrame: this.selectedTimeFrame
+            });
 
             const result = await this.leaderboardService.getLeaderboard(
                 this.selectedSubjectId || undefined,
@@ -157,6 +162,11 @@ export class LeaderboardComponent implements OnInit, OnDestroy {
         console.log('=== SUBJECT CHANGE ===');
         console.log('Selected Subject ID (before conversion):', this.selectedSubjectId, 'Type:', typeof this.selectedSubjectId);
 
+        // Clear any cached data
+        this.leaderboardData = [];
+        this.currentUserRank = null;
+        this.currentUserScore = null;
+
         // Convert string to number if it's not null
         if (this.selectedSubjectId !== null && this.selectedSubjectId !== undefined) {
             const originalValue = this.selectedSubjectId;
@@ -171,10 +181,8 @@ export class LeaderboardComponent implements OnInit, OnDestroy {
         const selectedSubject = this.subjects.find(s => s.id === this.selectedSubjectId);
         console.log('Selected Subject:', selectedSubject);
 
-        // Add a small delay to prevent rapid successive calls
-        setTimeout(() => {
-            this.loadLeaderboard();
-        }, 100);
+        // Force immediate load without delay
+        this.loadLeaderboard();
     }
 
     onTimeFrameChange(): void {

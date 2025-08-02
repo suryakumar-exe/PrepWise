@@ -44,6 +44,8 @@ export class LeaderboardService {
   getLeaderboard(subjectId?: number, timeFrame: string = 'all'): Observable<LeaderboardResult> {
     this.callCounter++;
     console.log(`=== LEADERBOARD SERVICE CALL #${this.callCounter} ===`);
+    console.log(`=== SERVICE VERSION: 2.0 (Updated Fields) ===`);
+    console.log(`=== CALL STACK: ${new Error().stack?.split('\n')[2] || 'Unknown'} ===`);
 
     const currentUser = this.authService.getCurrentUser();
     if (!currentUser) {
