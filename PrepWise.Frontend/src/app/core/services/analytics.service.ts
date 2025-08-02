@@ -76,12 +76,28 @@ export class AnalyticsService {
   }
 
   private calculateAnalytics(skillScores: UserSkillScore[], selectedSubjectId: number | null): AnalyticsData {
+    console.log('=== ANALYTICS CALCULATION ===');
+    console.log('Selected Subject ID:', selectedSubjectId, 'Type:', typeof selectedSubjectId);
+    console.log('All Skill Scores:', skillScores);
+
     // Filter by selected subject if specified
-    const filteredScores = selectedSubjectId
-      ? skillScores.filter(score => score.subject.id === selectedSubjectId)
-      : skillScores;
+    let filteredScores: UserSkillScore[];
+    if (selectedSubjectId !== null && selectedSubjectId !== undefined) {
+      // Convert to number to ensure proper comparison
+      const subjectId = Number(selectedSubjectId);
+      filteredScores = skillScores.filter(score => {
+        const matches = score.subject.id === subjectId;
+        console.log(`Comparing ${score.subject.id} (${typeof score.subject.id}) with ${subjectId} (${typeof subjectId}): ${matches}`);
+        return matches;
+      });
+      console.log('Filtered Scores for Subject ID', subjectId, ':', filteredScores);
+    } else {
+      filteredScores = skillScores;
+      console.log('No subject filter applied, using all scores');
+    }
 
     if (filteredScores.length === 0) {
+      console.log('No filtered scores found, returning empty analytics');
       return this.getEmptyAnalytics();
     }
 
@@ -89,6 +105,12 @@ export class AnalyticsService {
     const totalCorrectAnswers = filteredScores.reduce((sum, score) => sum + score.correctAnswers, 0);
     const totalQuestions = filteredScores.reduce((sum, score) => sum + score.totalQuestions, 0);
     const totalAttempts = filteredScores.reduce((sum, score) => sum + score.totalAttempts, 0);
+
+    console.log('Calculated Metrics:', {
+      totalCorrectAnswers,
+      totalQuestions,
+      totalAttempts
+    });
 
     // Calculate overall accuracy
     const overallAccuracy = totalQuestions > 0 ? Math.round((totalCorrectAnswers / totalQuestions) * 100) : 0;
@@ -118,7 +140,7 @@ export class AnalyticsService {
       };
     });
 
-    // Generate subjects list for dropdown
+    // Generate subjects list for dropdown (always include all subjects)
     const subjects: Subject[] = skillScores.map(score => ({
       id: score.subject.id,
       name: score.subject.name
@@ -133,7 +155,7 @@ export class AnalyticsService {
     const timeTrend = this.generateTrendData(averageTime, 6);
     const speedTrend = this.generateTrendData(averageTime, 6);
 
-    return {
+    const result = {
       overallAccuracy,
       totalQuestions,
       averageTime,
@@ -147,6 +169,11 @@ export class AnalyticsService {
       insights,
       subjects
     };
+
+    console.log('Final Analytics Result:', result);
+    console.log('=== END ANALYTICS CALCULATION ===');
+
+    return result;
   }
 
   private getPerformanceLevel(accuracy: number): string {

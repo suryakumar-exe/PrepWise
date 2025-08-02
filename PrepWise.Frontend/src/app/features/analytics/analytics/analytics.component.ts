@@ -67,6 +67,9 @@ export class AnalyticsComponent implements OnInit, OnDestroy {
 
         this.isLoading = true;
         try {
+            console.log('Loading analytics for user:', this.currentUser.id);
+            console.log('Selected subject ID:', this.selectedSubjectId);
+
             const data = await this.analyticsService.getAnalytics(
                 this.selectedTimeFrame,
                 this.selectedSubjectId
@@ -74,12 +77,15 @@ export class AnalyticsComponent implements OnInit, OnDestroy {
 
             this.analyticsData = data || null;
 
+            console.log('Analytics data loaded:', this.analyticsData);
+
             if (data && data.totalQuestions === 0) {
                 this.toastr.info('No quiz data available. Start taking quizzes to see your analytics!');
             }
         } catch (error) {
             console.error('Error loading analytics:', error);
             this.toastr.error('Failed to load analytics data');
+            this.analyticsData = null;
         } finally {
             this.isLoading = false;
         }
@@ -90,6 +96,16 @@ export class AnalyticsComponent implements OnInit, OnDestroy {
     }
 
     onSubjectChange(): void {
+        console.log('=== SUBJECT CHANGE ===');
+        console.log('Selected Subject ID (before conversion):', this.selectedSubjectId, 'Type:', typeof this.selectedSubjectId);
+
+        // Convert string to number if it's not null
+        if (this.selectedSubjectId !== null && this.selectedSubjectId !== undefined) {
+            this.selectedSubjectId = Number(this.selectedSubjectId);
+        }
+
+        console.log('Selected Subject ID (after conversion):', this.selectedSubjectId, 'Type:', typeof this.selectedSubjectId);
+        console.log('Available Subjects:', this.analyticsData?.subjects);
         this.loadAnalytics();
     }
 
@@ -106,6 +122,15 @@ export class AnalyticsComponent implements OnInit, OnDestroy {
         if (percentage >= 60) return 'Average';
         if (percentage >= 50) return 'Below Average';
         return 'Needs Improvement';
+    }
+
+    getPerformanceLevelScore(percentage: number): number {
+        if (percentage >= 90) return 95;
+        if (percentage >= 80) return 85;
+        if (percentage >= 70) return 75;
+        if (percentage >= 60) return 65;
+        if (percentage >= 50) return 55;
+        return 45;
     }
 
     // Calculate trend from array (last value - first value)

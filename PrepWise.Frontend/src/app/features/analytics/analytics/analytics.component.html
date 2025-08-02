@@ -123,8 +123,8 @@
                             <i class="bi bi-trophy"></i>
                         </div>
                         <div class="card-content">
-                            <h3 class="card-value">{{ analyticsData.performanceLevel }}</h3>
-                            <p class="card-label">Performance Level</p>
+                            <h3 class="card-value">{{ getPerformanceLevelScore(analyticsData.overallAccuracy) }}</h3>
+                            <p class="card-label">{{ analyticsData.performanceLevel }}</p>
                             <div class="trend-indicator">
                                 <i class="bi bi-star-fill text-warning"></i>
                                 <span class="text-warning">{{ analyticsData.streak }} days</span>
