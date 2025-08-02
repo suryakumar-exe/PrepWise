@@ -152,15 +152,18 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
         const storedAttemptId = sessionStorage.getItem('quizAttemptId');
         const storedSubjectId = sessionStorage.getItem('quizSubjectId');
         const storedTimeLimit = sessionStorage.getItem('quizTimeLimit');
+        const storedQuestionCount = sessionStorage.getItem('quizQuestionCount');
 
         console.log('Stored attempt ID:', storedAttemptId);
         console.log('Stored subject ID:', storedSubjectId);
         console.log('Stored time limit:', storedTimeLimit);
+        console.log('Stored question count:', storedQuestionCount);
 
         if (storedAttemptId && storedSubjectId) {
             console.log('Session storage data found, checking for stored questions');
             // Get time limit from session storage
             const timeLimitMinutes = storedTimeLimit ? parseInt(storedTimeLimit) : 5;
+            const questionCount = storedQuestionCount ? parseInt(storedQuestionCount) : 5;
 
             // Try to get stored questions first
             const storedQuestions = sessionStorage.getItem('quizQuestions');
@@ -171,12 +174,12 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
                     this.initializeQuizSession(questions, timeLimitMinutes, parseInt(attemptId));
                 } catch (error) {
                     console.log('Failed to parse stored questions, using sample questions');
-                    const sampleQuestions = this.generateSampleQuestions(parseInt(storedSubjectId));
+                    const sampleQuestions = this.generateSampleQuestions(parseInt(storedSubjectId), questionCount);
                     this.initializeQuizSession(sampleQuestions, timeLimitMinutes, parseInt(attemptId));
                 }
             } else {
                 console.log('No stored questions found, using sample questions');
-                const sampleQuestions = this.generateSampleQuestions(parseInt(storedSubjectId));
+                const sampleQuestions = this.generateSampleQuestions(parseInt(storedSubjectId), questionCount);
                 this.initializeQuizSession(sampleQuestions, timeLimitMinutes, parseInt(attemptId));
             }
 
@@ -185,6 +188,7 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
             sessionStorage.removeItem('quizTimeLimit');
             sessionStorage.removeItem('quizSubjectId');
             sessionStorage.removeItem('quizQuestions');
+            sessionStorage.removeItem('quizQuestionCount');
             console.log('Session storage cleared');
         } else {
             console.log('No session storage data found, redirecting to quiz start');
@@ -194,36 +198,31 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
         console.log('=== END SESSION STORAGE LOAD ===');
     }
 
-    private generateSampleQuestions(subjectId: number): any[] {
+    private generateSampleQuestions(subjectId: number, questionCount: number = 5): any[] {
+        console.log(`🔧 Generating ${questionCount} sample questions for subject ${subjectId}`);
+
         // Generate sample questions for testing when backend is not available
-        return [
-            {
-                id: 1,
-                text: "Sample question 1 for subject " + subjectId,
+        const questions = [];
+
+        for (let i = 1; i <= questionCount; i++) {
+            questions.push({
+                id: i,
+                text: `Sample question ${i} for subject ${subjectId}`,
+                textTamil: `பாடம் ${subjectId} க்கான மாதிரி கேள்வி ${i}`,
                 difficulty: "MEDIUM",
                 language: "ENGLISH",
                 subjectId: subjectId,
                 options: [
-                    { id: 1, text: "Option A", isCorrect: true, orderIndex: 0 },
-                    { id: 2, text: "Option B", isCorrect: false, orderIndex: 1 },
-                    { id: 3, text: "Option C", isCorrect: false, orderIndex: 2 },
-                    { id: 4, text: "Option D", isCorrect: false, orderIndex: 3 }
+                    { id: (i * 4) - 3, text: "Option A", textTamil: "விருப்பம் அ", isCorrect: i % 4 === 1, orderIndex: 0 },
+                    { id: (i * 4) - 2, text: "Option B", textTamil: "விருப்பம் ஆ", isCorrect: i % 4 === 2, orderIndex: 1 },
+                    { id: (i * 4) - 1, text: "Option C", textTamil: "விருப்பம் இ", isCorrect: i % 4 === 3, orderIndex: 2 },
+                    { id: (i * 4), text: "Option D", textTamil: "விருப்பம் ஈ", isCorrect: i % 4 === 0, orderIndex: 3 }
                 ]
-            },
-            {
-                id: 2,
-                text: "Sample question 2 for subject " + subjectId,
-                difficulty: "MEDIUM",
-                language: "ENGLISH",
-                subjectId: subjectId,
-                options: [
-                    { id: 5, text: "Option A", isCorrect: false, orderIndex: 0 },
-                    { id: 6, text: "Option B", isCorrect: true, orderIndex: 1 },
-                    { id: 7, text: "Option C", isCorrect: false, orderIndex: 2 },
-                    { id: 8, text: "Option D", isCorrect: false, orderIndex: 3 }
-                ]
-            }
-        ];
+            });
+        }
+
+        console.log(`✅ Generated ${questions.length} sample questions`);
+        return questions;
     }
 
     private initializeQuizSession(questions: any[], timeLimitMinutes: number, attemptId: number): void {

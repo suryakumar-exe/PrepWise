@@ -201,6 +201,7 @@ export class QuizStartComponent implements OnInit, OnDestroy {
                         sessionStorage.setItem('quizAttemptId', result.attemptId.toString());
                         sessionStorage.setItem('quizTimeLimit', formValue.timeLimitMinutes.toString());
                         sessionStorage.setItem('quizSubjectId', this.selectedSubjectId!.toString());
+                        sessionStorage.setItem('quizQuestionCount', formValue.questionCount.toString());
 
                         this.router.navigate(['/quiz/play', result.attemptId], {
                             state: {
