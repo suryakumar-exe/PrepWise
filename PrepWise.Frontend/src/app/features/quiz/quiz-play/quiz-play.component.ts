@@ -1,18 +1,16 @@
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef, HostListener } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
-import { Subject } from 'rxjs';
-import { takeUntil, finalize } from 'rxjs/operators';
-import { ToastrService } from 'ngx-toastr';
-
+import { Component, OnInit, OnDestroy, ViewChild, HostListener } from '@angular/core';
+import { ActivatedRoute, Router, NavigationStart } from '@angular/router';
+import { Subject, takeUntil, filter, finalize } from 'rxjs';
 import { QuizService } from '../../../core/services/quiz.service';
 import { LanguageService } from '../../../core/services/language.service';
-import { QuestionData } from '../../../shared/components/question-card/question-card.component';
-import { QuizAnswerInput } from '../../../core/models/quiz.model';
+import { ToastrService } from 'ngx-toastr';
+import { QuestionCardComponent } from '../../../shared/components/question-card/question-card.component';
 import { TimerComponent } from '../../../shared/components/timer/timer.component';
+import { Question, QuizAnswerInput } from '../../../core/models/quiz.model';
 
 interface QuizSession {
     attemptId: number;
-    questions: QuestionData[];
+    questions: Question[];
     currentQuestionIndex: number;
     answers: Map<number, number>;
     flaggedQuestions: Set<number>;
@@ -27,11 +25,18 @@ interface QuizSession {
     styleUrls: ['./quiz-play.component.css']
 })
 export class QuizPlayComponent implements OnInit, OnDestroy {
+    @ViewChild(QuestionCardComponent) questionCard!: QuestionCardComponent;
+    @ViewChild(TimerComponent) timer!: TimerComponent;
+
     quizSession: QuizSession | null = null;
     isLoading = true;
     isSubmitting = false;
     showConfirmSubmit = false;
     remainingTime = 0;
+    autoSaveInterval: any;
+    timerInterval: any;
+    private destroy$ = new Subject<void>();
+    private navigationAttempted = false;
 
     // Properties for template access
     get currentQuestionIndex(): number {
@@ -42,7 +47,7 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
         return this.quizSession?.questions.length || 0;
     }
 
-    get questions(): QuestionData[] {
+    get questions(): Question[] {
         return this.quizSession?.questions || [];
     }
 
@@ -61,7 +66,7 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
         return this.quizSession?.timeLimitSeconds || 1200;
     }
 
-    get currentQuestion(): QuestionData | null {
+    get currentQuestion(): Question | null {
         return this.getCurrentQuestion();
     }
 
@@ -74,25 +79,57 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
         return this.getProgressPercentage();
     }
 
-    private destroy$ = new Subject<void>();
-    private autoSaveInterval: any;
-    private timerInterval: any;
-
-    @ViewChild(TimerComponent) timerComponent!: TimerComponent;
-
     constructor(
         private route: ActivatedRoute,
         private router: Router,
         private quizService: QuizService,
         public languageService: LanguageService,
         private toastr: ToastrService
-    ) { }
+    ) {
+        // Listen for navigation attempts
+        this.router.events.pipe(
+            takeUntil(this.destroy$),
+            filter(event => event instanceof NavigationStart)
+        ).subscribe((event: NavigationStart) => {
+            if (this.quizSession && !this.quizSession.isSubmitted && !this.navigationAttempted) {
+                this.navigationAttempted = true;
+                this.handleNavigationAway();
+            }
+        });
+    }
 
     @HostListener('window:beforeunload', ['$event'])
-    unloadNotification($event: any): void {
+    onBeforeUnload(event: BeforeUnloadEvent): void {
         if (this.quizSession && !this.quizSession.isSubmitted) {
-            $event.returnValue = 'You have an active quiz. Are you sure you want to leave?';
+            event.preventDefault();
+            event.returnValue = 'You have an active quiz session. Are you sure you want to leave?';
+            this.clearSessionStorage();
         }
+    }
+
+    @HostListener('window:popstate', ['$event'])
+    onPopState(event: PopStateEvent): void {
+        if (this.quizSession && !this.quizSession.isSubmitted) {
+            this.handleNavigationAway();
+        }
+    }
+
+    private handleNavigationAway(): void {
+        console.log('⚠️ User attempting to navigate away during active quiz');
+
+        // Show warning toast
+        this.toastr.warning('Quiz session will be lost if you leave this page', 'Warning', {
+            timeOut: 5000,
+            closeButton: true
+        });
+
+        // Clear session storage
+        this.clearSessionStorage();
+
+        // Reset navigation flag after a delay
+        setTimeout(() => {
+            this.navigationAttempted = false;
+        }, 1000);
     }
 
     ngOnInit(): void {
@@ -126,37 +163,37 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
     }
 
     private loadQuizSession(): void {
-        const attemptId = this.route.snapshot.params['attemptId'];
-
-        if (!attemptId) {
-            this.toastr.error('No quiz attempt ID provided');
-            this.router.navigate(['/quiz/start']);
-            return;
-        }
-
-        // Try to get questions from navigation state first
-        const navigation = this.router.getCurrentNavigation();
-        const state = navigation?.extras?.state;
-
         console.log('=== LOADING QUIZ SESSION ===');
-        console.log('Attempt ID:', attemptId);
-        console.log('Navigation state:', state);
 
-        if (state && state['questions']) {
-            // Use questions passed from quiz start component
-            const questions = state['questions'];
-            const timeLimitMinutes = state['timeLimitMinutes'] || 5;
-            const questionCount = state['questionCount'] || questions.length;
+        // Get attempt ID from route
+        const attemptId = this.route.snapshot.paramMap.get('attemptId');
+        console.log('Attempt ID from route:', attemptId);
 
-            console.log('Using questions from navigation state:', questions.length);
-            console.log('Question count from state:', questionCount);
-            console.log('Time limit from state:', timeLimitMinutes);
-
-            this.initializeQuizSession(questions, timeLimitMinutes, parseInt(attemptId));
-        } else {
-            // Fallback: Try to get from session storage
-            console.log('No navigation state found, using session storage');
+        if (attemptId) {
+            // Try to load from session storage first
             this.loadFromSessionStorage(attemptId);
+        } else {
+            // Try to get from navigation state
+            const navigation = this.router.getCurrentNavigation();
+            console.log('Navigation state:', navigation?.extras?.state);
+
+            if (navigation?.extras?.state) {
+                const state = navigation.extras.state as any;
+                console.log('State data:', state);
+
+                if (state.attemptId && state.questions) {
+                    console.log('Loading from navigation state');
+                    this.initializeQuizSession(state.questions, state.timeLimitMinutes || 30, state.attemptId);
+                } else {
+                    console.error('❌ Missing required data in navigation state');
+                    this.toastr.error('Failed to load quiz session', 'Error');
+                    this.router.navigate(['/quiz/start']);
+                }
+            } else {
+                console.error('❌ No attempt ID or navigation state found');
+                this.toastr.error('Failed to load quiz session', 'Error');
+                this.router.navigate(['/quiz/start']);
+            }
         }
     }
 
@@ -168,55 +205,99 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
         const storedSubjectId = sessionStorage.getItem('quizSubjectId');
         const storedTimeLimit = sessionStorage.getItem('quizTimeLimit');
         const storedQuestionCount = sessionStorage.getItem('quizQuestionCount');
+        const storedQuestions = sessionStorage.getItem('quizQuestions');
 
         console.log('Stored attempt ID:', storedAttemptId);
         console.log('Stored subject ID:', storedSubjectId);
         console.log('Stored time limit:', storedTimeLimit);
         console.log('Stored question count:', storedQuestionCount);
+        console.log('Stored questions:', storedQuestions ? 'Found' : 'Not found');
 
-        if (storedAttemptId && storedSubjectId) {
-            console.log('Session storage data found, checking for stored questions');
-            // Get time limit from session storage
-            const timeLimitMinutes = storedTimeLimit ? parseInt(storedTimeLimit) : 5;
-            const questionCount = storedQuestionCount ? parseInt(storedQuestionCount) : 5;
+        if (storedAttemptId && storedQuestions && storedAttemptId === attemptId) {
+            try {
+                const questions = JSON.parse(storedQuestions);
+                const timeLimit = parseInt(storedTimeLimit || '30');
 
-            console.log('Using question count from session storage:', questionCount);
+                console.log('Parsed questions:', questions);
+                console.log('Questions length:', questions?.length);
 
-            // Try to get stored questions first
-            const storedQuestions = sessionStorage.getItem('quizQuestions');
-            if (storedQuestions) {
-                try {
-                    const questions = JSON.parse(storedQuestions);
-                    console.log('Using stored questions:', questions.length);
-
-                    // Verify question count matches
-                    if (questions.length !== questionCount) {
-                        console.warn(`Question count mismatch! Expected: ${questionCount}, Got: ${questions.length}`);
-                        // Use the actual number of questions found
-                        const actualQuestionCount = questions.length;
-                        console.log(`Using actual question count: ${actualQuestionCount}`);
-                    }
-
-                    this.initializeQuizSession(questions, timeLimitMinutes, parseInt(attemptId));
-                } catch (error) {
-                    console.log('Failed to parse stored questions, using sample questions');
-                    const sampleQuestions = this.generateSampleQuestions(parseInt(storedSubjectId), questionCount);
-                    this.initializeQuizSession(sampleQuestions, timeLimitMinutes, parseInt(attemptId));
+                if (questions && Array.isArray(questions) && questions.length > 0) {
+                    console.log('✅ Successfully loaded questions from session storage');
+                    this.initializeQuizSession(questions, timeLimit, parseInt(attemptId));
+                } else {
+                    console.warn('⚠️ Questions array is empty or invalid, trying to reload from backend');
+                    this.reloadQuestionsFromBackend(parseInt(storedSubjectId || '0'), parseInt(storedQuestionCount || '5'), timeLimit, parseInt(attemptId));
                 }
-            } else {
-                console.log('No stored questions found, using sample questions');
-                const sampleQuestions = this.generateSampleQuestions(parseInt(storedSubjectId), questionCount);
-                this.initializeQuizSession(sampleQuestions, timeLimitMinutes, parseInt(attemptId));
+            } catch (error) {
+                console.error('❌ Error parsing stored questions:', error);
+                this.reloadQuestionsFromBackend(parseInt(storedSubjectId || '0'), parseInt(storedQuestionCount || '5'), parseInt(storedTimeLimit || '30'), parseInt(attemptId));
             }
-
-            // Don't clear session storage immediately - keep it for potential refresh/reload
-            console.log('Session storage kept for potential refresh');
         } else {
-            console.log('No session storage data found, redirecting to quiz start');
-            this.toastr.error('No quiz data available. Please try again.');
+            console.warn('⚠️ No valid session storage data found, redirecting to quiz start');
+            this.toastr.error('Quiz session expired. Please start a new quiz.', 'Session Expired');
             this.router.navigate(['/quiz/start']);
         }
-        console.log('=== END SESSION STORAGE LOAD ===');
+    }
+
+    private reloadQuestionsFromBackend(subjectId: number, questionCount: number, timeLimit: number, attemptId: number): void {
+        console.log('=== RELOADING QUESTIONS FROM BACKEND ===');
+        console.log('Subject ID:', subjectId);
+        console.log('Question Count:', questionCount);
+        console.log('Time Limit:', timeLimit);
+        console.log('Attempt ID:', attemptId);
+
+        if (!subjectId || subjectId === 0) {
+            console.error('❌ Invalid subject ID for reload');
+            this.toastr.error('Invalid subject. Please start a new quiz.', 'Error');
+            this.router.navigate(['/quiz/start']);
+            return;
+        }
+
+        // Get current user ID from session storage or auth service
+        const currentUser = sessionStorage.getItem('currentUser');
+        const userId = currentUser ? JSON.parse(currentUser).id : 1; // Fallback to 1 if not found
+
+        console.log('User ID for reload:', userId);
+
+        this.quizService.startQuizAttempt(userId, subjectId, questionCount, timeLimit)
+            .pipe(
+                takeUntil(this.destroy$),
+                finalize(() => {
+                    this.isLoading = false;
+                })
+            )
+            .subscribe({
+                next: (result) => {
+                    console.log('Backend reload result:', result);
+
+                    if (result.success && result.questions && result.questions.length > 0) {
+                        console.log('✅ Successfully reloaded questions from backend');
+                        console.log('Questions count:', result.questions.length);
+
+                        // Update session storage with new data
+                        sessionStorage.setItem('quizQuestions', JSON.stringify(result.questions));
+                        sessionStorage.setItem('quizAttemptId', attemptId.toString());
+                        sessionStorage.setItem('quizSubjectId', subjectId.toString());
+                        sessionStorage.setItem('quizTimeLimit', timeLimit.toString());
+                        sessionStorage.setItem('quizQuestionCount', questionCount.toString());
+
+                        this.initializeQuizSession(result.questions, timeLimit, attemptId);
+                    } else {
+                        console.error('❌ Failed to reload questions from backend');
+                        console.error('Success:', result.success);
+                        console.error('Questions:', result.questions);
+                        console.error('Message:', result.message);
+
+                        this.toastr.error(`Failed to load questions: ${result.message || 'Unknown error'}`, 'Error');
+                        this.router.navigate(['/quiz/start']);
+                    }
+                },
+                error: (error) => {
+                    console.error('❌ Error reloading questions from backend:', error);
+                    this.toastr.error('Failed to reload questions. Please try again.', 'Error');
+                    this.router.navigate(['/quiz/start']);
+                }
+            });
     }
 
     private generateSampleQuestions(subjectId: number, questionCount: number = 5): any[] {
@@ -326,7 +407,7 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
 
 
 
-    getCurrentQuestion(): QuestionData | null {
+    getCurrentQuestion(): Question | null {
         if (!this.quizSession || this.quizSession.questions.length === 0) {
             return null;
         }
@@ -428,7 +509,7 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
         this.isSubmitting = true;
         this.quizSession.isSubmitted = true;
 
-        const answers: any[] = Array.from(this.quizSession.answers.entries()).map(([questionId, optionId]) => ({
+        const answers: QuizAnswerInput[] = Array.from(this.quizSession.answers.entries()).map(([questionId, optionId]) => ({
             questionId,
             selectedOptionId: optionId
         }));
@@ -450,7 +531,7 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
                 finalize(() => this.isSubmitting = false)
             )
             .subscribe({
-                next: (result) => {
+                next: (result: any) => {
                     console.log(`📥 QUIZ SUBMISSION RESPONSE:`);
                     console.log(`   Success: ${result.success}`);
                     console.log(`   Message: ${result.message}`);

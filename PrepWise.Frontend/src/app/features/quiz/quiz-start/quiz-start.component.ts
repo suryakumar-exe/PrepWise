@@ -76,6 +76,23 @@ export class QuizStartComponent implements OnInit, OnDestroy {
     ngOnDestroy(): void {
         this.destroy$.next();
         this.destroy$.complete();
+
+        // Clear any incomplete quiz session data
+        this.clearIncompleteSessionData();
+    }
+
+    private clearIncompleteSessionData(): void {
+        // Only clear if we're not in the middle of starting a quiz
+        if (!this.isLoading) {
+            console.log('Clearing incomplete session data from quiz start');
+            sessionStorage.removeItem('quizQuestions');
+            sessionStorage.removeItem('quizAttemptId');
+            sessionStorage.removeItem('quizSubjectId');
+            sessionStorage.removeItem('quizTimeLimit');
+            sessionStorage.removeItem('quizQuestionCount');
+            sessionStorage.removeItem('quizDifficulty');
+            sessionStorage.removeItem('quizLanguage');
+        }
     }
 
     private initializeForm(): void {
@@ -151,84 +168,120 @@ export class QuizStartComponent implements OnInit, OnDestroy {
     }
 
     onStartQuiz(): void {
-        if (this.quizForm.valid && this.currentUser && this.selectedSubjectId) {
-            this.isStartingQuiz = true;
-
-            const formValue = this.quizForm.value;
-            const selectedSubject = this.getSelectedSubject();
-
-            if (!selectedSubject) {
-                this.toastr.error('Please select a subject');
-                this.isStartingQuiz = false;
-                return;
-            }
-
-
-
-            // Start quiz attempt directly - it will return questions
-            this.quizService.startQuizAttempt(
-                this.currentUser!.id,
-                this.selectedSubjectId!,
-                formValue.questionCount,
-                formValue.timeLimitMinutes
-            ).subscribe({
-                next: (result) => {
-                    console.log(`Quiz start - Subject: ${this.selectedSubjectId}, Questions: ${result.questions?.length}, Success: ${result.success}`);
-
-                    if (result.success && result.attemptId && result.questions && result.questions.length > 0) {
-                        this.toastr.success('Quiz started successfully!');
-
-                        // Transform questions to match frontend format with both English and Tamil text
-                        const transformedQuestions = result.questions.map((q: any) => ({
-                            id: q.id,
-                            text: q.questionText,
-                            textTamil: q.questionTextTamil,
-                            explanation: '',
-                            difficulty: formValue.difficulty, // Use the selected difficulty from form
-                            language: this.languageService.getCurrentLanguage() === 'ta' ? QuestionLanguage.Tamil : QuestionLanguage.English, // Use current language preference
-                            subjectId: this.selectedSubjectId,
-                            isActive: true,
-                            createdAt: new Date().toISOString(),
-                            options: q.options.map((opt: any, index: number) => ({
-                                id: opt.id,
-                                text: opt.optionText,
-                                textTamil: opt.optionTextTamil,
-                                isCorrect: opt.isCorrect,
-                                orderIndex: index
-                            }))
-                        }));
-
-                        // Store questions and attempt details in session storage
-                        sessionStorage.setItem('quizQuestions', JSON.stringify(transformedQuestions));
-                        sessionStorage.setItem('quizAttemptId', result.attemptId.toString());
-                        sessionStorage.setItem('quizTimeLimit', formValue.timeLimitMinutes.toString());
-                        sessionStorage.setItem('quizSubjectId', this.selectedSubjectId!.toString());
-                        sessionStorage.setItem('quizQuestionCount', formValue.questionCount.toString());
-
-                        this.router.navigate(['/quiz/play', result.attemptId], {
-                            state: {
-                                questions: transformedQuestions,
-                                attemptId: result.attemptId,
-                                timeLimitMinutes: formValue.timeLimitMinutes,
-                                subjectId: this.selectedSubjectId,
-                                questionCount: formValue.questionCount
-                            }
-                        });
-                    } else {
-                        this.toastr.error(result.message || 'No questions available for this subject');
-                        this.isStartingQuiz = false;
-                    }
-                },
-                error: (error) => {
-                    console.error('Error starting quiz:', error);
-                    console.error('Error details:', error.error);
-                    this.toastr.error('Failed to start quiz');
-                    this.isStartingQuiz = false;
-                }
-            });
-        } else {
-            this.markFormGroupTouched();
+        if (this.quizForm.invalid) {
+            this.toastr.error('Please fill in all required fields', 'Validation Error');
+            return;
         }
+
+        const formValue = this.quizForm.value;
+        console.log('=== STARTING QUIZ ===');
+        console.log('Form values:', formValue);
+        console.log('Selected subject ID:', this.selectedSubjectId);
+
+        if (!this.selectedSubjectId) {
+            this.toastr.error('Please select a subject', 'Validation Error');
+            return;
+        }
+
+        // Store form values in session storage for potential reload
+        sessionStorage.setItem('quizQuestionCount', formValue.questionCount.toString());
+        sessionStorage.setItem('quizTimeLimit', formValue.timeLimitMinutes.toString());
+        sessionStorage.setItem('quizSubjectId', this.selectedSubjectId.toString());
+        sessionStorage.setItem('quizDifficulty', formValue.difficulty || 'MEDIUM');
+        sessionStorage.setItem('quizLanguage', formValue.language || 'ENGLISH');
+
+        this.isLoading = true;
+
+        // Get current user ID
+        const currentUser = sessionStorage.getItem('currentUser');
+        const userId = currentUser ? JSON.parse(currentUser).id : 1;
+
+        console.log('User ID:', userId);
+        console.log('Subject ID:', this.selectedSubjectId);
+        console.log('Question Count:', formValue.questionCount);
+        console.log('Time Limit:', formValue.timeLimitMinutes);
+
+        this.quizService.startQuizAttempt(
+            userId,
+            this.selectedSubjectId,
+            formValue.questionCount,
+            formValue.timeLimitMinutes
+        ).pipe(
+            takeUntil(this.destroy$),
+            finalize(() => {
+                this.isLoading = false;
+            })
+        ).subscribe({
+            next: (result) => {
+                console.log('Quiz start result:', result);
+
+                if (result.success && result.attemptId && result.questions) {
+                    console.log('✅ Quiz started successfully');
+                    console.log('Attempt ID:', result.attemptId);
+                    console.log('Questions count:', result.questions.length);
+
+                    // Validate questions array
+                    if (!Array.isArray(result.questions) || result.questions.length === 0) {
+                        console.error('❌ Questions array is empty or invalid');
+                        this.toastr.error('No questions available for this subject. Please try another subject.', 'No Questions Available');
+                        return;
+                    }
+
+                    // Check if we got the expected number of questions
+                    if (result.questions.length < formValue.questionCount) {
+                        console.warn(`⚠️ Got ${result.questions.length} questions, requested ${formValue.questionCount}`);
+                        this.toastr.warning(`Only ${result.questions.length} questions available for this subject.`, 'Limited Questions');
+                    }
+
+                    // Store questions in session storage
+                    sessionStorage.setItem('quizQuestions', JSON.stringify(result.questions));
+                    sessionStorage.setItem('quizAttemptId', result.attemptId.toString());
+
+                    // Navigate to quiz play with state
+                    this.router.navigate(['/quiz/play', result.attemptId], {
+                        state: {
+                            questions: result.questions,
+                            timeLimitMinutes: formValue.timeLimitMinutes,
+                            attemptId: result.attemptId,
+                            questionCount: result.questions.length
+                        }
+                    });
+                } else {
+                    console.error('❌ Quiz start failed');
+                    console.error('Success:', result.success);
+                    console.error('Attempt ID:', result.attemptId);
+                    console.error('Questions:', result.questions);
+                    console.error('Message:', result.message);
+
+                    let errorMessage = result.message || 'Failed to start quiz';
+
+                    // Provide more specific error messages
+                    if (errorMessage.includes('No questions found') || errorMessage.includes('questions available')) {
+                        errorMessage = `No questions available for "${this.getSubjectName(this.selectedSubjectId || 0)}". Please try another subject.`;
+                    } else if (errorMessage.includes('subject')) {
+                        errorMessage = `Invalid subject selected. Please choose a different subject.`;
+                    }
+
+                    this.toastr.error(errorMessage, 'Quiz Start Failed');
+                }
+            },
+            error: (error) => {
+                console.error('❌ Error starting quiz:', error);
+                console.error('Error details:', error.error);
+
+                let errorMessage = 'Failed to start quiz. Please try again.';
+
+                if (error.status === 404) {
+                    errorMessage = 'Subject not found. Please select a valid subject.';
+                } else if (error.status === 500) {
+                    errorMessage = 'Server error. Please try again later.';
+                } else if (error.error?.message) {
+                    errorMessage = error.error.message;
+                }
+
+                this.toastr.error(errorMessage, 'Error');
+            }
+        });
     }
 
     onBackToDashboard(): void {
@@ -275,5 +328,10 @@ export class QuizStartComponent implements OnInit, OnDestroy {
             case QuestionDifficulty.Hard: return 'danger';
             default: return 'secondary';
         }
+    }
+
+    private getSubjectName(subjectId: number): string {
+        const subject = this.subjects.find(s => s.id === subjectId);
+        return subject ? subject.name : 'Unknown Subject';
     }
 } 
