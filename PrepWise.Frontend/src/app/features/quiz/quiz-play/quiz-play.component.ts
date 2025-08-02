@@ -31,6 +31,7 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
     isSubmitting = false;
     showConfirmSubmit = false;
     remainingTime = 0;
+    selectedDifficulty = 'MEDIUM';
 
     // Properties for template access
     get currentQuestionIndex(): number {
@@ -96,6 +97,12 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
         this.loadQuizSession();
         this.setupAutoSave();
         this.startTimer();
+
+        // Subscribe to language changes
+        this.languageService.currentLanguage$.subscribe(language => {
+            console.log(`🌐 Language changed to: ${language}`);
+            this.updateQuestionsForLanguage(language);
+        });
     }
 
     ngOnDestroy(): void {
@@ -191,21 +198,27 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
             {
                 id: 1,
                 text: "Sample question 1 for subject " + subjectId,
+                difficulty: "MEDIUM",
+                language: "ENGLISH",
+                subjectId: subjectId,
                 options: [
-                    { id: 1, text: "Option A", isCorrect: true },
-                    { id: 2, text: "Option B", isCorrect: false },
-                    { id: 3, text: "Option C", isCorrect: false },
-                    { id: 4, text: "Option D", isCorrect: false }
+                    { id: 1, text: "Option A", isCorrect: true, orderIndex: 0 },
+                    { id: 2, text: "Option B", isCorrect: false, orderIndex: 1 },
+                    { id: 3, text: "Option C", isCorrect: false, orderIndex: 2 },
+                    { id: 4, text: "Option D", isCorrect: false, orderIndex: 3 }
                 ]
             },
             {
                 id: 2,
                 text: "Sample question 2 for subject " + subjectId,
+                difficulty: "MEDIUM",
+                language: "ENGLISH",
+                subjectId: subjectId,
                 options: [
-                    { id: 5, text: "Option A", isCorrect: false },
-                    { id: 6, text: "Option B", isCorrect: true },
-                    { id: 7, text: "Option C", isCorrect: false },
-                    { id: 8, text: "Option D", isCorrect: false }
+                    { id: 5, text: "Option A", isCorrect: false, orderIndex: 0 },
+                    { id: 6, text: "Option B", isCorrect: true, orderIndex: 1 },
+                    { id: 7, text: "Option C", isCorrect: false, orderIndex: 2 },
+                    { id: 8, text: "Option D", isCorrect: false, orderIndex: 3 }
                 ]
             }
         ];
@@ -265,6 +278,32 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
     private saveProgress(): void {
         // Save current progress to backend
         console.log('Auto-saving progress...');
+    }
+
+    private updateQuestionsForLanguage(language: string): void {
+        if (!this.quizSession) return;
+
+        console.log(`🔄 Updating questions for language: ${language}`);
+
+        // Update the language property for all questions
+        this.quizSession.questions.forEach(question => {
+            question.language = language.toUpperCase();
+        });
+
+        console.log('✅ Questions updated for new language');
+    }
+
+    onDifficultyChange(): void {
+        if (!this.quizSession) return;
+
+        console.log(`🔄 Updating questions for difficulty: ${this.selectedDifficulty}`);
+
+        // Update the difficulty property for all questions
+        this.quizSession.questions.forEach(question => {
+            question.difficulty = this.selectedDifficulty;
+        });
+
+        console.log('✅ Questions updated for new difficulty');
     }
 
     getCurrentQuestion(): QuestionData | null {

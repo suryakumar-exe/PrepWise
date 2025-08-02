@@ -90,7 +90,10 @@ export class QuizResultComponent implements OnInit {
     }
 
     onStartNewQuiz(): void {
-        this.router.navigate(['/quiz']);
+        // Clear any stored quiz data and navigate to quiz start
+        sessionStorage.removeItem('quizResult');
+        sessionStorage.removeItem('quizSubmittedAnswers');
+        this.router.navigate(['/quiz/start']);
     }
 
     onViewAnalytics(): void {

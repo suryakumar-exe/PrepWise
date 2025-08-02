@@ -13,6 +13,15 @@
                                     totalQuestions }}</p>
                             </div>
                             <div class="col-md-6 text-end">
+                                <div class="d-flex align-items-center justify-content-end gap-2 mb-2">
+                                    <select class="form-select form-select-sm" style="width: auto;"
+                                        [(ngModel)]="selectedDifficulty" (change)="onDifficultyChange()">
+                                        <option value="EASY">Easy</option>
+                                        <option value="MEDIUM">Medium</option>
+                                        <option value="HARD">Hard</option>
+                                    </select>
+                                    <app-language-switcher></app-language-switcher>
+                                </div>
                                 <app-timer [totalSeconds]="timeLimit" [autoStart]="true" (timeUp)="onTimeUp()">
                                 </app-timer>
                             </div>

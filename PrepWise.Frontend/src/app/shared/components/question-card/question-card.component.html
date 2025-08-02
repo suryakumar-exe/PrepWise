@@ -38,7 +38,7 @@
                     [disabled]="disabled" (change)="selectOption(option.id)" class="option-input">
 
                 <div class="option-marker">
-                    <span class="option-letter">{{ String.fromCharCode(65 + option.orderIndex) }}</span>
+                    <span class="option-letter">{{ String.fromCharCode(65 + $index) }}</span>
                 </div>
 
                 <div class="option-content">

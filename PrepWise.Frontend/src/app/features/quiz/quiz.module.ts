@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Routes } from '@angular/router';
-import { ReactiveFormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 
 import { SharedModule } from '../../shared/shared.module';
 import { QuizStartComponent } from './quiz-start/quiz-start.component';
@@ -44,6 +44,7 @@ const routes: Routes = [
     imports: [
         CommonModule,
         ReactiveFormsModule,
+        FormsModule,
         SharedModule,
         RouterModule.forChild(routes)
     ]
