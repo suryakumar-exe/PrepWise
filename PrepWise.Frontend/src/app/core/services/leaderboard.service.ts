@@ -117,8 +117,18 @@ export class LeaderboardService {
     }
 
     console.log('GraphQL Query:', JSON.stringify(graphqlQuery, null, 2));
+    console.log('=== QUERY DETAILS ===');
+    console.log('Subject ID:', subjectId);
+    console.log('Time Frame:', timeFrame);
+    console.log('Query Type:', subjectId ? 'Specific Subject' : 'Overall');
+    console.log('Fields Requested:', subjectId ?
+      'id, score, totalAttempts, correctAnswers, totalQuestions, user, subject' :
+      'id, score, totalAttempts, correctAnswers, totalQuestions, user, subject');
 
-    return this.http.post<LeaderboardGraphQLResponse>(`${this.apiUrl}/graphql`, graphqlQuery)
+    // Add cache-busting parameter to force fresh data
+    const url = `${this.apiUrl}/graphql?v=${Date.now()}`;
+
+    return this.http.post<LeaderboardGraphQLResponse>(url, graphqlQuery)
       .pipe(
         map(response => {
           console.log('=== LEADERBOARD RESPONSE ===');
@@ -185,7 +195,7 @@ export class LeaderboardService {
               `
             };
 
-            return this.http.post<LeaderboardGraphQLResponse>(`${this.apiUrl}/graphql`, fallbackQuery)
+            return this.http.post<LeaderboardGraphQLResponse>(`${this.apiUrl}/graphql?v=${Date.now()}`, fallbackQuery)
               .pipe(
                 map(fallbackResponse => {
                   console.log('Fallback response:', fallbackResponse);
@@ -386,7 +396,7 @@ export class LeaderboardService {
 
     console.log('Test Query:', JSON.stringify(testQuery, null, 2));
 
-    return this.http.post<LeaderboardGraphQLResponse>(`${this.apiUrl}/graphql`, testQuery)
+    return this.http.post<LeaderboardGraphQLResponse>(`${this.apiUrl}/graphql?v=${Date.now()}`, testQuery)
       .pipe(
         map(response => {
           console.log('Test Response:', response);
