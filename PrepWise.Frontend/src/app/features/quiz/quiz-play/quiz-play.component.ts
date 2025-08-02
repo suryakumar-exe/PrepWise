@@ -285,17 +285,10 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
     private updateQuestionsForLanguage(language: string): void {
         if (!this.quizSession) return;
 
-        console.log(`🔄 Updating questions for language: ${language}`);
-
-        // Convert string to enum value
-        const languageEnum = language.toUpperCase() === 'TAMIL' ? 'TAMIL' : 'ENGLISH';
-
-        // Update the language property for all questions
-        this.quizSession.questions.forEach(question => {
-            question.language = languageEnum as any;
-        });
+        console.log(`🔄 Language changed to: ${language}`);
 
         // Force change detection by creating a new array reference
+        // This will trigger the question card components to re-render with new language
         this.quizSession.questions = [...this.quizSession.questions];
 
         console.log('✅ Questions updated for new language');

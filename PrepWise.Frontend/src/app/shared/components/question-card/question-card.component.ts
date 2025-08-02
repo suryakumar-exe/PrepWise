@@ -57,7 +57,7 @@ export class QuestionCardComponent implements OnInit, OnDestroy {
 
         // Subscribe to language changes
         this.languageService.currentLanguage$.subscribe(language => {
-            this.currentLanguage = language.toUpperCase() as QuestionLanguage;
+            this.currentLanguage = language === 'ta' ? QuestionLanguage.Tamil : QuestionLanguage.English;
         });
     }
 
@@ -129,14 +129,14 @@ export class QuestionCardComponent implements OnInit, OnDestroy {
     }
 
     getQuestionText(): string {
-        if (this.currentLanguage === 'TAMIL' && this.question.textTamil) {
+        if (this.currentLanguage === QuestionLanguage.Tamil && this.question.textTamil) {
             return this.question.textTamil;
         }
         return this.question.text;
     }
 
     getOptionText(option: QuestionOption): string {
-        if (this.currentLanguage === 'TAMIL' && option.textTamil) {
+        if (this.currentLanguage === QuestionLanguage.Tamil && option.textTamil) {
             return option.textTamil;
         }
         return option.text;
