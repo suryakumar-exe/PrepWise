@@ -1,0 +1,304 @@
+<div class="analytics-container">
+    <!-- Header -->
+    <header class="analytics-header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col">
+                    <button class="btn btn-outline-light" (click)="goToDashboard()">
+                        <i class="bi bi-arrow-left me-2"></i>
+                        Back to Dashboard
+                    </button>
+                </div>
+                <div class="col-auto">
+                    <h1 class="analytics-title">
+                        <i class="bi bi-graph-up me-3"></i>
+                        Performance Analytics
+                    </h1>
+                </div>
+                <div class="col-auto">
+                    <div class="header-actions">
+                        <button class="btn btn-outline-light me-2" (click)="exportAnalytics()" [disabled]="!hasData()">
+                            <i class="bi bi-download me-2"></i>
+                            Export
+                        </button>
+                        <button class="btn btn-outline-light" (click)="shareAnalytics()" [disabled]="!hasData()">
+                            <i class="bi bi-share me-2"></i>
+                            Share
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Filters -->
+    <div class="filters-section">
+        <div class="container">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label for="timeFrameFilter" class="form-label">Time Frame</label>
+                    <select id="timeFrameFilter" class="form-select" [(ngModel)]="selectedTimeFrame"
+                        (change)="onTimeFrameChange()">
+                        <option *ngFor="let timeFrame of timeFrames" [value]="timeFrame.value">
+                            {{ timeFrame.label }}
+                        </option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label for="subjectFilter" class="form-label">Subject (Optional)</label>
+                    <select id="subjectFilter" class="form-select" [(ngModel)]="selectedSubjectId"
+                        (change)="onSubjectChange()">
+                        <option [value]="null">All Subjects</option>
+                        <option *ngFor="let subject of analyticsData?.subjects" [value]="subject.id">
+                            {{ subject.name }}
+                        </option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="analytics-content" *ngIf="analyticsData && hasData()">
+        <div class="container">
+            <!-- Overview Cards -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-3">
+                    <div class="overview-card">
+                        <div class="card-icon bg-primary">
+                            <i class="bi bi-target"></i>
+                        </div>
+                        <div class="card-content">
+                            <h3 class="card-value">{{ analyticsData.overallAccuracy }}%</h3>
+                            <p class="card-label">Overall Accuracy</p>
+                            <div class="trend-indicator">
+                                <i class="bi" [class]="getTrendIcon(analyticsData.accuracyTrend)"></i>
+                                <span [class]="getTrendColor(analyticsData.accuracyTrend)">
+                                    {{ Math.abs(getTrendPercentage(analyticsData.accuracyTrend)) }}%
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="overview-card">
+                        <div class="card-icon bg-success">
+                            <i class="bi bi-check-circle"></i>
+                        </div>
+                        <div class="card-content">
+                            <h3 class="card-value">{{ analyticsData.totalQuestions }}</h3>
+                            <p class="card-label">Questions Attempted</p>
+                            <div class="trend-indicator">
+                                <i class="bi" [class]="getTrendIcon(analyticsData.questionsTrend)"></i>
+                                <span [class]="getTrendColor(analyticsData.questionsTrend)">
+                                    {{ Math.abs(getTrendPercentage(analyticsData.questionsTrend)) }}%
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="overview-card">
+                        <div class="card-icon bg-info">
+                            <i class="bi bi-clock"></i>
+                        </div>
+                        <div class="card-content">
+                            <h3 class="card-value">{{ analyticsData.averageTime }} min</h3>
+                            <p class="card-label">Avg. Time per Question</p>
+                            <div class="trend-indicator">
+                                <i class="bi" [class]="getTrendIcon(analyticsData.timeTrend)"></i>
+                                <span [class]="getTrendColor(analyticsData.timeTrend)">
+                                    {{ Math.abs(getTrendPercentage(analyticsData.timeTrend)) }}%
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="overview-card">
+                        <div class="card-icon bg-warning">
+                            <i class="bi bi-trophy"></i>
+                        </div>
+                        <div class="card-content">
+                            <h3 class="card-value">{{ getPerformanceLevelScore(analyticsData.overallAccuracy) }}</h3>
+                            <p class="card-label">{{ analyticsData.performanceLevel }}</p>
+                            <div class="trend-indicator">
+                                <i class="bi bi-star-fill text-warning"></i>
+                                <span class="text-warning">{{ analyticsData.streak }} days</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Subject Performance -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="analytics-card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="bi bi-pie-chart me-2"></i>
+                                Subject-wise Performance
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="subject-performance-grid">
+                                <div class="subject-item" *ngFor="let subject of analyticsData.subjectPerformance">
+                                    <div class="subject-header">
+                                        <h5 class="subject-name">{{ subject.name }}</h5>
+                                        <span class="subject-score"
+                                            [class]="'text-' + getPerformanceColor(subject.accuracy)">
+                                            {{ subject.accuracy }}%
+                                        </span>
+                                    </div>
+                                    <div class="progress mb-3">
+                                        <div class="progress-bar" [style.width.%]="subject.accuracy"
+                                            [class]="'bg-' + getPerformanceColor(subject.accuracy)">
+                                        </div>
+                                    </div>
+                                    <div class="subject-stats">
+                                        <span class="stat">
+                                            <i class="bi bi-check-circle text-success"></i>
+                                            {{ subject.correctAnswers }}
+                                        </span>
+                                        <span class="stat">
+                                            <i class="bi bi-x-circle text-danger"></i>
+                                            {{ subject.wrongAnswers }}
+                                        </span>
+                                        <span class="stat">
+                                            <i class="bi bi-clock text-info"></i>
+                                            {{ subject.averageTime }} min
+                                        </span>
+                                    </div>
+                                    <div class="subject-actions mt-3">
+                                        <button class="btn btn-sm btn-primary"
+                                            (click)="startQuizForSubject(subject.id)">
+                                            <i class="bi bi-play-circle me-1"></i>
+                                            Practice More
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performance Trends -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="analytics-card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="bi bi-graph-up me-2"></i>
+                                Accuracy Trend
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="trend-chart">
+                                <div class="trend-line" *ngFor="let point of analyticsData.accuracyTrend; let i = index"
+                                    [style.left.%]="(i / (analyticsData.accuracyTrend.length - 1)) * 100"
+                                    [style.bottom.%]="point">
+                                    <div class="trend-point"></div>
+                                </div>
+                            </div>
+                            <div class="trend-labels">
+                                <span>Start</span>
+                                <span>Current</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="analytics-card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="bi bi-speedometer2 me-2"></i>
+                                Speed Trend
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="trend-chart">
+                                <div class="trend-line" *ngFor="let point of analyticsData.speedTrend; let i = index"
+                                    [style.left.%]="(i / (analyticsData.speedTrend.length - 1)) * 100"
+                                    [style.bottom.%]="point">
+                                    <div class="trend-point"></div>
+                                </div>
+                            </div>
+                            <div class="trend-labels">
+                                <span>Start</span>
+                                <span>Current</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Study Insights -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="analytics-card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="bi bi-lightbulb me-2"></i>
+                                Study Insights & Recommendations
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="insights-grid">
+                                <div class="insight-item" *ngFor="let insight of analyticsData.insights">
+                                    <div class="insight-icon" [class]="'bg-' + insight.type">
+                                        <i class="bi" [class]="insight.icon"></i>
+                                    </div>
+                                    <div class="insight-content">
+                                        <h5 class="insight-title">{{ insight.title }}</h5>
+                                        <p class="insight-description">{{ insight.description }}</p>
+                                        <div class="insight-actions">
+                                            <button class="btn btn-sm btn-outline-primary" *ngIf="insight.action"
+                                                (click)="insight.action()">
+                                                {{ insight.actionText }}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="!isLoading && (!analyticsData || !hasData())">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-6 text-center">
+                    <div class="empty-state-content">
+                        <i class="bi bi-graph-up empty-state-icon"></i>
+                        <h3 class="empty-state-title">No Analytics Data Available</h3>
+                        <p class="empty-state-description">
+                            Start taking quizzes to see your performance analytics and track your progress.
+                        </p>
+                        <button class="btn btn-primary btn-lg" (click)="goToDashboard()">
+                            <i class="bi bi-play-circle me-2"></i>
+                            Start Your First Quiz
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading-container" *ngIf="isLoading">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="loading-text">Loading your analytics...</p>
+    </div>
+</div>

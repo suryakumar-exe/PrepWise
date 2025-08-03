@@ -1,0 +1,186 @@
+.language-switcher {
+    position: relative;
+    display: inline-block;
+}
+
+.language-button {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 0.5rem;
+    color: white;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(10px);
+    min-width: 80px;
+}
+
+.language-button:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-1px);
+}
+
+.language-button:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+}
+
+.language-flag {
+    font-size: 1.1rem;
+    margin-right: 0.5rem;
+}
+
+.language-code {
+    margin-right: 0.5rem;
+    font-weight: 600;
+}
+
+.dropdown-icon {
+    font-size: 0.8rem;
+    transition: transform 0.2s ease;
+}
+
+.dropdown-icon.rotated {
+    transform: rotate(180deg);
+}
+
+.language-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: 0.5rem;
+    background: white;
+    border-radius: 0.75rem;
+    box-shadow:
+        0 10px 15px -3px rgba(0, 0, 0, 0.1),
+        0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--border-color);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.2s ease;
+    z-index: 1000;
+    min-width: 200px;
+}
+
+.language-dropdown.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.dropdown-content {
+    padding: 0.5rem;
+}
+
+.language-option {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 0.75rem;
+    background: none;
+    border: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-align: left;
+}
+
+.language-option:hover {
+    background-color: var(--light-bg);
+}
+
+.language-option.active {
+    background-color: rgba(37, 99, 235, 0.1);
+    color: var(--primary-color);
+}
+
+.language-option .language-flag {
+    font-size: 1.25rem;
+    margin-right: 0.75rem;
+}
+
+.language-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.language-name {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.2;
+}
+
+.language-native {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    line-height: 1.2;
+}
+
+.check-icon {
+    font-size: 1rem;
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+/* Animation for dropdown appearance */
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.language-dropdown.show {
+    animation: slideDown 0.2s ease-out;
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+    .language-button {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.8rem;
+        min-width: 70px;
+    }
+
+    .language-dropdown {
+        min-width: 180px;
+    }
+
+    .language-option {
+        padding: 0.6rem;
+    }
+
+    .language-name {
+        font-size: 0.8rem;
+    }
+
+    .language-native {
+        font-size: 0.7rem;
+    }
+}
+
+/* Dark theme adjustments */
+@media (prefers-color-scheme: dark) {
+    .language-dropdown {
+        background: var(--dark-bg);
+        border-color: var(--border-color);
+    }
+
+    .language-option:hover {
+        background-color: rgba(255, 255, 255, 0.05);
+    }
+}

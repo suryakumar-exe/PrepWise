@@ -1,0 +1,148 @@
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 1050;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.confirm-dialog {
+    background: white;
+    border-radius: 1rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow: hidden;
+    animation: slideUp 0.3s ease-out;
+}
+
+.dialog-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid var(--border-color);
+    background: rgba(37, 99, 235, 0.05);
+}
+
+.dialog-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.btn-close {
+    background: none;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--text-secondary);
+}
+
+.btn-close:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+    color: var(--text-primary);
+}
+
+.dialog-body {
+    padding: 2rem;
+}
+
+.dialog-message {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.dialog-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding: 1.5rem 2rem;
+    border-top: 1px solid var(--border-color);
+    background: rgba(0, 0, 0, 0.02);
+}
+
+.dialog-footer .btn {
+    min-width: 100px;
+    font-weight: 500;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+    .confirm-dialog {
+        width: 95%;
+    }
+
+    .dialog-header,
+    .dialog-body,
+    .dialog-footer {
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+    }
+
+    .dialog-footer {
+        flex-direction: column;
+    }
+
+    .dialog-footer .btn {
+        width: 100%;
+    }
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+    .confirm-dialog {
+        background: var(--dark-bg);
+        border: 1px solid var(--border-color);
+    }
+
+    .dialog-header {
+        background: rgba(37, 99, 235, 0.1);
+        border-color: var(--border-color);
+    }
+
+    .dialog-footer {
+        background: rgba(255, 255, 255, 0.02);
+        border-color: var(--border-color);
+    }
+}

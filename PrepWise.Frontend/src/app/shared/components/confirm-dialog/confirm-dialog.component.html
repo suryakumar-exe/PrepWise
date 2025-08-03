@@ -1,0 +1,24 @@
+<div class="modal-backdrop" *ngIf="show" (click)="onBackdropClick($event)">
+    <div class="confirm-dialog">
+        <div class="dialog-header">
+            <h4 class="dialog-title">{{ title }}</h4>
+            <button type="button" class="btn-close" (click)="onCancel()" [disabled]="isLoading" aria-label="Close">
+                <i class="bi bi-x"></i>
+            </button>
+        </div>
+
+        <div class="dialog-body">
+            <p class="dialog-message">{{ message }}</p>
+        </div>
+
+        <div class="dialog-footer">
+            <button type="button" class="btn btn-secondary" (click)="onCancel()" [disabled]="isLoading">
+                {{ cancelText }}
+            </button>
+            <button type="button" [class]="'btn ' + confirmClass" (click)="onConfirm()" [disabled]="isLoading">
+                <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2"></span>
+                {{ confirmText }}
+            </button>
+        </div>
+    </div>
+</div>

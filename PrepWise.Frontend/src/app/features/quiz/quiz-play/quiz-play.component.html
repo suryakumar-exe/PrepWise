@@ -1,0 +1,124 @@
+<div class="quiz-play-container">
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Main Quiz Area -->
+            <div class="col-lg-8">
+                <!-- Quiz Header -->
+                <div class="quiz-header card mb-4">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-6">
+                                <h4 class="quiz-title mb-0">{{ currentQuiz?.title || 'Quiz' }}</h4>
+                                <p class="quiz-subtitle mb-0">Question {{ currentQuestionIndex + 1 }} of {{
+                                    totalQuestions }}</p>
+                            </div>
+                            <div class="col-md-6 text-end">
+                                <div class="d-flex align-items-center justify-content-end gap-2 mb-2">
+                                    <app-language-switcher></app-language-switcher>
+                                </div>
+                                <app-timer [totalSeconds]="remainingTime" [autoStart]="true" (timeUp)="onTimeUp()">
+                                </app-timer>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="progress mb-4" style="height: 8px;">
+                    <div class="progress-bar bg-primary" [style.width.%]="progressPercentage" role="progressbar">
+                    </div>
+                </div>
+
+                <!-- Question Card -->
+                <div class="question-section" *ngIf="currentQuestion">
+                    <app-question-card [question]="currentQuestion" [questionNumber]="currentQuestionIndex + 1"
+                        [totalQuestions]="totalQuestions" [selectedOptionId]="selectedAnswer" [showExplanation]="false"
+                        (optionSelected)="onAnswerSelected($event)">
+                    </app-question-card>
+                </div>
+
+                <!-- Navigation Buttons -->
+                <div class="navigation-buttons mt-4">
+                    <div class="row">
+                        <div class="col-6">
+                            <button class="btn btn-outline-secondary w-100" [disabled]="currentQuestionIndex === 0"
+                                (click)="previousQuestion()">
+                                <i class="bi bi-arrow-left me-2"></i>
+                                Previous
+                            </button>
+                        </div>
+                        <div class="col-6">
+                            <button class="btn btn-primary w-100" *ngIf="currentQuestionIndex < totalQuestions - 1"
+                                (click)="nextQuestion()">
+                                Next
+                                <i class="bi bi-arrow-right ms-2"></i>
+                            </button>
+                            <button class="btn btn-success w-100" *ngIf="currentQuestionIndex === totalQuestions - 1"
+                                (click)="submitQuiz()">
+                                Submit Quiz
+                                <i class="bi bi-check-circle ms-2"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Question Navigator Sidebar -->
+            <div class="col-lg-4">
+                <div class="question-navigator card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Question Navigator</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="question-grid">
+                            <button class="question-number" *ngFor="let question of questions; let i = index"
+                                [class]="getQuestionNumberClass(i)" (click)="goToQuestion(i)">
+                                {{ i + 1 }}
+                            </button>
+                        </div>
+
+                        <div class="legend mt-3">
+                            <div class="legend-item">
+                                <span class="legend-color answered"></span>
+                                <span class="legend-text">Answered</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-color current"></span>
+                                <span class="legend-text">Current</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-color unanswered"></span>
+                                <span class="legend-text">Unanswered</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quiz Summary -->
+                <div class="quiz-summary card mt-3">
+                    <div class="card-header">
+                        <h5 class="mb-0">Quiz Summary</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="summary-item">
+                            <span class="summary-label">Total Questions:</span>
+                            <span class="summary-value">{{ totalQuestions }}</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Answered:</span>
+                            <span class="summary-value text-success">{{ answeredQuestions }}</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Remaining:</span>
+                            <span class="summary-value text-warning">{{ totalQuestions - answeredQuestions }}</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Time Left:</span>
+                            <span class="summary-value">{{ remainingTime | timeFormat }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

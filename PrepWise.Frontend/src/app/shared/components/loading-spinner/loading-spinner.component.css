@@ -1,0 +1,106 @@
+.loading-spinner-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+}
+
+.loading-spinner-container.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(2px);
+    z-index: 9999;
+}
+
+.loading-spinner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.loading-text {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+/* Spinner Sizes */
+.spinner-small .spinner-border {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-width: 2px;
+}
+
+.spinner-medium .spinner-border {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-width: 3px;
+}
+
+.spinner-large .spinner-border {
+    width: 4rem;
+    height: 4rem;
+    border-width: 4px;
+}
+
+/* Spinner Colors */
+.spinner-primary .spinner-border {
+    color: var(--primary-color);
+}
+
+.spinner-secondary .spinner-border {
+    color: var(--secondary-color);
+}
+
+.spinner-success .spinner-border {
+    color: var(--success-color);
+}
+
+.spinner-danger .spinner-border {
+    color: var(--danger-color);
+}
+
+.spinner-warning .spinner-border {
+    color: var(--warning-color);
+}
+
+.spinner-info .spinner-border {
+    color: #17a2b8;
+}
+
+.spinner-light .spinner-border {
+    color: #f8f9fa;
+}
+
+.spinner-dark .spinner-border {
+    color: #212529;
+}
+
+/* Animation */
+.loading-spinner {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+    .loading-spinner-container.overlay {
+        background: rgba(0, 0, 0, 0.8);
+    }
+}

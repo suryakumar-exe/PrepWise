@@ -1,0 +1,134 @@
+<div class="dashboard-container">
+    <!-- Header -->
+    <header class="dashboard-header">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col">
+                    <h1 class="dashboard-title">
+                        <i class="bi bi-house-door me-3"></i>
+                        {{ languageService.translate('nav.dashboard') }}
+                    </h1>
+                    <p class="dashboard-subtitle" *ngIf="currentUser">
+                        Welcome back, {{ currentUser.firstName }}! Ready to continue your TNPSC preparation?
+                    </p>
+                </div>
+                <div class="col-auto">
+                    <div class="header-actions">
+                        <app-language-switcher></app-language-switcher>
+                        <button class="btn btn-outline-primary ms-2" (click)="logout()">
+                            <i class="bi bi-box-arrow-right me-2"></i>
+                            {{ languageService.translate('nav.logout') }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Quick Actions -->
+    <section class="quick-actions">
+        <div class="container">
+            <div class="row g-3">
+                <div class="col-12 col-md-6 col-lg-3">
+                    <div class="action-card action-card-primary" (click)="startMockTest()">
+                        <div class="action-icon">
+                            <i class="bi bi-clipboard-check"></i>
+                        </div>
+                        <div class="action-content">
+                            <h3 class="action-title">{{ languageService.translate('mockTest.title') }}</h3>
+                            <p class="action-description">{{ languageService.translate('mockTest.description') }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6 col-lg-3">
+                    <div class="action-card action-card-success" (click)="openChat()">
+                        <div class="action-icon">
+                            <i class="bi bi-robot"></i>
+                        </div>
+                        <div class="action-content">
+                            <h3 class="action-title">{{ languageService.translate('chat.title') }}</h3>
+                            <p class="action-description">Get AI-powered study assistance</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6 col-lg-3">
+                    <div class="action-card action-card-info" (click)="viewAnalytics()">
+                        <div class="action-icon">
+                            <i class="bi bi-graph-up"></i>
+                        </div>
+                        <div class="action-content">
+                            <h3 class="action-title">{{ languageService.translate('nav.analytics') }}</h3>
+                            <p class="action-description">Track your performance</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6 col-lg-3">
+                    <div class="action-card action-card-warning" (click)="viewLeaderboard()">
+                        <div class="action-icon">
+                            <i class="bi bi-trophy"></i>
+                        </div>
+                        <div class="action-content">
+                            <h3 class="action-title">{{ languageService.translate('leaderboard.title') }}</h3>
+                            <p class="action-description">See your ranking</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Subjects by Category -->
+    <section class="subjects-section" *ngFor="let category of subjectCategories">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <div class="section-header">
+                        <h2 class="section-title">{{ category.name }}</h2>
+                        <p class="section-subtitle">{{ category.description }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-12 col-sm-6 col-lg-4 col-xl-3"
+                    *ngFor="let subject of category.subjects; trackBy: trackBySubjectId">
+                    <div class="subject-card" (click)="startQuiz(subject.id)"
+                        [class.featured-subject]="subject.name === 'Standard6to10'">
+                        <div class="subject-header" [style.background-color]="subject.color">
+                            <i class="subject-icon" [class]="subject.icon"></i>
+                            <!-- Special badge for Standard6to10 -->
+                            <div class="subject-badge" *ngIf="subject.name === 'Standard6to10'">
+                                <span class="badge bg-warning text-dark">6-10 Combined</span>
+                            </div>
+                        </div>
+                        <div class="subject-body">
+                            <h3 class="subject-name">{{ subject.name }}</h3>
+                            <p class="subject-description">{{ subject.description }}</p>
+                            <div class="subject-footer">
+                                <span class="start-text">Start Practice</span>
+                                <i class="bi bi-arrow-right"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="dashboard-footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-12 text-center">
+                    <p class="footer-text">
+                        &copy; {{ getCurrentYear() }} PrepWise. Empowering TNPSC aspirants with AI-powered
+                        learning.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+</div>

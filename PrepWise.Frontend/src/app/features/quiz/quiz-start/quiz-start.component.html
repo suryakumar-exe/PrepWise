@@ -1,0 +1,181 @@
+<div class="quiz-start-container">
+    <!-- Header -->
+    <div class="quiz-header">
+        <div class="d-flex align-items-center justify-content-between">
+            <div>
+                <h1 class="quiz-title">
+                    <i class="bi bi-play-circle me-3"></i>
+                    Start New Quiz
+                </h1>
+                <p class="quiz-subtitle">Configure your quiz settings and begin practicing</p>
+            </div>
+            <button class="btn btn-outline-secondary" (click)="onBackToDashboard()">
+                <i class="bi bi-arrow-left me-2"></i>
+                Back to Dashboard
+            </button>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    <app-loading-spinner *ngIf="isLoading" size="large" text="Loading subjects...">
+    </app-loading-spinner>
+
+    <!-- Quiz Configuration Form -->
+    <div class="quiz-config" *ngIf="!isLoading">
+        <form [formGroup]="quizForm" (ngSubmit)="onStartQuiz()">
+            <!-- Selected Subject Display -->
+            <div class="config-section" *ngIf="getSelectedSubject()">
+                <h3 class="section-title">
+                    <i class="bi bi-book me-2"></i>
+                    Selected Subject
+                </h3>
+                <div class="selected-subject-card">
+                    <div class="subject-content">
+                        <h4 class="subject-name">{{ getSelectedSubject()?.name }}</h4>
+                        <p class="subject-description">{{ getSelectedSubject()?.description }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quiz Settings -->
+            <div class="config-section">
+                <h3 class="section-title">
+                    <i class="bi bi-gear me-2"></i>
+                    Quiz Settings
+                </h3>
+
+                <div class="row g-4">
+                    <!-- Difficulty -->
+                    <div class="col-12 col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="bi bi-speedometer2 me-2"></i>
+                                Difficulty Level
+                            </label>
+                            <div class="radio-group">
+                                <div class="radio-option" *ngFor="let option of difficultyOptions">
+                                    <input type="radio" [id]="'difficulty-' + option.value" [value]="option.value"
+                                        formControlName="difficulty" class="radio-input">
+                                    <label [for]="'difficulty-' + option.value" class="radio-label"
+                                        [class]="'radio-' + getDifficultyColor(option.value)">
+                                        <div class="radio-content">
+                                            <span class="radio-title">{{ option.label }}</span>
+                                            <span class="radio-description">{{ option.description }}</span>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Language -->
+                    <div class="col-12 col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="bi bi-translate me-2"></i>
+                                Question Language
+                            </label>
+                            <div class="radio-group">
+                                <div class="radio-option" *ngFor="let option of languageOptions">
+                                    <input type="radio" [id]="'language-' + option.value" [value]="option.value"
+                                        formControlName="language" class="radio-input">
+                                    <label [for]="'language-' + option.value" class="radio-label">
+                                        <div class="radio-content">
+                                            <span class="radio-title">
+                                                {{ option.flag }} {{ option.label }}
+                                            </span>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Question Count -->
+                    <div class="col-12 col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="bi bi-list-ol me-2"></i>
+                                Number of Questions
+                            </label>
+                            <div class="select-group">
+                                <select class="form-select" formControlName="questionCount"
+                                    [class.is-invalid]="isFieldInvalid('questionCount')">
+                                    <option *ngFor="let option of questionCountOptions" [value]="option.value">
+                                        {{ option.label }} ({{ option.duration }})
+                                    </option>
+                                </select>
+                                <div class="invalid-feedback" *ngIf="isFieldInvalid('questionCount')">
+                                    {{ getFieldError('questionCount') }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Time Limit -->
+                    <div class="col-12 col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="bi bi-clock me-2"></i>
+                                Time Limit
+                            </label>
+                            <div class="select-group">
+                                <select class="form-select" formControlName="timeLimitMinutes"
+                                    [class.is-invalid]="isFieldInvalid('timeLimitMinutes')">
+                                    <option *ngFor="let option of timeLimitOptions" [value]="option.value">
+                                        {{ option.label }} - {{ option.description }}
+                                    </option>
+                                </select>
+                                <div class="invalid-feedback" *ngIf="isFieldInvalid('timeLimitMinutes')">
+                                    {{ getFieldError('timeLimitMinutes') }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quiz Summary -->
+            <div class="quiz-summary" *ngIf="getSelectedSubject()">
+                <h3 class="section-title">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Quiz Summary
+                </h3>
+                <div class="summary-card">
+                    <div class="summary-header">
+                        <h4 class="summary-title">{{ getSelectedSubject()?.name }}</h4>
+                        <p class="summary-description">{{ getSelectedSubject()?.description }}</p>
+                    </div>
+                    <div class="summary-details">
+                        <div class="detail-item">
+                            <i class="bi bi-list-ol detail-icon"></i>
+                            <span class="detail-text">{{ quizForm.value.questionCount }} Questions</span>
+                        </div>
+                        <div class="detail-item">
+                            <i class="bi bi-clock detail-icon"></i>
+                            <span class="detail-text">{{ quizForm.value.timeLimitMinutes }} Minutes</span>
+                        </div>
+                        <div class="detail-item">
+                            <i class="bi bi-speedometer2 detail-icon"></i>
+                            <span class="detail-text">{{ quizForm.value.difficulty }} Difficulty</span>
+                        </div>
+                        <div class="detail-item">
+                            <i class="bi bi-translate detail-icon"></i>
+                            <span class="detail-text">{{ quizForm.value.language }} Language</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Start Button -->
+            <div class="quiz-actions">
+                <button type="submit" class="btn btn-primary btn-lg start-quiz-btn"
+                    [disabled]="quizForm.invalid || isStartingQuiz">
+                    <span *ngIf="isStartingQuiz" class="spinner-border spinner-border-sm me-2"></span>
+                    <i class="bi bi-play-fill me-2" *ngIf="!isStartingQuiz"></i>
+                    {{ isStartingQuiz ? 'Starting Quiz...' : 'Start Quiz' }}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

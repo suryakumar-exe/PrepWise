@@ -1,0 +1,25 @@
+<div class="language-switcher" (clickOutside)="isOpen = false">
+    <!-- Current Language Button -->
+    <button type="button" class="language-button" (click)="toggleDropdown()" [attr.aria-expanded]="isOpen"
+        [attr.aria-label]="'Switch language. Current: ' + getCurrentLanguageConfig()?.name">
+        <span class="language-flag">{{ getCurrentLanguageConfig()?.flag }}</span>
+        <span class="language-code">{{ currentLanguage.toUpperCase() }}</span>
+        <i class="bi bi-chevron-down dropdown-icon" [class.rotated]="isOpen"></i>
+    </button>
+
+    <!-- Language Dropdown -->
+    <div class="language-dropdown" [class.show]="isOpen">
+        <div class="dropdown-content">
+            <button type="button" class="language-option" *ngFor="let language of availableLanguages"
+                [class.active]="language.code === currentLanguage" (click)="selectLanguage(language.code)"
+                [attr.aria-label]="'Switch to ' + language.name">
+                <span class="language-flag">{{ language.flag }}</span>
+                <div class="language-info">
+                    <span class="language-name">{{ language.name }}</span>
+                    <span class="language-native">{{ language.nativeName }}</span>
+                </div>
+                <i class="bi bi-check check-icon" *ngIf="language.code === currentLanguage"></i>
+            </button>
+        </div>
+    </div>
+</div>

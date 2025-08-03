@@ -1,0 +1,181 @@
+<div class="chat-container">
+    <!-- Header -->
+    <header class="chat-header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col">
+                    <button class="btn btn-outline-light" (click)="goToDashboard()">
+                        <i class="bi bi-arrow-left me-2"></i>
+                        Back to Dashboard
+                    </button>
+                </div>
+                <div class="col-auto">
+                    <h1 class="chat-title">
+                        <i class="bi bi-robot me-3"></i>
+                        AI Study Assistant
+                    </h1>
+                </div>
+                <div class="col-auto">
+                    <button class="btn btn-outline-light" (click)="clearChat()">
+                        <i class="bi bi-trash me-2"></i>
+                        Clear Chat
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Chat Area -->
+    <div class="chat-content">
+        <div class="container">
+            <div class="row">
+                <!-- Chat Messages -->
+                <div class="col-lg-8">
+                    <div class="chat-messages-container">
+                        <div class="messages-wrapper" #messagesContainer>
+                            <div class="message-item" *ngFor="let message of messages"
+                                [class.user-message]="message.isUser" [class.ai-message]="!message.isUser">
+
+                                <div class="message-avatar">
+                                    <i class="bi" [class]="message.isUser ? 'bi-person-circle' : 'bi-robot'"></i>
+                                </div>
+
+                                <div class="message-content">
+                                    <div class="message-header">
+                                        <span class="message-sender">
+                                            {{ message.isUser ? 'You' : 'AI Assistant' }}
+                                        </span>
+                                        <span class="message-time">
+                                            {{ formatTimestamp(message.timestamp) }}
+                                        </span>
+                                    </div>
+
+                                    <div class="message-text" [innerHTML]="message.content"></div>
+
+                                    <div class="message-actions" *ngIf="!message.isUser">
+                                        <button class="btn btn-sm btn-outline-primary"
+                                            (click)="copyMessage(message.content)" title="Copy message">
+                                            <i class="bi bi-clipboard"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Typing Indicator -->
+                            <div class="message-item ai-message" *ngIf="isTyping">
+                                <div class="message-avatar">
+                                    <i class="bi bi-robot"></i>
+                                </div>
+                                <div class="message-content">
+                                    <div class="typing-indicator">
+                                        <div class="typing-dots">
+                                            <span></span>
+                                            <span></span>
+                                            <span></span>
+                                        </div>
+                                        <span class="typing-text">AI is typing...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Message Input -->
+                        <div class="message-input-container">
+                            <form [formGroup]="chatForm" (ngSubmit)="sendMessage()" class="message-form">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" formControlName="message"
+                                        placeholder="Ask me anything about TNPSC preparation..." [disabled]="isLoading">
+                                    <button type="submit" class="btn btn-primary"
+                                        [disabled]="chatForm.invalid || isLoading">
+                                        <i class="bi" [class]="isLoading ? 'bi-hourglass-split' : 'bi-send'"></i>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Questions Sidebar -->
+                <div class="col-lg-4">
+                    <div class="quick-questions-sidebar">
+                        <div class="sidebar-header">
+                            <h4 class="sidebar-title">
+                                <i class="bi bi-lightbulb me-2"></i>
+                                Quick Questions
+                            </h4>
+                            <p class="sidebar-subtitle">Click to ask common questions</p>
+                        </div>
+
+                        <div class="quick-questions-list">
+                            <button class="quick-question-item" *ngFor="let question of quickQuestions"
+                                (click)="sendQuickQuestion(question)" [disabled]="isLoading">
+                                <i class="bi bi-question-circle me-2"></i>
+                                {{ question }}
+                            </button>
+                        </div>
+
+                        <!-- Study Tips -->
+                        <div class="study-tips-section">
+                            <h5 class="tips-title">
+                                <i class="bi bi-star me-2"></i>
+                                Study Tips
+                            </h5>
+                            <div class="tips-list">
+                                <div class="tip-item">
+                                    <i class="bi bi-check-circle text-success"></i>
+                                    <span>Practice daily with mock tests</span>
+                                </div>
+                                <div class="tip-item">
+                                    <i class="bi bi-check-circle text-success"></i>
+                                    <span>Focus on weak areas</span>
+                                </div>
+                                <div class="tip-item">
+                                    <i class="bi bi-check-circle text-success"></i>
+                                    <span>Stay updated with current affairs</span>
+                                </div>
+                                <div class="tip-item">
+                                    <i class="bi bi-check-circle text-success"></i>
+                                    <span>Review previous year questions</span>
+                                </div>
+                                <div class="tip-item">
+                                    <i class="bi bi-check-circle text-success"></i>
+                                    <span>Maintain a study schedule</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- AI Capabilities -->
+                        <div class="ai-capabilities-section">
+                            <h5 class="capabilities-title">
+                                <i class="bi bi-gear me-2"></i>
+                                What I Can Help With
+                            </h5>
+                            <div class="capabilities-list">
+                                <div class="capability-item">
+                                    <i class="bi bi-book text-primary"></i>
+                                    <span>Subject explanations</span>
+                                </div>
+                                <div class="capability-item">
+                                    <i class="bi bi-calculator text-success"></i>
+                                    <span>Math problem solving</span>
+                                </div>
+                                <div class="capability-item">
+                                    <i class="bi bi-newspaper text-info"></i>
+                                    <span>Current affairs</span>
+                                </div>
+                                <div class="capability-item">
+                                    <i class="bi bi-graph-up text-warning"></i>
+                                    <span>Study strategies</span>
+                                </div>
+                                <div class="capability-item">
+                                    <i class="bi bi-question-diamond text-danger"></i>
+                                    <span>Practice questions</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

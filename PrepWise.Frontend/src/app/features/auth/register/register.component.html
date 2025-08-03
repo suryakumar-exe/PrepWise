@@ -1,0 +1,175 @@
+<div class="register-container">
+    <!-- Header -->
+    <div class="auth-form-header">
+        <h2 class="auth-title">{{ languageService.translate('auth.register') }}</h2>
+        <p class="auth-subtitle">Create your account to start your TNPSC preparation journey</p>
+    </div>
+
+    <!-- Registration Form -->
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="auth-form">
+        <!-- Name Fields Row -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control" [class.is-invalid]="isFieldInvalid('firstName')"
+                        id="firstName" formControlName="firstName" placeholder="First Name" autocomplete="given-name">
+                    <label for="firstName">
+                        <i class="bi bi-person me-2"></i>
+                        {{ languageService.translate('auth.firstName') }}
+                    </label>
+                    <div class="invalid-feedback" *ngIf="isFieldInvalid('firstName')">
+                        {{ getFieldError('firstName') }}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control" [class.is-invalid]="isFieldInvalid('lastName')"
+                        id="lastName" formControlName="lastName" placeholder="Last Name" autocomplete="family-name">
+                    <label for="lastName">
+                        <i class="bi bi-person me-2"></i>
+                        {{ languageService.translate('auth.lastName') }}
+                    </label>
+                    <div class="invalid-feedback" *ngIf="isFieldInvalid('lastName')">
+                        {{ getFieldError('lastName') }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Email Field -->
+        <div class="form-floating mb-3">
+            <input type="email" class="form-control" [class.is-invalid]="isFieldInvalid('email')" id="email"
+                formControlName="email" placeholder="name@example.com" autocomplete="email">
+            <label for="email">
+                <i class="bi bi-envelope me-2"></i>
+                {{ languageService.translate('auth.email') }}
+            </label>
+            <button type="button" class="email-suggestion-btn" (click)="generateEmailSuggestion()"
+                [disabled]="!registerForm.get('firstName')?.value || !registerForm.get('lastName')?.value"
+                title="Generate email from name">
+                <i class="bi bi-magic"></i>
+            </button>
+            <div class="invalid-feedback" *ngIf="isFieldInvalid('email')">
+                {{ getFieldError('email') }}
+            </div>
+        </div>
+
+        <!-- Phone Number Field -->
+        <div class="form-floating mb-3">
+            <input type="tel" class="form-control" [class.is-invalid]="isFieldInvalid('phoneNumber')" id="phoneNumber"
+                formControlName="phoneNumber" placeholder="Phone Number (Optional)" autocomplete="tel">
+            <label for="phoneNumber">
+                <i class="bi bi-telephone me-2"></i>
+                {{ languageService.translate('auth.phoneNumber') }} (Optional)
+            </label>
+            <div class="invalid-feedback" *ngIf="isFieldInvalid('phoneNumber')">
+                {{ getFieldError('phoneNumber') }}
+            </div>
+        </div>
+
+        <!-- Password Field -->
+        <div class="form-floating mb-3">
+            <input [type]="showPassword ? 'text' : 'password'" class="form-control"
+                [class.is-invalid]="isFieldInvalid('password')" id="password" formControlName="password"
+                placeholder="Password" autocomplete="new-password">
+            <label for="password">
+                <i class="bi bi-lock me-2"></i>
+                {{ languageService.translate('auth.password') }}
+            </label>
+            <button type="button" class="password-toggle" (click)="togglePasswordVisibility('password')"
+                [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'">
+                <i [class]="showPassword ? 'bi bi-eye-slash' : 'bi bi-eye'"></i>
+            </button>
+            <div class="invalid-feedback" *ngIf="isFieldInvalid('password')">
+                {{ getFieldError('password') }}
+            </div>
+
+            <!-- Password Strength Indicator -->
+            <div class="password-strength mt-2" *ngIf="registerForm.get('password')?.value">
+                <div class="progress" style="height: 4px;">
+                    <div class="progress-bar" [class]="'bg-' + getPasswordStrength().color"
+                        [style.width.%]="getPasswordStrength().score * 20" role="progressbar">
+                    </div>
+                </div>
+                <small [class]="'text-' + getPasswordStrength().color">
+                    Password strength: {{ getPasswordStrength().text }}
+                </small>
+            </div>
+        </div>
+
+        <!-- Confirm Password Field -->
+        <div class="form-floating mb-3">
+            <input [type]="showConfirmPassword ? 'text' : 'password'" class="form-control"
+                [class.is-invalid]="isFieldInvalid('confirmPassword')" id="confirmPassword"
+                formControlName="confirmPassword" placeholder="Confirm Password" autocomplete="new-password">
+            <label for="confirmPassword">
+                <i class="bi bi-lock-fill me-2"></i>
+                {{ languageService.translate('auth.confirmPassword') }}
+            </label>
+            <button type="button" class="password-toggle" (click)="togglePasswordVisibility('confirmPassword')"
+                [attr.aria-label]="showConfirmPassword ? 'Hide password' : 'Show password'">
+                <i [class]="showConfirmPassword ? 'bi bi-eye-slash' : 'bi bi-eye'"></i>
+            </button>
+            <div class="invalid-feedback" *ngIf="isFieldInvalid('confirmPassword')">
+                {{ getFieldError('confirmPassword') }}
+            </div>
+        </div>
+
+        <!-- Terms and Conditions -->
+        <div class="form-check mb-4">
+            <input class="form-check-input" [class.is-invalid]="isFieldInvalid('agreeToTerms')" type="checkbox"
+                formControlName="agreeToTerms" id="agreeToTerms">
+            <label class="form-check-label" for="agreeToTerms">
+                I agree to the <a href="#" class="terms-link">Terms and Conditions</a> and
+                <a href="#" class="terms-link">Privacy Policy</a>
+            </label>
+            <div class="invalid-feedback" *ngIf="isFieldInvalid('agreeToTerms')">
+                {{ getFieldError('agreeToTerms') }}
+            </div>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="btn btn-primary btn-lg w-100 mb-3" [disabled]="isLoading">
+            <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </span>
+            {{ languageService.translate('auth.register') }}
+        </button>
+    </form>
+
+    <!-- Login Link -->
+    <div class="auth-form-footer">
+        <p class="login-text">
+            Already have an account?
+            <button type="button" class="btn-link" (click)="navigateToLogin()" [disabled]="isLoading">
+                {{ languageService.translate('auth.login') }}
+            </button>
+        </p>
+    </div>
+
+    <!-- Benefits Section -->
+    <div class="benefits-section">
+        <h6 class="benefits-title">Why join PrepWise?</h6>
+        <div class="row">
+            <div class="col-12 col-md-4 mb-2">
+                <div class="benefit-item">
+                    <i class="bi bi-robot benefit-icon"></i>
+                    <span class="benefit-text">AI-Generated Questions</span>
+                </div>
+            </div>
+            <div class="col-12 col-md-4 mb-2">
+                <div class="benefit-item">
+                    <i class="bi bi-clock-history benefit-icon"></i>
+                    <span class="benefit-text">Progress Tracking</span>
+                </div>
+            </div>
+            <div class="col-12 col-md-4 mb-2">
+                <div class="benefit-item">
+                    <i class="bi bi-trophy benefit-icon"></i>
+                    <span class="benefit-text">Performance Analytics</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

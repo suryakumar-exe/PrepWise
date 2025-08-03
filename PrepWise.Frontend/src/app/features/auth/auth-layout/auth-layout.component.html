@@ -1,0 +1,58 @@
+<div class="auth-container">
+    <!-- Background Pattern -->
+    <div class="auth-background"></div>
+
+    <!-- Header -->
+    <header class="auth-header">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col">
+                    <div class="d-flex align-items-center">
+                        <img src="assets/images/logo.png" alt="PrepWise" class="logo"
+                            onerror="this.style.display='none'">
+                        <div class="brand-text">
+                            <h1 class="brand-title">PrepWise</h1>
+                            <p class="brand-subtitle">TNPSC AI-Powered Quiz Platform</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-auto">
+                    <!-- Language Switcher -->
+                    <app-language-switcher></app-language-switcher>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="auth-main">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-12 col-md-8 col-lg-6 col-xl-5">
+                    <div class="auth-card">
+                        <div class="auth-card-body">
+                            <!-- Router Outlet for Auth Components -->
+                            <router-outlet></router-outlet>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="auth-footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-12 text-center">
+                    <p class="footer-text">
+                        &copy; {{ currentYear }} PrepWise. All rights reserved.
+                    </p>
+                    <p class="footer-text small">
+                        Empowering TNPSC aspirants with AI-powered learning
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+</div>
