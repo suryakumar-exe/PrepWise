@@ -32,23 +32,32 @@ export class MockTestPlayComponent implements OnInit, OnDestroy {
 
     ngOnInit(): void {
         console.log('Mock test play component initialized');
-        const navigation = this.router.getCurrentNavigation();
-        const mockTestData = navigation?.extras?.state?.['mockTestData'];
-        const questions = navigation?.extras?.state?.['questions'];
 
-        console.log('Navigation:', navigation);
-        console.log('Mock test data:', mockTestData);
-        console.log('Questions:', questions);
+        // Try to get data from session storage first (most reliable)
+        const storedMockTestData = sessionStorage.getItem('mockTestData');
+        const storedQuestions = sessionStorage.getItem('mockTestQuestions');
 
-        if (mockTestData && questions) {
-            this.mockTest = mockTestData;
-            this.questions = questions;
-            // Use the timeLimitMinutes from the API response or default to 5 minutes per question
-            this.timeRemaining = (mockTestData.timeLimitMinutes || questions.length * 5) * 60;
-            console.log('Time remaining:', this.timeRemaining);
-            this.startTimer();
+        console.log('Stored mock test data:', storedMockTestData);
+        console.log('Stored questions:', storedQuestions);
+
+        if (storedMockTestData && storedQuestions) {
+            try {
+                this.mockTest = JSON.parse(storedMockTestData);
+                this.questions = JSON.parse(storedQuestions);
+
+                console.log('Parsed mock test data:', this.mockTest);
+                console.log('Parsed questions:', this.questions);
+
+                // Use the timeLimitMinutes from the API response or default to 5 minutes per question
+                this.timeRemaining = (this.mockTest?.timeLimitMinutes || this.questions.length * 5) * 60;
+                console.log('Time remaining:', this.timeRemaining);
+                this.startTimer();
+            } catch (error) {
+                console.error('Error parsing stored data:', error);
+                this.router.navigate(['/mock-test']);
+            }
         } else {
-            console.log('No data found, redirecting to mock test start');
+            console.log('No data found in session storage, redirecting to mock test start');
             this.router.navigate(['/mock-test']);
         }
     }

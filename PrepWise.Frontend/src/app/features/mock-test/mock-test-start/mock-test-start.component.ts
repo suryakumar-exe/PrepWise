@@ -101,12 +101,11 @@ export class MockTestStartComponent implements OnInit {
                         mockTestData: result.mockTestAttempt,
                         questions: result.questions
                     });
-                    this.router.navigate(['/mock-test/play'], {
-                        state: {
-                            mockTestData: result.mockTestAttempt,
-                            questions: result.questions
-                        }
-                    }).then(() => {
+                    // Store data in session storage for reliable access
+                    sessionStorage.setItem('mockTestData', JSON.stringify(result.mockTestAttempt));
+                    sessionStorage.setItem('mockTestQuestions', JSON.stringify(result.questions));
+
+                    this.router.navigate(['/mock-test/play']).then(() => {
                         console.log('Navigation completed');
                     }).catch(error => {
                         console.error('Navigation error:', error);
