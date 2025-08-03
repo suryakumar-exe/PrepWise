@@ -61,7 +61,6 @@ builder.Services.AddAuthentication("Bearer")
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(
                 System.Text.Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? "TOKEN"))
-            //9f84a12c8f83b467a19f2a3fbb09172a7e7cfda4ae2c4fcaa84ad91d7e1a7c6f
         };
     });
 
