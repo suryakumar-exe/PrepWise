@@ -273,6 +273,11 @@ export class LeaderboardComponent implements OnInit, OnDestroy {
         return subject ? subject.name : 'All Subjects';
     }
 
+    // Helper method to round scores to whole numbers
+    roundScore(score: number): number {
+        return Math.round(score);
+    }
+
     // Test method to manually test the leaderboard query
     testLeaderboardQuery(): void {
         console.log('=== MANUAL TEST ===');
