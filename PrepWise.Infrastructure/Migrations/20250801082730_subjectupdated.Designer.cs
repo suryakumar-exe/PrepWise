@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PrepWise.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using PrepWise.Infrastructure.Data;
 namespace PrepWise.Infrastructure.Migrations
 {
     [DbContext(typeof(PrepWiseDbContext))]
-    partial class PrepWiseDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250801082730_subjectupdated")]
+    partial class subjectupdated
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -455,7 +458,7 @@ namespace PrepWise.Infrastructure.Migrations
                         {
                             Id = 1,
                             Category = 1,
-                            CreatedAt = new DateTime(2025, 8, 1, 8, 36, 48, 75, DateTimeKind.Utc).AddTicks(5847),
+                            CreatedAt = new DateTime(2025, 8, 1, 8, 27, 29, 649, DateTimeKind.Utc).AddTicks(2276),
                             Description = "Standard 6th to 10th Tamil",
                             IsActive = true,
                             Name = "Tamil 6 Subject Quiz"
@@ -464,7 +467,7 @@ namespace PrepWise.Infrastructure.Migrations
                         {
                             Id = 2,
                             Category = 1,
-                            CreatedAt = new DateTime(2025, 8, 1, 8, 36, 48, 75, DateTimeKind.Utc).AddTicks(6456),
+                            CreatedAt = new DateTime(2025, 8, 1, 8, 27, 29, 649, DateTimeKind.Utc).AddTicks(2892),
                             Description = "Standard 6th to 10th Tamil",
                             IsActive = true,
                             Name = "Tamil 7 Subject Quiz"
@@ -473,7 +476,7 @@ namespace PrepWise.Infrastructure.Migrations
                         {
                             Id = 3,
                             Category = 1,
-                            CreatedAt = new DateTime(2025, 8, 1, 8, 36, 48, 75, DateTimeKind.Utc).AddTicks(6458),
+                            CreatedAt = new DateTime(2025, 8, 1, 8, 27, 29, 649, DateTimeKind.Utc).AddTicks(2894),
                             Description = "Standard 6th to 10th Tamil",
                             IsActive = true,
                             Name = "Tamil 8 Subject Quiz"
@@ -482,7 +485,7 @@ namespace PrepWise.Infrastructure.Migrations
                         {
                             Id = 4,
                             Category = 1,
-                            CreatedAt = new DateTime(2025, 8, 1, 8, 36, 48, 75, DateTimeKind.Utc).AddTicks(6460),
+                            CreatedAt = new DateTime(2025, 8, 1, 8, 27, 29, 649, DateTimeKind.Utc).AddTicks(2895),
                             Description = "Standard 6th to 10th Tamil",
                             IsActive = true,
                             Name = "Tamil 9 Subject Quiz"
@@ -491,7 +494,7 @@ namespace PrepWise.Infrastructure.Migrations
                         {
                             Id = 5,
                             Category = 1,
-                            CreatedAt = new DateTime(2025, 8, 1, 8, 36, 48, 75, DateTimeKind.Utc).AddTicks(6461),
+                            CreatedAt = new DateTime(2025, 8, 1, 8, 27, 29, 649, DateTimeKind.Utc).AddTicks(2896),
                             Description = "Standard 6th to 10th Tamil",
                             IsActive = true,
                             Name = "Tamil 10 Subject Quiz"
@@ -500,7 +503,7 @@ namespace PrepWise.Infrastructure.Migrations
                         {
                             Id = 6,
                             Category = 3,
-                            CreatedAt = new DateTime(2025, 8, 1, 8, 36, 48, 75, DateTimeKind.Utc).AddTicks(6461),
+                            CreatedAt = new DateTime(2025, 8, 1, 8, 27, 29, 649, DateTimeKind.Utc).AddTicks(2897),
                             Description = "Indian Constitution and Politics",
                             IsActive = true,
                             Name = "Indian Polity"
@@ -509,7 +512,7 @@ namespace PrepWise.Infrastructure.Migrations
                         {
                             Id = 7,
                             Category = 1,
-                            CreatedAt = new DateTime(2025, 8, 1, 8, 36, 48, 75, DateTimeKind.Utc).AddTicks(6462),
+                            CreatedAt = new DateTime(2025, 8, 1, 8, 27, 29, 649, DateTimeKind.Utc).AddTicks(2898),
                             Description = "Tamil Grammar, Literature, Comprehension and Vocabulary",
                             IsActive = true,
                             Name = "Tamil Grammar"
@@ -518,7 +521,7 @@ namespace PrepWise.Infrastructure.Migrations
                         {
                             Id = 8,
                             Category = 2,
-                            CreatedAt = new DateTime(2025, 8, 1, 8, 36, 48, 75, DateTimeKind.Utc).AddTicks(6463),
+                            CreatedAt = new DateTime(2025, 8, 1, 8, 27, 29, 649, DateTimeKind.Utc).AddTicks(2899),
                             Description = "Mathematical Simplification",
                             IsActive = true,
                             Name = "Simplification"
@@ -527,7 +530,7 @@ namespace PrepWise.Infrastructure.Migrations
                         {
                             Id = 9,
                             Category = 2,
-                            CreatedAt = new DateTime(2025, 8, 1, 8, 36, 48, 75, DateTimeKind.Utc).AddTicks(6464),
+                            CreatedAt = new DateTime(2025, 8, 1, 8, 27, 29, 649, DateTimeKind.Utc).AddTicks(2900),
                             Description = "Percentage Calculations",
                             IsActive = true,
                             Name = "Percentage"
@@ -536,7 +539,7 @@ namespace PrepWise.Infrastructure.Migrations
                         {
                             Id = 10,
                             Category = 2,
-                            CreatedAt = new DateTime(2025, 8, 1, 8, 36, 48, 75, DateTimeKind.Utc).AddTicks(6465),
+                            CreatedAt = new DateTime(2025, 8, 1, 8, 27, 29, 649, DateTimeKind.Utc).AddTicks(2901),
                             Description = "Highest Common Factor and Least Common Multiple",
                             IsActive = true,
                             Name = "HCF and LCM"
@@ -545,7 +548,7 @@ namespace PrepWise.Infrastructure.Migrations
                         {
                             Id = 11,
                             Category = 2,
-                            CreatedAt = new DateTime(2025, 8, 1, 8, 36, 48, 75, DateTimeKind.Utc).AddTicks(6466),
+                            CreatedAt = new DateTime(2025, 8, 1, 8, 27, 29, 649, DateTimeKind.Utc).AddTicks(2901),
                             Description = "Ratio and Proportion Problems",
                             IsActive = true,
                             Name = "Ratio and Proportion"
@@ -554,7 +557,7 @@ namespace PrepWise.Infrastructure.Migrations
                         {
                             Id = 12,
                             Category = 2,
-                            CreatedAt = new DateTime(2025, 8, 1, 8, 36, 48, 75, DateTimeKind.Utc).AddTicks(6467),
+                            CreatedAt = new DateTime(2025, 8, 1, 8, 27, 29, 649, DateTimeKind.Utc).AddTicks(2902),
                             Description = "Area and Volume Calculations",
                             IsActive = true,
                             Name = "Area and Volume"
@@ -563,7 +566,7 @@ namespace PrepWise.Infrastructure.Migrations
                         {
                             Id = 13,
                             Category = 3,
-                            CreatedAt = new DateTime(2025, 8, 1, 8, 36, 48, 75, DateTimeKind.Utc).AddTicks(6468),
+                            CreatedAt = new DateTime(2025, 8, 1, 8, 27, 29, 649, DateTimeKind.Utc).AddTicks(2903),
                             Description = "Physics, Chemistry, Biology",
                             IsActive = true,
                             Name = "General Science"
@@ -572,7 +575,7 @@ namespace PrepWise.Infrastructure.Migrations
                         {
                             Id = 14,
                             Category = 3,
-                            CreatedAt = new DateTime(2025, 8, 1, 8, 36, 48, 75, DateTimeKind.Utc).AddTicks(6469),
+                            CreatedAt = new DateTime(2025, 8, 1, 8, 27, 29, 649, DateTimeKind.Utc).AddTicks(2904),
                             Description = "Current Affairs and Events",
                             IsActive = true,
                             Name = "Current Events"
@@ -581,7 +584,7 @@ namespace PrepWise.Infrastructure.Migrations
                         {
                             Id = 15,
                             Category = 3,
-                            CreatedAt = new DateTime(2025, 8, 1, 8, 36, 48, 75, DateTimeKind.Utc).AddTicks(6470),
+                            CreatedAt = new DateTime(2025, 8, 1, 8, 27, 29, 649, DateTimeKind.Utc).AddTicks(2905),
                             Description = "Indian and World Geography",
                             IsActive = true,
                             Name = "Geography"
@@ -590,7 +593,7 @@ namespace PrepWise.Infrastructure.Migrations
                         {
                             Id = 16,
                             Category = 3,
-                            CreatedAt = new DateTime(2025, 8, 1, 8, 36, 48, 75, DateTimeKind.Utc).AddTicks(6471),
+                            CreatedAt = new DateTime(2025, 8, 1, 8, 27, 29, 649, DateTimeKind.Utc).AddTicks(2906),
                             Description = "Indian History and Culture",
                             IsActive = true,
                             Name = "History and Culture"

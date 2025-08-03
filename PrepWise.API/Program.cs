@@ -21,11 +21,16 @@ builder.Services.AddSwaggerGen();
 //builder.Services.AddDbContext<PrepWiseDbContext>(options =>
 //    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddDbContext<PrepWiseDbContext>(options =>
+{
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection"),
-        b => b.MigrationsAssembly("PrepWise.Infrastructure") 
-    )
-);
+        b => b.MigrationsAssembly("PrepWise.Infrastructure")
+    );
+
+    options.ConfigureWarnings(w =>
+        w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+});
+
 
 // Add GraphQL
 builder.Services

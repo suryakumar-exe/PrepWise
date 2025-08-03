@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PrepWise.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using PrepWise.Infrastructure.Data;
 namespace PrepWise.Infrastructure.Migrations
 {
     [DbContext(typeof(PrepWiseDbContext))]
-    partial class PrepWiseDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250801083648_NewFeature")]
+    partial class NewFeature
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
