@@ -11,7 +11,9 @@ import { MockTest, MockTestAttempt, MockTestResult } from '../models/mock-test.m
 export class MockTestService {
   private apiUrl = environment.apiUrl;
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {
+    console.log('MockTestService constructor called'); // Debug log
+  }
 
   getMockTests(): Observable<MockTest[]> {
     const graphqlQuery = {

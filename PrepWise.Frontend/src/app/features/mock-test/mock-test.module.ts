@@ -37,4 +37,8 @@ const routes: Routes = [
         RouterModule.forChild(routes)
     ]
 })
-export class MockTestModule { } 
+export class MockTestModule {
+    constructor() {
+        console.log('MockTestModule loaded successfully'); // Debug log
+    }
+} 

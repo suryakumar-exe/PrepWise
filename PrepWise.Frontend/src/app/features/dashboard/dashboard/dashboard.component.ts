@@ -88,7 +88,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
                 description: 'Mathematical and logical reasoning',
                 subjects: [
                     {
-                        id: 3,
+                        id: 7,
                         name: 'Area and Volume',
                         description: 'Area and Volume Calculations',
                         icon: 'bi-bounding-box',
@@ -96,7 +96,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
                         category: 'Aptitude'
                     },
                     {
-                        id: 4,
+                        id: 3,
                         name: 'Simplification',
                         description: 'Mathematical Simplification',
                         icon: 'bi-calculator',
@@ -104,7 +104,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
                         category: 'Aptitude'
                     },
                     {
-                        id: 5,
+                        id: 4,
                         name: 'Percentage',
                         description: 'Percentage Calculations',
                         icon: 'bi-percent',
@@ -112,7 +112,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
                         category: 'Aptitude'
                     },
                     {
-                        id: 6,
+                        id: 5,
                         name: 'HCF and LCM',
                         description: 'Highest Common Factor & LCM',
                         icon: 'bi-hash',
@@ -120,7 +120,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
                         category: 'Aptitude'
                     },
                     {
-                        id: 7,
+                        id: 6,
                         name: 'Ratio and Proportion',
                         description: 'Ratio and Proportion Problems',
                         icon: 'bi-pie-chart',
@@ -184,7 +184,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
 
     startMockTest(): void {
-        this.router.navigate(['/mock-test/start']);
+        console.log('Navigating to mock test...'); // Debug log
+        console.log('Current route:', this.router.url); // Debug log
+
+        // Try to navigate and log the result
+        this.router.navigate(['/mock-test']).then((success) => {
+            console.log('Navigation completed successfully:', success); // Debug log
+            console.log('New route:', this.router.url); // Debug log
+        }).catch(error => {
+            console.error('Navigation error:', error); // Debug log
+        });
     }
 
     openChat(): void {

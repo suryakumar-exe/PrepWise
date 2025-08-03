@@ -47,16 +47,21 @@ export class MockTestStartComponent implements OnInit {
         private toastr: ToastrService,
         public languageService: LanguageService
     ) {
+        console.log('Mock test start component constructor called'); // Debug log
         this.mockTestForm = this.formBuilder.group({
             testType: ['standard', Validators.required],
             customTitle: [''],
             customQuestionCount: [100, [Validators.min(10), Validators.max(200)]],
             customTimeLimit: [120, [Validators.min(15), Validators.max(300)]]
         });
+        console.log('Mock test form initialized:', this.mockTestForm.value); // Debug log
     }
 
     ngOnInit(): void {
         console.log('Mock test start component initialized'); // Debug log
+        console.log('Form initialized:', this.mockTestForm.value); // Debug log
+        console.log('Test configurations:', this.testConfigurations); // Debug log
+
         this.mockTestForm.get('testType')?.valueChanges.subscribe(value => {
             console.log('Test type changed to:', value); // Debug log
             if (value !== 'custom') {
