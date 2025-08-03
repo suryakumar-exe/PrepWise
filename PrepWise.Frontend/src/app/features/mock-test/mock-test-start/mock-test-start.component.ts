@@ -13,6 +13,7 @@ import { LanguageService } from '../../../core/services/language.service';
 export class MockTestStartComponent implements OnInit {
     mockTestForm: FormGroup;
     isLoading = false;
+    currentTime: string = new Date().toLocaleString();
     testConfigurations = [
         {
             id: 'standard',
@@ -61,6 +62,11 @@ export class MockTestStartComponent implements OnInit {
         console.log('Mock test start component initialized'); // Debug log
         console.log('Form initialized:', this.mockTestForm.value); // Debug log
         console.log('Test configurations:', this.testConfigurations); // Debug log
+
+        // Update current time every second
+        setInterval(() => {
+            this.currentTime = new Date().toLocaleString();
+        }, 1000);
 
         this.mockTestForm.get('testType')?.valueChanges.subscribe(value => {
             console.log('Test type changed to:', value); // Debug log
