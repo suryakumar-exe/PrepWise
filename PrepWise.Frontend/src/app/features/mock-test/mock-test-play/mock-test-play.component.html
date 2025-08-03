@@ -173,6 +173,17 @@
     </div>
 </div>
 
+<!-- Loading Overlay for Submit -->
+<div class="loading-overlay" *ngIf="isLoading">
+    <div class="loading-content">
+        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <h4 class="loading-title mt-3">Submitting Your Test...</h4>
+        <p class="loading-subtitle">Please wait while we process your answers</p>
+    </div>
+</div>
+
 <!-- Loading State -->
 <div class="loading-container" *ngIf="!mockTest">
     <div class="spinner-border text-primary" role="status">

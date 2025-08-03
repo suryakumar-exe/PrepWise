@@ -193,26 +193,31 @@ export class MockTestPlayComponent implements OnInit, OnDestroy {
         if (!confirmed) return;
 
         this.isLoading = true;
+        console.log('Submitting test...');
 
         const answersArray: MockTestAnswer[] = Array.from(this.answers.entries()).map(([questionId, optionId]) => ({
             questionId,
             selectedOptionId: optionId
         }));
 
+        console.log('Answers to submit:', answersArray);
+        console.log('Mock test ID:', this.mockTest?.id);
+
         this.mockTestService.submitMockTest(
             this.mockTest!.id,
             answersArray
         ).subscribe({
             next: (result) => {
+                console.log('Submit result:', result);
                 if (result?.success) {
                     this.toastr.success('Test submitted successfully!');
-                    this.router.navigate(['/mock-test/result'], {
-                        state: {
-                            result: result,
-                            mockTest: this.mockTest,
-                            answers: this.answers
-                        }
-                    });
+
+                    // Store result in session storage for the result page
+                    sessionStorage.setItem('mockTestResult', JSON.stringify(result));
+                    sessionStorage.setItem('mockTestData', JSON.stringify(this.mockTest));
+                    sessionStorage.setItem('mockTestAnswers', JSON.stringify(Array.from(this.answers.entries())));
+
+                    this.router.navigate(['/mock-test/result']);
                 } else {
                     this.toastr.error(result?.message || 'Failed to submit test');
                 }

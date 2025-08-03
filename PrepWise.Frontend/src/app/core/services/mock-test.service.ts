@@ -118,9 +118,12 @@ export class MockTestService {
       }
     };
 
+    console.log('Submitting mock test with data:', { mockTestAttemptId, answers });
+
     return this.http.post<any>(`${this.apiUrl}/graphql`, graphqlQuery)
       .pipe(
         map(response => {
+          console.log('Submit response:', response);
           const result = response.data?.submitMockTestAnswers;
           if (result?.success) {
             return {

@@ -22,15 +22,38 @@ export class MockTestResultComponent implements OnInit {
     ) { }
 
     ngOnInit(): void {
-        const navigation = this.router.getCurrentNavigation();
-        const resultData = navigation?.extras?.state;
+        console.log('Mock test result component initialized');
 
-        if (resultData) {
-            this.result = resultData['result'];
-            this.mockTest = resultData['mockTest'];
-            this.answers = resultData['answers'] || new Map();
+        // Try to get data from session storage
+        const storedResult = sessionStorage.getItem('mockTestResult');
+        const storedMockTest = sessionStorage.getItem('mockTestData');
+        const storedAnswers = sessionStorage.getItem('mockTestAnswers');
+
+        console.log('Stored result:', storedResult);
+        console.log('Stored mock test:', storedMockTest);
+        console.log('Stored answers:', storedAnswers);
+
+        if (storedResult && storedMockTest) {
+            try {
+                this.result = JSON.parse(storedResult);
+                this.mockTest = JSON.parse(storedMockTest);
+                if (storedAnswers) {
+                    this.answers = new Map(JSON.parse(storedAnswers));
+                }
+
+                console.log('Parsed result:', this.result);
+                console.log('Parsed mock test:', this.mockTest);
+
+                // Clear the stored data after using it
+                sessionStorage.removeItem('mockTestResult');
+                sessionStorage.removeItem('mockTestData');
+                sessionStorage.removeItem('mockTestAnswers');
+            } catch (error) {
+                console.error('Error parsing stored data:', error);
+                this.router.navigate(['/mock-test']);
+            }
         } else {
-            // Redirect if no result data
+            console.log('No result data found, redirecting to mock test start');
             this.router.navigate(['/mock-test']);
         }
     }
