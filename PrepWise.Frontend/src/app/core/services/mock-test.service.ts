@@ -42,44 +42,51 @@ export class MockTestService {
       );
   }
 
-  startMockTest(userId: number): Observable<any> {
+  startMockTest(userId: number, title: string = "First Attempt", timeLimitMinutes: number = 5): Observable<any> {
     const graphqlQuery = {
       query: `
-                mutation StartQuizAttempt($userId: Int!, $subjectId: Int!, $questionCount: Int!, $timeLimitMinutes: Int!) {
-                    startQuizAttempt(userId: $userId, subjectId: $subjectId, questionCount: $questionCount, timeLimitMinutes: $timeLimitMinutes) {
-                        success
-                        message
-                        quizAttempt {
-                            id
-                            quiz {
-                                id
-                                title
-                                questionCount
-                                timeLimitMinutes
-                            }
-                            startedAt
-                            status
-                        }
-                    }
-                }
-            `,
+        mutation StartMockTest($userId: Int!, $title: String!, $timeLimitMinutes: Int!) {
+          startMockTest(userId: $userId, title: $title, timeLimitMinutes: $timeLimitMinutes) {
+            success
+            message
+            mockTestAttempt {
+              id
+              title
+              startedAt
+              totalQuestions
+            }
+            questions {
+              id
+              questionText
+              questionTextTamil
+              options {
+                id
+                questionId
+                optionText
+                optionTextTamil
+                isCorrect
+              }
+            }
+          }
+        }
+      `,
       variables: {
         userId: userId,
-        subjectId: 1, // Default subject for mock test
-        questionCount: 4, // Default question count for mock test
-        timeLimitMinutes: 5 // Default time limit for mock test
+        title: title,
+        timeLimitMinutes: timeLimitMinutes
       }
     };
 
     return this.http.post<any>(`${this.apiUrl}/graphql`, graphqlQuery)
       .pipe(
         map(response => {
-          const result = response.data?.startQuizAttempt;
+          const result = response.data?.startMockTest;
           if (result?.success) {
             return {
               success: true,
-              attemptId: result.quizAttempt?.id,
-              quizAttempt: result.quizAttempt
+              message: result.message,
+              mockTestAttempt: result.mockTestAttempt,
+              questions: result.questions
             };
           }
           return { success: false, message: result?.message || 'Failed to start mock test' };
@@ -91,29 +98,22 @@ export class MockTestService {
       );
   }
 
-  submitMockTest(attemptId: number, answers: any[]): Observable<MockTestResult> {
+  submitMockTest(mockTestAttemptId: number, answers: any[]): Observable<MockTestResult> {
     const graphqlQuery = {
       query: `
-                mutation SubmitMockTest($attemptId: Int!, $answers: [MockTestAnswerInput!]!) {
-                    submitMockTest(attemptId: $attemptId, answers: $answers) {
-                        success
-                        score
-                        correctAnswers
-                        totalQuestions
-                        timeTaken
-                        result {
-                            id
-                            score
-                            correctAnswers
-                            totalQuestions
-                            timeTaken
-                            completedAt
-                        }
-                    }
-                }
-            `,
+        mutation SubmitMockTestAnswers($mockTestAttemptId: Int!, $answers: [MockTestAnswerInput!]!) {
+          submitMockTestAnswers(mockTestAttemptId: $mockTestAttemptId, answers: $answers) {
+            success
+            message
+            score
+            correctAnswers
+            wrongAnswers
+            unansweredQuestions
+          }
+        }
+      `,
       variables: {
-        attemptId: attemptId,
+        mockTestAttemptId: mockTestAttemptId,
         answers: answers
       }
     };
@@ -121,18 +121,18 @@ export class MockTestService {
     return this.http.post<any>(`${this.apiUrl}/graphql`, graphqlQuery)
       .pipe(
         map(response => {
-          const result = response.data?.submitMockTest;
+          const result = response.data?.submitMockTestAnswers;
           if (result?.success) {
             return {
               success: true,
+              message: result.message,
               score: result.score,
               correctAnswers: result.correctAnswers,
-              totalQuestions: result.totalQuestions,
-              timeTaken: result.timeTaken,
-              result: result.result
+              wrongAnswers: result.wrongAnswers,
+              unansweredQuestions: result.unansweredQuestions
             };
           }
-          return { success: false, message: 'Failed to submit mock test' };
+          return { success: false, message: result?.message || 'Failed to submit mock test' };
         }),
         catchError(error => {
           console.error('Error submitting mock test:', error);

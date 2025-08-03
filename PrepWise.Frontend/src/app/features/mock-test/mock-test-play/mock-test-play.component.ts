@@ -33,17 +33,18 @@ export class MockTestPlayComponent implements OnInit, OnDestroy {
     ngOnInit(): void {
         const navigation = this.router.getCurrentNavigation();
         const mockTestData = navigation?.extras?.state?.['mockTestData'];
+        const questions = navigation?.extras?.state?.['questions'];
 
         console.log('Mock test data received:', mockTestData); // Debug log
+        console.log('Questions received:', questions); // Debug log
 
-        if (mockTestData) {
+        if (mockTestData && questions) {
             this.mockTest = mockTestData;
-            // For now, let's create some mock questions since the API might not return questions
-            this.questions = this.createMockQuestions();
-            this.timeRemaining = (mockTestData.quiz?.timeLimitMinutes || 5) * 60;
+            this.questions = questions;
+            this.timeRemaining = (mockTestData.totalQuestions || 5) * 60; // Default 5 minutes per question
             this.startTimer();
         } else {
-            console.log('No mock test data found, redirecting to mock test start');
+            console.log('No mock test data or questions found, redirecting to mock test start');
             this.router.navigate(['/mock-test']);
         }
     }

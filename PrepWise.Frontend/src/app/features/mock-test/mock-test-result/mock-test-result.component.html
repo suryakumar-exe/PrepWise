@@ -40,8 +40,7 @@
                             <div class="detail-item">
                                 <i class="bi bi-check-circle text-success"></i>
                                 <span class="detail-label">Correct Answers:</span>
-                                <span class="detail-value">{{ result.correctAnswers }}/{{ result.totalQuestions
-                                    }}</span>
+                                <span class="detail-value">{{ result.correctAnswers }}</span>
                             </div>
                             <div class="detail-item">
                                 <i class="bi bi-x-circle text-danger"></i>
@@ -54,9 +53,9 @@
                                 <span class="detail-value">{{ result.unansweredQuestions }}</span>
                             </div>
                             <div class="detail-item">
-                                <i class="bi bi-clock text-info"></i>
-                                <span class="detail-label">Time Taken:</span>
-                                <span class="detail-value">{{ result.timeTakenMinutes }} minutes</span>
+                                <i class="bi bi-percent text-info"></i>
+                                <span class="detail-label">Score:</span>
+                                <span class="detail-value">{{ result.score }}%</span>
                             </div>
                         </div>
                     </div>

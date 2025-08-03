@@ -93,14 +93,17 @@ export class MockTestStartComponent implements OnInit {
             `${this.getSelectedConfig()?.title || 'Custom Test'} - ${new Date().toLocaleDateString()}`;
 
         console.log('Calling mock test service with userId: 1'); // Debug log
-        this.mockTestService.startMockTest(1).subscribe({
+        this.mockTestService.startMockTest(1, title, formValue.customTimeLimit).subscribe({
             next: (result) => {
                 console.log('Mock test service response:', result); // Debug log
                 if (result?.success) {
                     this.toastr.success('Mock test started successfully!');
-                    console.log('Navigating to mock test play with data:', result.quizAttempt); // Debug log
+                    console.log('Navigating to mock test play with data:', result.mockTestAttempt); // Debug log
                     this.router.navigate(['/mock-test/play'], {
-                        state: { mockTestData: result.quizAttempt }
+                        state: {
+                            mockTestData: result.mockTestAttempt,
+                            questions: result.questions
+                        }
                     });
                 } else {
                     this.toastr.error(result?.message || 'Failed to start mock test');
