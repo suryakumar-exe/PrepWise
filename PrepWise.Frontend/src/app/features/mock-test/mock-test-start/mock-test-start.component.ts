@@ -48,28 +48,21 @@ export class MockTestStartComponent implements OnInit {
         private toastr: ToastrService,
         public languageService: LanguageService
     ) {
-        console.log('Mock test start component constructor called'); // Debug log
         this.mockTestForm = this.formBuilder.group({
             testType: ['standard', Validators.required],
             customTitle: [''],
             customQuestionCount: [100, [Validators.min(10), Validators.max(200)]],
             customTimeLimit: [120, [Validators.min(15), Validators.max(300)]]
         });
-        console.log('Mock test form initialized:', this.mockTestForm.value); // Debug log
     }
 
     ngOnInit(): void {
-        console.log('Mock test start component initialized'); // Debug log
-        console.log('Form initialized:', this.mockTestForm.value); // Debug log
-        console.log('Test configurations:', this.testConfigurations); // Debug log
-
         // Update current time every second
         setInterval(() => {
             this.currentTime = new Date().toLocaleString();
         }, 1000);
 
         this.mockTestForm.get('testType')?.valueChanges.subscribe(value => {
-            console.log('Test type changed to:', value); // Debug log
             if (value !== 'custom') {
                 const config = this.testConfigurations.find(c => c.id === value);
                 if (config) {
@@ -88,11 +81,7 @@ export class MockTestStartComponent implements OnInit {
     }
 
     startMockTest() {
-        console.log('Starting mock test...'); // Debug log
-        console.log('Form value:', this.mockTestForm.value); // Debug log
-
         if (this.mockTestForm.invalid) {
-            console.log('Form is invalid'); // Debug log
             this.toastr.error('Please fill in all required fields correctly.');
             return;
         }
@@ -103,13 +92,10 @@ export class MockTestStartComponent implements OnInit {
         const title = formValue.customTitle ||
             `${this.getSelectedConfig()?.title || 'Custom Test'} - ${new Date().toLocaleDateString()}`;
 
-        console.log('Calling mock test service with userId: 1'); // Debug log
         this.mockTestService.startMockTest(1, title, formValue.customTimeLimit).subscribe({
             next: (result) => {
-                console.log('Mock test service response:', result); // Debug log
                 if (result?.success) {
                     this.toastr.success('Mock test started successfully!');
-                    console.log('Navigating to mock test play with data:', result.mockTestAttempt); // Debug log
                     this.router.navigate(['/mock-test/play'], {
                         state: {
                             mockTestData: result.mockTestAttempt,

@@ -35,16 +35,13 @@ export class MockTestPlayComponent implements OnInit, OnDestroy {
         const mockTestData = navigation?.extras?.state?.['mockTestData'];
         const questions = navigation?.extras?.state?.['questions'];
 
-        console.log('Mock test data received:', mockTestData); // Debug log
-        console.log('Questions received:', questions); // Debug log
-
         if (mockTestData && questions) {
             this.mockTest = mockTestData;
             this.questions = questions;
-            this.timeRemaining = (mockTestData.totalQuestions || 5) * 60; // Default 5 minutes per question
+            // Use the timeLimitMinutes from the API response or default to 5 minutes per question
+            this.timeRemaining = (mockTestData.timeLimitMinutes || questions.length * 5) * 60;
             this.startTimer();
         } else {
-            console.log('No mock test data or questions found, redirecting to mock test start');
             this.router.navigate(['/mock-test']);
         }
     }

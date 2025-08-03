@@ -14,7 +14,6 @@ export class MockTestResultComponent implements OnInit {
     result: MockTestResult | null = null;
     answers: Map<number, number> = new Map();
     isLoading = false;
-    Math = Math;
 
     constructor(
         private router: Router,
@@ -36,46 +35,19 @@ export class MockTestResultComponent implements OnInit {
         }
     }
 
-    get scorePercentage(): number {
-        if (!this.result?.score) return 0;
-        return Math.round(this.result.score);
-    }
-
-    get performanceLevel(): string {
-        const percentage = this.scorePercentage;
-        if (percentage >= 90) return 'Excellent';
-        if (percentage >= 80) return 'Very Good';
-        if (percentage >= 70) return 'Good';
-        if (percentage >= 60) return 'Average';
-        if (percentage >= 50) return 'Below Average';
+    getPerformanceLevel(score: number): string {
+        if (score >= 90) return 'Excellent';
+        if (score >= 80) return 'Very Good';
+        if (score >= 70) return 'Good';
+        if (score >= 60) return 'Average';
         return 'Needs Improvement';
     }
 
-    get performanceColor(): string {
-        const percentage = this.scorePercentage;
-        if (percentage >= 90) return 'success';
-        if (percentage >= 80) return 'info';
-        if (percentage >= 70) return 'primary';
-        if (percentage >= 60) return 'warning';
+    getPerformanceColor(score: number): string {
+        if (score >= 90) return 'success';
+        if (score >= 80) return 'info';
+        if (score >= 70) return 'warning';
         return 'danger';
-    }
-
-    get accuracyRate(): number {
-        if (!this.result?.score) return 0;
-        return Math.round(this.result.score);
-    }
-
-    get averageTimePerQuestion(): number {
-        // Since we don't have time data in the new API response, return a default value
-        return 1; // Default 1 minute per question
-    }
-
-    get hasUnansweredQuestions(): boolean {
-        return (this.result?.unansweredQuestions || 0) > 0;
-    }
-
-    get subjectPerformance(): any[] {
-        return this.result?.subjectPerformance || [];
     }
 
     goToDashboard(): void {
@@ -97,15 +69,16 @@ export class MockTestResultComponent implements OnInit {
     }
 
     shareResult(): void {
+        const score = this.result?.score || 0;
         if (navigator.share) {
             navigator.share({
                 title: 'My TNPSC Mock Test Result',
-                text: `I scored ${this.scorePercentage}% on my TNPSC mock test!`,
+                text: `I scored ${score}% on my TNPSC mock test!`,
                 url: window.location.href
             });
         } else {
             // Fallback: copy to clipboard
-            const text = `I scored ${this.scorePercentage}% on my TNPSC mock test!`;
+            const text = `I scored ${score}% on my TNPSC mock test!`;
             navigator.clipboard.writeText(text).then(() => {
                 // Show toast notification
                 console.log('Result copied to clipboard');

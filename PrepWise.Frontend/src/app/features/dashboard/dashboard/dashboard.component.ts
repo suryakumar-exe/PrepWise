@@ -184,16 +184,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
 
     startMockTest(): void {
-        console.log('Navigating to mock test...'); // Debug log
-        console.log('Current route:', this.router.url); // Debug log
-
-        // Try to navigate and log the result
-        this.router.navigate(['/mock-test']).then((success) => {
-            console.log('Navigation completed successfully:', success); // Debug log
-            console.log('New route:', this.router.url); // Debug log
-        }).catch(error => {
-            console.error('Navigation error:', error); // Debug log
-        });
+        this.router.navigate(['/mock-test']);
     }
 
     openChat(): void {
