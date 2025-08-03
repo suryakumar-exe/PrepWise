@@ -1,6 +1,7 @@
 using HotChocolate;
 using HotChocolate.Types;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using PrepWise.Core.Entities;
 using PrepWise.Core.Services;
 using PrepWise.Infrastructure.Data;
@@ -312,6 +313,57 @@ public class QuizMutations
         };
     }
 
+    [GraphQLDescription("Test database connection")]
+    public async Task<ChatResult> TestDatabaseConnection([Service] PrepWiseDbContext context)
+    {
+        try
+        {
+            var canConnect = await context.Database.CanConnectAsync();
+            var userCount = await context.Users.CountAsync();
+            var chatMessageCount = await context.ChatMessages.CountAsync();
+            
+            // If no users exist, create a test user
+            if (userCount == 0)
+            {
+                var testUser = new User
+                {
+                    Email = "test@prepwise.com",
+                    PasswordHash = "test_hash",
+                    FirstName = "Test",
+                    LastName = "User",
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                };
+                
+                context.Users.Add(testUser);
+                await context.SaveChangesAsync();
+                
+                return new ChatResult
+                {
+                    Success = true,
+                    Message = $"Database connection: {canConnect}, Created test user with ID: {testUser.Id}, ChatMessages: {chatMessageCount}",
+                    Response = "Database test completed and test user created"
+                };
+            }
+            
+            return new ChatResult
+            {
+                Success = true,
+                Message = $"Database connection: {canConnect}, Users: {userCount}, ChatMessages: {chatMessageCount}",
+                Response = "Database test completed"
+            };
+        }
+        catch (Exception ex)
+        {
+            return new ChatResult
+            {
+                Success = false,
+                Message = $"Database test failed: {ex.Message}",
+                Response = null
+            };
+        }
+    }
+
     [GraphQLDescription("Send chat message")]
     public async Task<ChatResult> SendChatMessage(
         int userId,
@@ -321,34 +373,115 @@ public class QuizMutations
     {
         try
         {
-            // Validate user exists
-            var userExists = await context.Users.AnyAsync(u => u.Id == userId && u.IsActive);
-            if (!userExists)
+            // Validate input
+            if (string.IsNullOrWhiteSpace(message))
             {
                 return new ChatResult
                 {
                     Success = false,
-                    Message = "User not found or inactive",
+                    Message = "Message cannot be empty",
+                    Response = null
+                };
+            }
+
+            // Validate user exists
+            var user = await context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            if (user == null)
+            {
+                return new ChatResult
+                {
+                    Success = false,
+                    Message = $"User with ID {userId} not found",
+                    Response = null
+                };
+            }
+            
+            if (!user.IsActive)
+            {
+                return new ChatResult
+                {
+                    Success = false,
+                    Message = "User is inactive",
+                    Response = null
+                };
+            }
+            
+            Console.WriteLine($"Found user: {user.FirstName} {user.LastName} (ID: {user.Id})");
+
+            // Test database connection and table existence
+            try
+            {
+                var tableExists = await context.Database.CanConnectAsync();
+                Console.WriteLine($"Database connection test: {tableExists}");
+                
+                // Try to get count of existing chat messages
+                var existingCount = await context.ChatMessages.CountAsync();
+                Console.WriteLine($"Existing chat messages count: {existingCount}");
+            }
+            catch (Exception dbTestEx)
+            {
+                Console.WriteLine($"Database test error: {dbTestEx.Message}");
+                return new ChatResult
+                {
+                    Success = false,
+                    Message = $"Database connection issue: {dbTestEx.Message}",
                     Response = null
                 };
             }
 
             // Get AI response first
-            var aiResponse = await aiService.GetChatResponseAsync(message, userId);
+            string aiResponse;
+            try
+            {
+                aiResponse = await aiService.GetChatResponseAsync(message, userId);
+                if (string.IsNullOrEmpty(aiResponse))
+                {
+                    aiResponse = "I apologize, but I couldn't generate a response at this time. Please try again.";
+                }
+            }
+            catch (Exception aiEx)
+            {
+                Console.WriteLine($"AI service error: {aiEx.Message}");
+                aiResponse = "I apologize, but I'm having trouble processing your request right now. Please try again later.";
+            }
 
             // Create single chat message with both user message and AI response
             var chatMessage = new ChatMessage
             {
                 UserId = userId,
-                Message = message,                    // User's message
+                Message = message ?? string.Empty,    // User's message (ensure not null)
                 Response = aiResponse,                // AI's response
                 Type = ChatMessageType.UserMessage,  // This is a user-initiated conversation
                 IsAIGenerated = false,              // The message itself is from user
                 CreatedAt = DateTime.UtcNow
             };
 
-            context.ChatMessages.Add(chatMessage);
-            await context.SaveChangesAsync();
+            Console.WriteLine($"Created chat message: UserId={chatMessage.UserId}, Message={chatMessage.Message?.Substring(0, Math.Min(50, chatMessage.Message?.Length ?? 0))}...");
+
+            try
+            {
+                context.ChatMessages.Add(chatMessage);
+                Console.WriteLine("Added chat message to context");
+                
+                await context.SaveChangesAsync();
+                Console.WriteLine("Successfully saved changes to database");
+            }
+            catch (DbUpdateException dbEx)
+            {
+                // Log the detailed database error
+                Console.WriteLine($"Database error: {dbEx.Message}");
+                if (dbEx.InnerException != null)
+                {
+                    Console.WriteLine($"Inner exception: {dbEx.InnerException.Message}");
+                }
+                
+                return new ChatResult
+                {
+                    Success = false,
+                    Message = $"Database error: {dbEx.InnerException?.Message ?? dbEx.Message}",
+                    Response = null
+                };
+            }
 
             return new ChatResult
             {
@@ -359,6 +492,10 @@ public class QuizMutations
         }
         catch (Exception ex)
         {
+            // Log the full exception details
+            Console.WriteLine($"Chat message error: {ex.Message}");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+            
             return new ChatResult
             {
                 Success = false,
