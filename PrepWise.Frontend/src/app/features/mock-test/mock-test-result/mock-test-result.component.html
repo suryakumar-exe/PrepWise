@@ -22,12 +22,12 @@
                     <div class="score-overview card mb-4">
                         <div class="card-body text-center">
                             <div class="score-circle">
-                                <div class="score-number">{{ result?.score || 0 }}%</div>
+                                <div class="score-number">{{ result.score || 0 }}%</div>
                                 <div class="score-label">Your Score</div>
                             </div>
                             <div class="performance-level mt-3">
-                                <span class="badge" [class]="'bg-' + getPerformanceColor(result?.score || 0)">
-                                    {{ getPerformanceLevel(result?.score || 0) }}
+                                <span class="badge" [class]="'bg-' + getPerformanceColor(result.score || 0)">
+                                    {{ getPerformanceLevel(result.score || 0) }}
                                 </span>
                             </div>
                         </div>
@@ -41,7 +41,7 @@
                                     <div class="metric-icon text-success">
                                         <i class="bi bi-check-circle-fill"></i>
                                     </div>
-                                    <div class="metric-value">{{ result?.correctAnswers || 0 }}</div>
+                                    <div class="metric-value">{{ result.correctAnswers || 0 }}</div>
                                     <div class="metric-label">Correct</div>
                                 </div>
                             </div>
@@ -52,7 +52,7 @@
                                     <div class="metric-icon text-danger">
                                         <i class="bi bi-x-circle-fill"></i>
                                     </div>
-                                    <div class="metric-value">{{ result?.wrongAnswers || 0 }}</div>
+                                    <div class="metric-value">{{ result.wrongAnswers || 0 }}</div>
                                     <div class="metric-label">Wrong</div>
                                 </div>
                             </div>
@@ -63,7 +63,7 @@
                                     <div class="metric-icon text-info">
                                         <i class="bi bi-question-circle-fill"></i>
                                     </div>
-                                    <div class="metric-value">{{ result?.unansweredQuestions || 0 }}</div>
+                                    <div class="metric-value">{{ result.unansweredQuestions || 0 }}</div>
                                     <div class="metric-label">Unanswered</div>
                                 </div>
                             </div>

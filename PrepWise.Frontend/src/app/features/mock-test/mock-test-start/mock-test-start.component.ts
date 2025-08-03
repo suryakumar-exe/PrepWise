@@ -94,13 +94,22 @@ export class MockTestStartComponent implements OnInit {
 
         this.mockTestService.startMockTest(1, title, formValue.customTimeLimit).subscribe({
             next: (result) => {
+                console.log('Mock test service result:', result);
                 if (result?.success) {
                     this.toastr.success('Mock test started successfully!');
+                    console.log('Navigating to play with data:', {
+                        mockTestData: result.mockTestAttempt,
+                        questions: result.questions
+                    });
                     this.router.navigate(['/mock-test/play'], {
                         state: {
                             mockTestData: result.mockTestAttempt,
                             questions: result.questions
                         }
+                    }).then(() => {
+                        console.log('Navigation completed');
+                    }).catch(error => {
+                        console.error('Navigation error:', error);
                     });
                 } else {
                     this.toastr.error(result?.message || 'Failed to start mock test');
