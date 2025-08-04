@@ -280,6 +280,11 @@ export class QuizService {
 
   // Start a quiz attempt
   startQuizAttempt(userId: number, subjectId: number, questionCount: number = 2, timeLimitMinutes: number = 30): Observable<{ success: boolean; attemptId?: number; questions?: any[]; message?: string }> {
+    console.log('=== STARTING QUIZ ATTEMPT ===');
+    console.log('User ID:', userId);
+    console.log('Subject ID:', subjectId);
+    console.log('Question Count:', questionCount);
+    console.log('Time Limit Minutes:', timeLimitMinutes);
     const graphqlQuery = {
       query: `
               mutation StartQuizAttempt($userId: Int!, $subjectId: Int!, $questionCount: Int!, $timeLimitMinutes: Int!) {
