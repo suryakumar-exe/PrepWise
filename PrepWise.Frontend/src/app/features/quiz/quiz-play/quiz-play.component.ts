@@ -82,7 +82,7 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
 
     constructor(
         private route: ActivatedRoute,
-        private router: Router,
+        public router: Router,
         private quizService: QuizService,
         public languageService: LanguageService,
         private toastr: ToastrService
