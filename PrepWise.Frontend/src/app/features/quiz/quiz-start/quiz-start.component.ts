@@ -183,6 +183,7 @@ export class QuizStartComponent implements OnInit, OnDestroy {
                         console.log('Attempt ID:', result.attemptId);
                         console.log('Questions count:', result.questions.length);
                         console.log('Message:', result.message);
+                        console.log('Raw questions from backend:', result.questions);
 
                         // Validate questions array
                         if (!Array.isArray(result.questions) || result.questions.length === 0) {
@@ -191,8 +192,31 @@ export class QuizStartComponent implements OnInit, OnDestroy {
                             return;
                         }
 
+                        // Transform questions to ensure they have the correct structure
+                        const transformedQuestions = result.questions.map((q: any, index: number) => {
+                            console.log(`Transforming question ${index + 1}:`, q);
+
+                            return {
+                                id: q.id || index + 1,
+                                text: q.text || q.questionText || `Question ${index + 1}`,
+                                textTamil: q.textTamil || q.questionTextTamil || '',
+                                difficulty: q.difficulty || 'MEDIUM',
+                                language: q.language || 'ENGLISH',
+                                subjectId: q.subjectId || this.selectedSubjectId,
+                                options: (q.options || []).map((opt: any, optIndex: number) => ({
+                                    id: opt.id || optIndex + 1,
+                                    text: opt.text || opt.optionText || `Option ${optIndex + 1}`,
+                                    textTamil: opt.textTamil || opt.optionTextTamil || '',
+                                    isCorrect: opt.isCorrect || false,
+                                    orderIndex: opt.orderIndex || optIndex
+                                }))
+                            };
+                        });
+
+                        console.log('Transformed questions:', transformedQuestions);
+
                         // Use the actual number of questions received, not the requested count
-                        const actualQuestionCount = result.questions.length;
+                        const actualQuestionCount = transformedQuestions.length;
                         console.log(`📊 Actual questions received: ${actualQuestionCount} (requested: ${formValue.questionCount})`);
 
                         // Check if we got the expected number of questions
@@ -202,7 +226,7 @@ export class QuizStartComponent implements OnInit, OnDestroy {
                         }
 
                         // Store questions in session storage with actual count
-                        sessionStorage.setItem('quizQuestions', JSON.stringify(result.questions));
+                        sessionStorage.setItem('quizQuestions', JSON.stringify(transformedQuestions));
                         sessionStorage.setItem('quizAttemptId', result.attemptId.toString());
                         sessionStorage.setItem('quizQuestionCount', actualQuestionCount.toString()); // Use actual count
                         sessionStorage.setItem('quizTimeLimit', formValue.timeLimitMinutes.toString());
@@ -211,7 +235,7 @@ export class QuizStartComponent implements OnInit, OnDestroy {
                         // Navigate to quiz play with state
                         this.router.navigate(['/quiz/play', result.attemptId], {
                             state: {
-                                questions: result.questions,
+                                questions: transformedQuestions,
                                 timeLimitMinutes: formValue.timeLimitMinutes,
                                 attemptId: result.attemptId,
                                 questionCount: actualQuestionCount // Use actual count

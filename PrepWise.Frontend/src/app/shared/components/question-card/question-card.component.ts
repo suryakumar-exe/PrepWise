@@ -50,21 +50,16 @@ export class QuestionCardComponent implements OnInit, OnDestroy {
     constructor(private languageService: LanguageService) { }
 
     ngOnInit(): void {
-        console.log('=== QUESTION CARD INITIALIZATION ===');
-        console.log('Question input:', this.question);
-        console.log('Question text:', this.question?.text);
-        console.log('Question options:', this.question?.options);
+        console.log('Question card initialized with:', this.question);
 
         // Sort options by orderIndex
         if (this.question?.options) {
             this.question.options.sort((a, b) => a.orderIndex - b.orderIndex);
-            console.log('Sorted options:', this.question.options);
         }
 
         // Subscribe to language changes
         this.languageService.currentLanguage$.subscribe(language => {
             this.currentLanguage = language === 'ta' ? QuestionLanguage.Tamil : QuestionLanguage.English;
-            console.log('Language changed to:', this.currentLanguage);
         });
     }
 
@@ -136,32 +131,16 @@ export class QuestionCardComponent implements OnInit, OnDestroy {
     }
 
     getQuestionText(): string {
-        console.log('=== GET QUESTION TEXT ===');
-        console.log('Current language:', this.currentLanguage);
-        console.log('Question:', this.question);
-        console.log('Question text:', this.question?.text);
-        console.log('Question textTamil:', this.question?.textTamil);
-
         if (this.currentLanguage === QuestionLanguage.Tamil && this.question?.textTamil) {
-            console.log('Returning Tamil text:', this.question.textTamil);
             return this.question.textTamil;
         }
-        console.log('Returning English text:', this.question?.text);
         return this.question?.text || 'Question text not available';
     }
 
     getOptionText(option: QuestionOption): string {
-        console.log('=== GET OPTION TEXT ===');
-        console.log('Current language:', this.currentLanguage);
-        console.log('Option:', option);
-        console.log('Option text:', option?.text);
-        console.log('Option textTamil:', option?.textTamil);
-
         if (this.currentLanguage === QuestionLanguage.Tamil && option?.textTamil) {
-            console.log('Returning Tamil text:', option.textTamil);
             return option.textTamil;
         }
-        console.log('Returning English text:', option?.text);
         return option?.text || 'Option text not available';
     }
 } 
