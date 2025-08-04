@@ -62,7 +62,15 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
     }
 
     get currentQuestion(): QuestionData | null {
-        return this.getCurrentQuestion();
+        const question = this.getCurrentQuestion();
+        console.log('=== CURRENT QUESTION GETTER ===');
+        console.log('Quiz session:', this.quizSession);
+        console.log('Current question index:', this.currentQuestionIndex);
+        console.log('Total questions:', this.totalQuestions);
+        console.log('Current question:', question);
+        console.log('Question text:', question?.text);
+        console.log('Question options:', question?.options);
+        return question;
     }
 
     get selectedAnswer(): number | null {
@@ -255,10 +263,17 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
         console.log(`   Questions loaded:`);
         questions.forEach((question, index) => {
             console.log(`     Question ${index + 1} (ID: ${question.id}): ${question.text}`);
+            console.log(`       Question text: "${question.text}"`);
+            console.log(`       Question textTamil: "${question.textTamil}"`);
+            console.log(`       Options count: ${question.options?.length || 0}`);
             console.log(`       Options:`);
-            question.options.forEach((option: any) => {
-                console.log(`         Option ${option.id}: ${option.text} (IsCorrect: ${option.isCorrect})`);
-            });
+            if (question.options && Array.isArray(question.options)) {
+                question.options.forEach((option: any) => {
+                    console.log(`         Option ${option.id}: "${option.text}" (IsCorrect: ${option.isCorrect})`);
+                });
+            } else {
+                console.log(`         No options found or options is not an array`);
+            }
         });
         console.log(`--- END QUIZ INITIALIZATION ---\n`);
 
@@ -274,6 +289,10 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
         };
         this.remainingTime = this.quizSession.timeLimitSeconds;
         this.isLoading = false;
+
+        console.log(`✅ Quiz session initialized successfully`);
+        console.log(`   Current question index: ${this.quizSession.currentQuestionIndex}`);
+        console.log(`   First question:`, this.quizSession.questions[0]);
     }
 
 

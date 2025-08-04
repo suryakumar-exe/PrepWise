@@ -25,11 +25,14 @@
 
     <!-- Question Text -->
     <div class="question-content">
-        <div class="question-text" [innerHTML]="getQuestionText()"></div>
+        <div class="question-text" [innerHTML]="getQuestionText() || 'Question text not available'"></div>
     </div>
 
     <!-- Options -->
     <div class="question-options">
+        <div *ngIf="!question.options || question.options.length === 0" class="no-options">
+            <p class="text-muted">No options available</p>
+        </div>
         <div class="option-container" *ngFor="let option of question.options; let i = index; trackBy: trackByOptionId">
             <label [class]="getOptionClass(option)" [for]="'option-' + option.id">
 
@@ -42,7 +45,7 @@
                 </div>
 
                 <div class="option-content">
-                    <div class="option-text" [innerHTML]="getOptionText(option)"></div>
+                    <div class="option-text" [innerHTML]="getOptionText(option) || 'Option text not available'"></div>
                 </div>
 
                 <!-- Result Icons -->

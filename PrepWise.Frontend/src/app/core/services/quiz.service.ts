@@ -301,12 +301,15 @@ export class QuizService {
                           id
                           questionText
                           questionTextTamil
+                          difficulty
+                          language
+                          subjectId
                           options {
                               id
                               isCorrect
                               optionText
                               optionTextTamil
-                              questionId
+                              orderIndex
                           }
                       }
                   }
@@ -323,18 +326,44 @@ export class QuizService {
     return this.http.post<StartQuizAttemptResponse>(`${this.apiUrl}/graphql?v=${Date.now()}`, graphqlQuery)
       .pipe(
         map(response => {
+          console.log('=== START QUIZ ATTEMPT RESPONSE ===');
+          console.log('Full response:', response);
+          console.log('Response data:', response.data);
+
           const result = response.data?.startQuizAttempt;
+          console.log('Start quiz result:', result);
+
           if (result?.success) {
+            // Transform questions to match frontend model
+            const transformedQuestions = (result.questions || []).map((q: any) => ({
+              id: q.id,
+              text: q.questionText, // Map questionText to text
+              textTamil: q.questionTextTamil,
+              difficulty: q.difficulty || 'MEDIUM',
+              language: q.language || 'ENGLISH',
+              subjectId: q.subjectId || subjectId,
+              options: (q.options || []).map((opt: any) => ({
+                id: opt.id,
+                text: opt.optionText, // Map optionText to text
+                textTamil: opt.optionTextTamil,
+                isCorrect: opt.isCorrect,
+                orderIndex: opt.orderIndex || 0
+              }))
+            }));
+
+            console.log('Transformed questions:', transformedQuestions);
+
             return {
               success: true,
               attemptId: result.quizAttempt?.id,
-              questions: result.questions || []
+              questions: transformedQuestions
             };
           }
-          return { success: false, message: 'Failed to start quiz' };
+          return { success: false, message: result?.message || 'Failed to start quiz' };
         }),
         catchError(error => {
           console.error('Error starting quiz:', error);
+          console.error('Error details:', error.error);
           return of({ success: false, message: 'Failed to start quiz' });
         })
       );
