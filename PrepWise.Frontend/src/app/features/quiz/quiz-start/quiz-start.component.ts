@@ -233,15 +233,6 @@ export class QuizStartComponent implements OnInit, OnDestroy {
                         sessionStorage.setItem('quizSubjectId', this.selectedSubjectId!.toString());
 
                         // Navigate to quiz play with state
-                        console.log('=== NAVIGATING TO QUIZ PLAY ===');
-                        console.log('Attempt ID:', result.attemptId);
-                        console.log('Navigation state:', {
-                            questions: transformedQuestions,
-                            timeLimitMinutes: formValue.timeLimitMinutes,
-                            attemptId: result.attemptId,
-                            questionCount: actualQuestionCount
-                        });
-
                         this.router.navigate(['/quiz/play', result.attemptId], {
                             state: {
                                 questions: transformedQuestions,
@@ -249,11 +240,6 @@ export class QuizStartComponent implements OnInit, OnDestroy {
                                 attemptId: result.attemptId,
                                 questionCount: actualQuestionCount // Use actual count
                             }
-                        }).then(() => {
-                            console.log('✅ Navigation to quiz play successful');
-                        }).catch((error) => {
-                            console.error('❌ Navigation to quiz play failed:', error);
-                            this.toastr.error('Failed to navigate to quiz. Please try again.', 'Navigation Error');
                         });
                     } else {
                         console.error('❌ Quiz start failed');

@@ -62,11 +62,7 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
     }
 
     get currentQuestion(): QuestionData | null {
-        const question = this.getCurrentQuestion();
-        if (question) {
-            console.log('Current question:', question.text, 'Options:', question.options?.length);
-        }
-        return question;
+        return this.getCurrentQuestion();
     }
 
     get selectedAnswer(): number | null {
@@ -90,9 +86,7 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
         private quizService: QuizService,
         public languageService: LanguageService,
         private toastr: ToastrService
-    ) {
-        console.log('Quiz Play Component Constructor called');
-    }
+    ) { }
 
     @HostListener('window:beforeunload', ['$event'])
     unloadNotification($event: any): void {
@@ -102,22 +96,15 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit(): void {
-        console.log('=== QUIZ PLAY COMPONENT INITIALIZED ===');
-        try {
-            this.loadQuizSession();
-            this.setupAutoSave();
-            this.startTimer();
+        this.loadQuizSession();
+        this.setupAutoSave();
+        this.startTimer();
 
-            // Subscribe to language changes
-            this.languageService.currentLanguage$.subscribe(language => {
-                console.log(`🌐 Language changed to: ${language}`);
-                this.updateQuestionsForLanguage(language);
-            });
-        } catch (error) {
-            console.error('Error in quiz play component initialization:', error);
-            this.toastr.error('Failed to initialize quiz. Please try again.', 'Error');
-            this.router.navigate(['/quiz/start']);
-        }
+        // Subscribe to language changes
+        this.languageService.currentLanguage$.subscribe(language => {
+            console.log(`🌐 Language changed to: ${language}`);
+            this.updateQuestionsForLanguage(language);
+        });
     }
 
     ngOnDestroy(): void {
@@ -139,56 +126,37 @@ export class QuizPlayComponent implements OnInit, OnDestroy {
     }
 
     private loadQuizSession(): void {
-        console.log('=== LOADING QUIZ SESSION ===');
+        const attemptId = this.route.snapshot.params['attemptId'];
 
-        try {
-            const attemptId = this.route.snapshot.params['attemptId'];
-            console.log('Attempt ID from route params:', attemptId);
-            console.log('All route params:', this.route.snapshot.params);
-
-            if (!attemptId) {
-                console.error('No quiz attempt ID provided');
-                this.toastr.error('No quiz attempt ID provided');
-                this.router.navigate(['/quiz/start']);
-                return;
-            }
-
-            // For testing purposes, if attemptId is 'test', generate sample questions
-            if (attemptId === 'test') {
-                console.log('Test mode detected, generating sample questions');
-                const sampleQuestions = this.generateSampleQuestions(1, 2);
-                this.initializeQuizSession(sampleQuestions, 5, 999);
-                return;
-            }
-
-            // Try to get questions from navigation state first
-            const navigation = this.router.getCurrentNavigation();
-            const state = navigation?.extras?.state;
-
-            console.log('Navigation object:', navigation);
-            console.log('Navigation state:', state);
-
-            if (state && state['questions']) {
-                // Use questions passed from quiz start component
-                const questions = state['questions'];
-                const timeLimitMinutes = state['timeLimitMinutes'] || 5;
-                const questionCount = state['questionCount'] || questions.length;
-
-                console.log('Using questions from navigation state:', questions.length);
-                console.log('Question count from state:', questionCount);
-                console.log('Time limit from state:', timeLimitMinutes);
-                console.log('Questions from state:', questions);
-
-                this.initializeQuizSession(questions, timeLimitMinutes, parseInt(attemptId));
-            } else {
-                // Fallback: Try to get from session storage
-                console.log('No navigation state found, using session storage');
-                this.loadFromSessionStorage(attemptId);
-            }
-        } catch (error) {
-            console.error('Error in loadQuizSession:', error);
-            this.toastr.error('Failed to load quiz session. Please start a new quiz.', 'Error');
+        if (!attemptId) {
+            this.toastr.error('No quiz attempt ID provided');
             this.router.navigate(['/quiz/start']);
+            return;
+        }
+
+        // Try to get questions from navigation state first
+        const navigation = this.router.getCurrentNavigation();
+        const state = navigation?.extras?.state;
+
+        console.log('=== LOADING QUIZ SESSION ===');
+        console.log('Attempt ID:', attemptId);
+        console.log('Navigation state:', state);
+
+        if (state && state['questions']) {
+            // Use questions passed from quiz start component
+            const questions = state['questions'];
+            const timeLimitMinutes = state['timeLimitMinutes'] || 5;
+            const questionCount = state['questionCount'] || questions.length;
+
+            console.log('Using questions from navigation state:', questions.length);
+            console.log('Question count from state:', questionCount);
+            console.log('Time limit from state:', timeLimitMinutes);
+
+            this.initializeQuizSession(questions, timeLimitMinutes, parseInt(attemptId));
+        } else {
+            // Fallback: Try to get from session storage
+            console.log('No navigation state found, using session storage');
+            this.loadFromSessionStorage(attemptId);
         }
     }
 
