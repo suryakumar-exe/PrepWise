@@ -5,21 +5,26 @@ using PrepWise.API.GraphQL.Queries;
 using PrepWise.Core.Services;
 using PrepWise.Infrastructure.Data;
 using PrepWise.Infrastructure.Services;
-using System;
-using System.Net.Http.Headers;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// 🔹 Secure configuration loading
+builder.Configuration
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
+    .AddUserSecrets<Program>(optional: true) // Only loads in Development
+    .AddEnvironmentVariables();
+
+// Optional: Access keys if needed directly
+var jwtKey = builder.Configuration["Jwt:Key"];
+var openAiKey = builder.Configuration["AIProviders:OpenAI:ApiKey"];
+
 // Add services to the container.
 builder.Services.AddControllers();
-
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Add Entity Framework
-//builder.Services.AddDbContext<PrepWiseDbContext>(options =>
-//    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+// Database
 builder.Services.AddDbContext<PrepWiseDbContext>(options =>
 {
     options.UseSqlServer(
@@ -31,13 +36,12 @@ builder.Services.AddDbContext<PrepWiseDbContext>(options =>
         w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
 });
 
-
-// Add GraphQL
+// GraphQL
 builder.Services
     .AddGraphQLServer()
     .AddQueryType<QuizQueries>()
-    .AddMutationType<Mutation>()         // base mutation class
-    .AddType<QuizMutations>()            // extension for Quiz
+    .AddMutationType<Mutation>()
+    .AddType<QuizMutations>()
     .AddType<AuthMutations>()
     .AddType<PrepWise.API.GraphQL.Types.UserType>()
     .AddType<PrepWise.API.GraphQL.Types.SubjectType>()
@@ -47,7 +51,7 @@ builder.Services
     .AddSorting()
     .AddProjections();
 
-// Add JWT Authentication
+// JWT Authentication
 builder.Services.AddAuthentication("Bearer")
     .AddJwtBearer("Bearer", options =>
     {
@@ -60,13 +64,13 @@ builder.Services.AddAuthentication("Bearer")
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(
-                System.Text.Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? "9f84a12c8f83b467a19f2a3fbb09172a7e7cfda4ae2c4fcaa84ad91d7e1a7c6f"))
+                System.Text.Encoding.UTF8.GetBytes(jwtKey ?? "fallback-key"))
         };
     });
 
 builder.Services.AddAuthorization();
 
-// Add CORS
+// CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
@@ -77,37 +81,29 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Register AI providers
+// AI Providers
 builder.Services.AddScoped<IAIProvider, OpenAIProvider>();
 builder.Services.AddScoped<IAIProvider, GeminiProvider>();
 builder.Services.AddScoped<IAIProvider, GroqProvider>();
 
-// Register services
+// App Services
 builder.Services.AddScoped<IAIQuestionService, AIQuestionService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
 
 var app = builder.Build();
 
 app.UseHttpsRedirection();
-
 app.UseCors("AllowAll");
-
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-
-// Map GraphQL endpoint
 app.MapGraphQL();
 
-// Seed database
+// Database initialization
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<PrepWiseDbContext>();
-    
-    // Drop and recreate database to handle schema changes
-    //context.Database.EnsureDeleted();
-    //context.Database.Migrate(); // Apply migrations if any
     context.Database.EnsureCreated();
 }
 
